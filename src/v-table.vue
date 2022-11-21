@@ -31,7 +31,7 @@ const template = `
                 v-bind:class="getRowClass(r,entry)">
 					<td v-if="selectable0" width="18" class="center">
 						<span v-bind:data-index="r" class="v-check" v-on:click="rowSelect(entry,r)"
-						v-bind:data-icon="isSelected(r)?'check-square':'square'"><i class="far fa-lg" v-bind:class="isSelected(r)?'fa-check-square-o':'fa-square'" ></i></span>
+						v-bind:data-icon="isSelected(r)?'check-square-o':'square'"><i class="far fa-lg" v-bind:class="isSelected(r)?'fa-check-square-o':'fa-square'" ></i></span>
 					</td>
 					<slot v-bind:row="entry" v-bind:index="r+(page-1)*paginatio_"></slot>
 				</tr>

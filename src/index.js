@@ -1046,10 +1046,17 @@ window.ui = _.ui = function (cfg) {
 			edit(e) {
 				var me = this;
 				var f = me.$children[0];
-				var action = f.action;
+				var action =f.action;
+                var t=[].filter.call(e.component.$parent.$children,(e)=>{
+                    return e.$el.classList.contains('v-datatable');
+                })[0];
+                if(t&&t.src)action=t.src.replace("/api", "").replace("/0/0", "");
 				if (e.action) action = e.action;
-				var t = e.$vnode ? e : (e.target && e.target.$vnode) ? e : me.$children[0].$children[0];
+                if(!t)
+				t = e.$vnode ? e : (e.target && e.target.$vnode) ? e : me.$children[0].$children[0];
+				
 				if (!action && t.src) action = t.src.replace("/api", "").replace("/0/0", "");
+				
 				if (!action)
 					action = window.location.pathname;
 				var selected = me.getSelected(t)[0];
@@ -1082,10 +1089,16 @@ window.ui = _.ui = function (cfg) {
 				var me = this;
 				var f = me.$children[0];
 				var action = f.action;
+				var t=[].filter.call(e.component.$parent.$children,(e)=>{
+                    return e.$el.classList.contains('v-datatable');
+                })[0];
+				if(!t)
+				t = e.$vnode ? e : me.$children[0].$children[0];
+				
 				if (!action)
 					action = window.location.pathname;
 				var cb = e.$vnode ? e.load : null;
-				var t = e.$vnode ? e : me.$children[0].$children[0];
+				
 				var key = t.$attrs.rowkey;
 				if (!key) key = t.rowKey;
 				var dat = t.data[t.selected[0]];
