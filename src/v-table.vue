@@ -17,8 +17,8 @@ const template = `
 			<thead>
             <tr>
                 <th v-if="selectable0" v-bind:width="getCheckColumnWidth" >
-                    <span class="v-check" v-on:click="rowSelect(null,-10)" v-bind:data-icon="selected.length?'check-square':'square'">
-                        <i class="fa fa-lg" v-bind:class="selected.length?'fa-check-square-o':'fa-square'"></i>
+                    <span class="v-check" v-on:click="rowSelect(null,-10)" v-bind:data-icon="selected.length?'square-check':'square'">
+                        <i class="fa fa-lg" v-bind:class="selected.length?'fa-square-check':'fa-square'"></i>
                     </span>
                 </th>
                 <th v-bind:class="k['h-class']" v-for="k in columns" v-bind:width="k.width" v-on:click="sortBy(k)">
@@ -31,7 +31,7 @@ const template = `
                 v-bind:class="getRowClass(r,entry)">
 					<td v-if="selectable0" width="18" class="center">
 						<span v-bind:data-index="r" class="v-check" v-on:click="rowSelect(entry,r)"
-						v-bind:data-icon="isSelected(r)?'check-square-o':'square'"><i class="far fa-lg" v-bind:class="isSelected(r)?'fa-check-square-o':'fa-square'" ></i></span>
+						v-bind:data-icon="isSelected(r)?'square-check':'square'"><i class="far fa-lg" v-bind:class="isSelected(r)?'fa-square-check':'fa-square'" ></i></span>
 					</td>
 					<slot v-bind:row="entry" v-bind:index="r+(page-1)*paginatio_"></slot>
 				</tr>
@@ -383,7 +383,7 @@ export default {
         }
         var svg=me.$el.querySelectorAll('.v-check > svg');
         for(i=0;i<svg.length;i++){
-			//check-square':'square
+			//square-check':'square
             svg[i].dataset.icon = svg[i].parentNode.dataset.icon;
         }
         if(me.loaded){
