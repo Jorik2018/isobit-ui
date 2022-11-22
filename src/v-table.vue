@@ -560,6 +560,7 @@ export default {
                 if(_.networkStatus.connected){
                     var request;
                     if(me.gql){
+                        var gql=this.gql;
                         var query=('query{'+Object.keys(gql)[0]+'(offset:'+((me.page - 1) * pagination)
                             +' limit:'+(me.pagination)+'){\ndata{'+gql[Object.keys(gql)[0]]+'}\nsize\n}\n}');
         
