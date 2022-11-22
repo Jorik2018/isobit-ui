@@ -57,6 +57,7 @@ export default {
         reflow:null,
         summary:null,
         src: String,
+        gql:null,
         filters: Object,
         store:null,
         width:null,
@@ -557,7 +558,18 @@ export default {
                     s += '/' + (me.page - 1) * pagination + '/' + (me.pagination);
                 }	
                 if(_.networkStatus.connected){
-                    axios.get(s, {params: _.clean(me.filters)}).then((r)=>{
+                    var request;
+                    if(me.gql){
+                        var query=('query{'+Object.keys(gql)[0]+'(offset:'+((me.page - 1) * pagination)
+                            +' limit:'+(me.pagination)+'){\ndata{'+gql[Object.keys(gql)[0]]+'}\nsize\n}\n}');
+        
+                        request=axios.post(me.src, {query:query});
+                    }else{
+                        request=axios.get(s, {params: _.clean(me.filters)});
+                    }
+                    
+
+                    request.then((r)=>{
                         if(r.data&&r.data.error){
                             MsgBox(r.data.error);
                         }else{
