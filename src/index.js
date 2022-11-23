@@ -1059,7 +1059,8 @@ window.ui = _.ui = function (cfg) {
 				
 				if (!action)
 					action = window.location.pathname;
-				var selected = me.getSelected(t)[0];
+				if(action)action=action.replace("/api", "");
+					var selected = me.getSelected(t)[0];
 				var id = selected[t.rowKey];
 				if (selected.tmpId) id = -selected.tmpId;
 				console.log(selected);
