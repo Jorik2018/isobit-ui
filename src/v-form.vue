@@ -44,20 +44,26 @@ export default {
         el = el.children[1].children[0];
         el.style.height = h + "px";
 
-   
+        function getAbsoluteHeight(el) {
+  var styles = window.getComputedStyle(el);
+  var margin = parseFloat(styles['marginTop']) +
+               parseFloat(styles['marginBottom']);
+
+  return Math.ceil(el.offsetHeight + margin);
+}
         var el2; //,style2;
 
         [].forEach.call(el.children, (ee, i) => {
             console.log(i);
             console.log(ee);
-            //style2 = window.getComputedStyle(ee);
             if (
               (i == el.children.length - 1 && ee.tagName == "CENTER") ||
               (!ee.classList.contains("v-scrollable") &&
               !ee.classList.contains("v-form") &&
                 !ee.classList.contains("v-resize"))
             ) {
-              h -= ee.offsetHeight + 2;
+                ;
+              h -= (getAbsoluteHeight(ee) + 2);
             } else if (!el2){
                 el2 = ee;
                 console.log(el2);
