@@ -72,13 +72,14 @@ export default {
         el = el.children[0];
         el.style.height = h + "px";
       }
-      //h = h - 20;
-      el.style.overflowY = "auto";
-      el.style.height = h + "px";
-      var event = new Event("parentResize", { bubbles: true });
-      event.height = h;
-      //console.log(el.children[0]);
-      el.children[0].dispatchEvent(event);
+      if(el){
+        el.style.overflowY = "auto";
+        el.style.height = h + "px";
+        var event = new Event("parentResize", { bubbles: true });
+        event.height = h;
+        //console.log(el.children[0]);
+        el.children[0].dispatchEvent(event);
+      }
     },
   },
   mounted() {
