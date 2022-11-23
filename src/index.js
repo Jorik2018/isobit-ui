@@ -194,6 +194,7 @@ let resize = function () {
 		pc[0].style.overflowY = 'auto';
 		p = pc[0].querySelector(".ui-panel");
 		if (p) {
+			console.log(p);
 			pc = p.children;
 			if (ph) h -= (ph.offsetHeight + pc[0].offsetHeight + 2);
 			if (pc[1]) {
@@ -212,6 +213,7 @@ let resize = function () {
 				var style = window.getComputedStyle(el);
 				return (style.display === 'none')
 			}
+			console.log(pc[0]);
 			//function isHidden(el) {return (el.offsetParent === null)}
 			if (!pc[0].children[0]) return;
 			console.log(h);
