@@ -179,10 +179,10 @@ let resize = function () {
 			p = pc[0];
 			p.style.height = h + 'px';
 			p.style.overflowY = 'auto';
+			h = h - ph.offsetHeight - 0;
 			if (p.classList.contains('ui-panel')){
 				//is v-form
 			}else{
-				h = h - ph.offsetHeight - 0;
 				p = p.children[0];
 			}
 			var event = new Event("parentResize", { bubbles: true });
