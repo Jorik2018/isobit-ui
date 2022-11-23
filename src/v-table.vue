@@ -576,9 +576,9 @@ export default {
                         }else{
                             var re=(r.data.data ? r.data.data : r.data);
                             if(me.gql){
-                                console.log(r.data);
-                                console.log(Object.keys(me.gql)[0]);
-                                re=r.data[Object.keys(me.gql)[0]];
+                                //console.log(r.data);
+                                //console.log(Object.keys(me.gql)[0]);
+                                re=r.data.data[Object.keys(me.gql)[0]];
                             }
                             me.data = re.data;
                             if (re && re.hasOwnProperty('size')&&pagination) {
