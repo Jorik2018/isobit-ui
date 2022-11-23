@@ -560,7 +560,7 @@ export default {
                 if(_.networkStatus.connected){
                     var request;
                     if(me.gql){
-                        var gql=this.gql;
+                        var gql=me.gql;
                         var query=('query{'+Object.keys(gql)[0]+'(offset:'+((me.page - 1) * pagination)
                             +' limit:'+(me.pagination)+'){\ndata{'+gql[Object.keys(gql)[0]]+'}\nsize\n}\n}');
         
@@ -574,12 +574,16 @@ export default {
                         if(r.data&&r.data.error){
                             MsgBox(r.data.error);
                         }else{
-                            me.data = (r.data.data ? r.data.data : r.data);
-                            if (r.data && r.data.hasOwnProperty('size')&&pagination) {
-                                    me.pages = Math.ceil(r.data.size / pagination);
+                            var re=(r.data.data ? r.data.data : r.data);
+                            if(me.gql){
+re=r.data[Object.keys(me.gql)[0]];
+                            }
+                            me.data = re.data;
+                            if (re && re.hasOwnProperty('size')&&pagination) {
+                                    me.pages = Math.ceil(re.size / pagination);
                                     if (me.page > me.pages)
                                             me.page = 1;
-								me.size=r.data.size;
+								me.size=re.size;
                             }
                             //console.log('======');
                             //console.log(me.data);
