@@ -1,6 +1,6 @@
 <template>
 <div v-bind:value="toDate(value)" >
-    <input v-bind:required="required" style2="width:calc(100% - 0px)"
+    <input :required="required" :readonly="readonly" style2="width:calc(100% - 0px)"
      v-on:change="enterD" v-bind:type="type?type:'date'"/></div>
 </template>
 <script>
@@ -10,7 +10,8 @@
                 value: String
             },
             type: String,
-            required:String
+            required:String,
+            readonly:String
         },
         data() {
             return {
