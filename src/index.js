@@ -1050,7 +1050,7 @@ window.ui = _.ui = function (cfg) {
                 var t=[].filter.call(e.component.$parent.$children,(e)=>{
                     return e.$el.classList.contains('v-datatable');
                 })[0];
-                if(t&&t.src)action=t.src.replace("/api", "").replace("api/", "/").replace("/0/0", "");
+                if(t&&t.src)action=t.src.replace("/api", "").replace("api/", "").replace("/0/0", "");
 				if (e.action) action = e.action;
                 if(!t)
 				t = e.$vnode ? e : (e.target && e.target.$vnode) ? e : me.$children[0].$children[0];
