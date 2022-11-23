@@ -27,10 +27,19 @@ export default {
         }, 100);
       }
     },
+    getAbsoluteHeight(el) {
+      var styles = window.getComputedStyle(el);
+      var margin =
+        parseFloat(styles["marginTop"]) + parseFloat(styles["marginBottom"]);
+
+      return Math.ceil(el.offsetHeight + margin);
+    },
     resize(e) {
       var me = this,
         el = me.$el,
         h = e.height;
+      console.log(h);
+      console.log(el);
       el.style.height = h + "px";
       //si tiene header
       if (el.children[1]) {
@@ -44,31 +53,20 @@ export default {
         el = el.children[1].children[0];
         el.style.height = h + "px";
 
-        function getAbsoluteHeight(el) {
-  var styles = window.getComputedStyle(el);
-  var margin = parseFloat(styles['marginTop']) +
-               parseFloat(styles['marginBottom']);
-
-  return Math.ceil(el.offsetHeight + margin);
-}
         var el2; //,style2;
 
         [].forEach.call(el.children, (ee, i) => {
-            console.log(i);
-            console.log(ee);
-            if (
-              (i == el.children.length - 1 && ee.tagName == "CENTER") ||
-              (!ee.classList.contains("v-scrollable") &&
+          if (
+            (i == el.children.length - 1 && ee.tagName == "CENTER") ||
+            (!ee.classList.contains("v-scrollable") &&
               !ee.classList.contains("v-form") &&
-                !ee.classList.contains("v-resize"))
-            ) {
-                ;
-              h -= (getAbsoluteHeight(ee) + 2);
-            } else if (!el2){
-                el2 = ee;
-                console.log(el2);
-            }
-          
+              !ee.classList.contains("v-resize"))
+          ) {
+            console.log(ee);
+            h -= me.getAbsoluteHeight(ee) + 2;
+          } else if (!el2) {
+            el2 = ee;
+          }
         });
         el = el2;
         //          console.log(el);
