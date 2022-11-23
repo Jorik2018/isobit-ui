@@ -177,8 +177,8 @@ let resize = function () {
 			return;
 		} else if (pc[0].nodeName == "DIV") {
 			p = pc[0];
-			//console.log("========");
-			//console.log(p);
+			console.log("========");
+			console.log(p);
 			h = h - ph.offsetHeight - 0;
 			p.style.height = h + 'px';
 			p.style.overflowY = 'auto';
