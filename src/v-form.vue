@@ -75,7 +75,7 @@ export default {
         el = el.children[0];
         el.style.height = h + "px";
       }
-      h = h - 20;
+      //h = h - 20;
       el.style.overflowY = "auto";
       el.style.height = h + "px";
       var event = new Event("parentResize", { bubbles: true });
