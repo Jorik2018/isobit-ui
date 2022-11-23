@@ -48,8 +48,8 @@ export default {
         var el2; //,style2;
 
         [].forEach.call(el.children, (ee, i) => {
-            
-          
+            console.log(i);
+            console.log(ee);
             //style2 = window.getComputedStyle(ee);
             if (
               (i == el.children.length - 1 && ee.tagName == "CENTER") ||
@@ -59,7 +59,7 @@ export default {
               h -= ee.offsetHeight + 2;
             } else if (!el2){
                 el2 = ee;
-                console.log(ee);
+                console.log(el2);
             }
           
         });
