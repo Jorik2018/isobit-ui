@@ -41,6 +41,10 @@ export default {
                 el=el.children[1].children[0];
                 el.style.height=h+'px';
 
+
+console.log("============");
+console.log(el.children);
+
                 var el2;//,style2;
                 if(el.children.forEach){
                 el.children.forEach(ee=>{
