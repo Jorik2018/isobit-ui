@@ -178,7 +178,7 @@ let resize = function () {
 		} else if (pc[0].nodeName == "DIV") {
 			p = pc[0];
 			//console.log("========");
-			console.log(p);
+			//console.log(p);
 			h = h - ph.offsetHeight - 0;
 			p.style.height = h + 'px';
 			p.style.overflowY = 'auto';
@@ -194,7 +194,7 @@ let resize = function () {
 		pc[0].style.overflowY = 'auto';
 		p = pc[0].querySelector(".ui-panel");
 		if (p) {
-			console.log(p);
+			//console.log(p);
 			pc = p.children;
 			if (ph) h -= (ph.offsetHeight + pc[0].offsetHeight + 2);
 			if (pc[1]) {
@@ -237,8 +237,8 @@ let resize = function () {
 				vc[0].style.height=(h-(ph.offsetHeight+0+40))+'.px';*/
 			}
 		}
-		console.log("p");
-		console.log(p);
+		//console.log("p");
+		//console.log(p);
 
 	} else {
 		var ww = document.querySelectorAll(".ion-page");
