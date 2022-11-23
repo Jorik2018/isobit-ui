@@ -177,13 +177,14 @@ let resize = function () {
 			return;
 		} else if (pc[0].nodeName == "DIV") {
 			p = pc[0];
-			console.log("========");
-			console.log(p);
-			h = h - ph.offsetHeight - 0;
 			p.style.height = h + 'px';
 			p.style.overflowY = 'auto';
-			if (!p.classList.contains('ui-panel')) p = p.children[0];
-			//console.log(p);
+			if (p.classList.contains('ui-panel')){
+				//is v-form
+			}else{
+				h = h - ph.offsetHeight - 0;
+				p = p.children[0];
+			}
 			var event = new Event("parentResize", { bubbles: true });
 			event.height = h;
 			p.dispatchEvent(event);
