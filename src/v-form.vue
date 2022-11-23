@@ -54,6 +54,7 @@ export default {
             if (
               (i == el.children.length - 1 && ee.tagName == "CENTER") ||
               (!ee.classList.contains("v-scrollable") &&
+              !ee.classList.contains("v-form") &&
                 !ee.classList.contains("v-resize"))
             ) {
               h -= ee.offsetHeight + 2;
