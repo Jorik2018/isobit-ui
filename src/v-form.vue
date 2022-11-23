@@ -47,10 +47,12 @@ console.log(el.children);
 
                 var el2;//,style2;
                 if(el.children.forEach){
-                el.children.forEach(ee=>{
+                el.children.forEach((ee,i)=>{
                     if(!el2){
                         //style2 = window.getComputedStyle(ee);
-                        if(!ee.classList.contains('v-scrollable')&&!ee.classList.contains('v-resize')){
+                        if((i==el.children.length-1&&ee.tagName=='CENTER')||(
+                            !ee.classList.contains('v-scrollable')
+                            &&!ee.classList.contains('v-resize'))){
                             h-=(ee.offsetHeight+2);
                         }else{
                             el2=ee;
