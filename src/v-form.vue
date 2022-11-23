@@ -44,13 +44,12 @@ export default {
         el = el.children[1].children[0];
         el.style.height = h + "px";
 
-        console.log("============");
-        console.log(el.children);
-
+   
         var el2; //,style2;
 
         [].forEach.call(el.children, (ee, i) => {
-          if (!el2) {
+            console.log(ee);
+          
             //style2 = window.getComputedStyle(ee);
             if (
               (i == el.children.length - 1 && ee.tagName == "CENTER") ||
@@ -59,9 +58,10 @@ export default {
             ) {
               h -= ee.offsetHeight + 2;
             } else {
+                if (!el2)
               el2 = ee;
             }
-          }
+          
         });
         el = el2;
         //          console.log(el);
