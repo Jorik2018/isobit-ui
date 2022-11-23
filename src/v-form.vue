@@ -38,8 +38,6 @@ export default {
       var me = this,
         el = me.$el,
         h = e.height;
-      console.log(h);
-      console.log(el);
       el.style.height = h + "px";
       //si tiene header
       if (el.children[1]) {
@@ -62,8 +60,7 @@ export default {
               !ee.classList.contains("v-form") &&
               !ee.classList.contains("v-resize"))
           ) {
-            console.log(ee);
-            h -= me.getAbsoluteHeight(ee) + 2;
+            h -= me.getAbsoluteHeight(ee);
           } else if (!el2) {
             el2 = ee;
           }
