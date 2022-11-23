@@ -197,6 +197,7 @@ let resize = function () {
 			pc = p.children;
 			if (ph) h -= (ph.offsetHeight + pc[0].offsetHeight + 2);
 			if (pc[1]) {
+				console.log(pc[1]);
 				pc[1].style.height = h + 'px';
 				var e = pc[1].querySelectorAll(".v-resize,.v-datatable");
 				for (i = 0; i < e.length; i++) {
