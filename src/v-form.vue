@@ -48,7 +48,7 @@ export default {
         var el2; //,style2;
 
         [].forEach.call(el.children, (ee, i) => {
-            console.log(ee);
+            
           
             //style2 = window.getComputedStyle(ee);
             if (
@@ -57,9 +57,9 @@ export default {
                 !ee.classList.contains("v-resize"))
             ) {
               h -= ee.offsetHeight + 2;
-            } else {
-                if (!el2)
-              el2 = ee;
+            } else if (!el2){
+                el2 = ee;
+                console.log(ee);
             }
           
         });
