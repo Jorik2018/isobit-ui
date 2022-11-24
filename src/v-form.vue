@@ -50,7 +50,10 @@ export default {
         //obtien el form
         el = el.children[1].children[0];
         el.style.height = h + "px";
-
+if(el.children){
+el.parentNode.style.overflowY='hidden';
+el.parentNode.style.overflow='hidden';
+}
         var el2; //,style2;
 
         [].forEach.call(el.children, (ee, i) => {
