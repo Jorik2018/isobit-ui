@@ -1040,6 +1040,7 @@ window.ui = _.ui = function (cfg) {
 				if (!action)
 					action = window.location.pathname;
 				action = _.processURL(action);
+				if(action)action=action.replace("/api", "");
 				if (window.app) {
 					me.open(action + '/create');
 				} else {
