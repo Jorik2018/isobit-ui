@@ -579,8 +579,8 @@ export default {
                                 //console.log(r.data);
                                 //console.log(Object.keys(me.gql)[0]);
                                 re=r.data.data[Object.keys(me.gql)[0]];
-                            }
-                            me.data = re.data;
+                            }else
+                                me.data = re;
                             if (re && re.hasOwnProperty('size')&&pagination) {
                                     me.pages = Math.ceil(re.size / pagination);
                                     if (me.page > me.pages)
