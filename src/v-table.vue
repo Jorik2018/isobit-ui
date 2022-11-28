@@ -574,13 +574,13 @@ export default {
                         if(r.data&&r.data.error){
                             MsgBox(r.data.error);
                         }else{
-                            var re=(r.data.data ? r.data.data : r.data);
+                            var re=r.data;
                             if(me.gql){
                                 //console.log(r.data);
                                 //console.log(Object.keys(me.gql)[0]);
                                 re=r.data.data[Object.keys(me.gql)[0]];
-                            }else
-                                me.data = re;
+                            }
+                            me.data = re.data||re;
                             if (re && re.hasOwnProperty('size')&&pagination) {
                                     me.pages = Math.ceil(re.size / pagination);
                                     if (me.page > me.pages)
