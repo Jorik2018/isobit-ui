@@ -14,7 +14,7 @@ export default {
     },
 	watch:{
 		closed(c){
-			this.$emit('expand',{target:this,value:c})
+			this.$emit('change',{target:this,closed:c})
 		}
 	},
 	data(){
