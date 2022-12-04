@@ -15,6 +15,7 @@ export default {
 	watch:{
 		closed(c){
 			this.$emit('change',{target:this,closed:c})
+			this.$emit('input',c)
 		}
 	},
 	data(){
