@@ -103,7 +103,10 @@ export default {
 					if (ii > -1){
 						select.selectedIndex = ii + 1;
                         var ffound=me.$children[j].getValueByIndex(select.selectedIndex - 1);
-                
+                        if(ffound==-1){ffound=null;}else{
+                            ffound=me.$children[j].filterList[select.selectedIndex - 1];
+					
+				}
 						/*if(me.$el.id){
 						for(k=0;k<select.length;k++){
 							console.log(k+'--'+select[k].value);
