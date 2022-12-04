@@ -102,6 +102,8 @@ export default {
 				me.$children[j].getIndexByValue(v,function(ii,found){
 					if (ii > -1){
 						select.selectedIndex = ii + 1;
+                        var ffound=me.$children[j].getValueByIndex(select.selectedIndex - 1);
+                
 						/*if(me.$el.id){
 						for(k=0;k<select.length;k++){
 							console.log(k+'--'+select[k].value);
@@ -123,7 +125,10 @@ export default {
 							a=!v;
 						}
 						if(!a){
-							if(me.$el.id)console.log('emit input .'+me.$el.id+'='+JSON.stringify(v));
+							if(me.$el.id){
+                                console.log('emit input .'+me.$el.id+'='+JSON.stringify(v));
+                                console.log('ffound=',ffound);
+                            }
 							me.$emit('input',v,found);
 						}
 					}
