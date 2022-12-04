@@ -140,11 +140,20 @@
          // }
           const [key] = p ? Object.keys(p) : [];
           if (key) {
+            try{
+              var ittt;
             me.data2 = me.data2.concat(
               storedList.filter((item) => {
+                ittt=item;
+                //item[key]&&
                 return item[key].startsWith(p[key]);
               })
             );
+            }catch(e){
+              console.log('Error trying to filter ',ittt);
+              console.log(ittt);
+              console.log(storedList);
+            }
             //console.log("data filtrada");
           } else {
             me.data2 = me.data2.concat(storedList);
