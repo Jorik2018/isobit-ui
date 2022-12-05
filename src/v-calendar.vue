@@ -71,9 +71,9 @@
             },
             changeDate(){
                 var me = this;
-                console.log(me.value);
+                //console.log(me.value);
                 var d = me.toDate(me.value);
-                console.log(d);
+                //console.log(d);
                 var fd;
                 if (d) {
                     if (me.$props.type === 'time') {
