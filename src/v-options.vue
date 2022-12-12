@@ -144,17 +144,23 @@ export default {
         if (key) {
           try {
             var ittt;
-            me.data2 = me.data2.concat(
-              storedList.filter((item) => {
+            var fd=storedList.filter((item) => {
                 ittt = item;
                 //item[key]&&
-                     var ee=this.getParentE();
-       if(ee.id){
-        console.log(item[key]+' c '+p[key]+' = '+(item[key].startsWith(p[key])));
-       }
-                
+                var ee = this.getParentE();
+                if (ee.id) {
+                  console.log(
+                    item[key] +
+                      " c " +
+                      p[key] +
+                      " = " +
+                      item[key].startsWith(p[key])
+                  );
+                }
                 return item[key].startsWith(p[key]);
-              })
+              });
+            me.data2 = me.data2.concat(
+              fd
             );
           } catch (e) {
             console.log("Error trying to filter ", ittt);

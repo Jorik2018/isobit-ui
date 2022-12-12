@@ -1978,7 +1978,8 @@ function configureAxios(a) {
 		_.eeee = config;
 		if (config.mask) {
 			config.mask();
-		} else if (!mask) mask = _.mask();
+		} else if (!mask) 
+			mask = _.mask();
 		return config;
 	}, function (e) {
 		mask = _.unmask(mask);
@@ -2009,10 +2010,14 @@ function configureAxios(a) {
 				}
 			}
 			if (e.config.error) {
+				console.log('error');
 				e.config.error(e, msg);
 			} else {
+				console.log('mssg');
 				_.MsgBox('<b>' + e.request.responseURL + '</b><br/><br/>' + msg);
 			}
+			console.log(msg);
+			console.log(r);
 		}
 		delete axios.error;
 		return Promise.reject(e);
