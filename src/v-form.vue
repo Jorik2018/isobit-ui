@@ -81,7 +81,10 @@ el.parentNode.style.overflow='hidden';
         var event = new Event("parentResize", { bubbles: true });
         event.height = h;
         //console.log(el.children[0]);
+        
         el.children[0].dispatchEvent(event);
+        event.$target=me;
+        me.$emit("resize",event);
       }
     },
   },

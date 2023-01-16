@@ -22,6 +22,13 @@ export default {
 		return {closed:false}
 	},
 	created(){this.closed=this.closable;},
+	mounted(){
+        var me=this;
+        me.$el.addEventListener("parentResize",(event)=>{
+            event.$target=me;
+            me.$emit("resize",event);
+        });
+    },
 	updated(){
 		var me=this;
 		setTimeout(function(){

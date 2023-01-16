@@ -1,7 +1,7 @@
 <script>
 import Vue from 'vue'
 const template = `
-	<div v-bind:class={reflow:reflow} v-bind:key="'v-table-'+keyBody" 
+	<div v-bind:class={reflow:reflow} :key="'v-table-'+keyBody" 
     class="v-datatable v-resize">
     <template v-if="active">
 		<div v-if="hasSlot('header')" class="v-datatable-header v-widget-header ui-corner-top"><slot name="header"></slot>
