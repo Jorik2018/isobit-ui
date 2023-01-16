@@ -1,7 +1,9 @@
 <script>
 import Vue from 'vue'
 const template = `
-	<div v-bind:class={reflow:reflow} v-bind:key="'v-table-'+keyBody" class="v-datatable v-resize" style="background-color:#dbdbdb"><template v-if="active">
+	<div v-bind:class={reflow:reflow} v-bind:key="'v-table-'+keyBody" 
+    class="v-datatable v-resize">
+    <template v-if="active">
 		<div v-if="hasSlot('header')" class="v-datatable-header v-widget-header ui-corner-top"><slot name="header"></slot>
 		</div>
 		<div v-if="pagination" class="v-paginator v-paginator-top v-widget-header v-paginator-pages center">
