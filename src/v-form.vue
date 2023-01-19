@@ -23,7 +23,7 @@ export default {
         //console.log(window.app);
         setTimeout(function () {
           //console.log(v);
-          window.app.title = v;
+          _.app.title = v;
         }, 100);
       }
     },
