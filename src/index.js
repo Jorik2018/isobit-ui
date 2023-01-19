@@ -883,7 +883,7 @@ window.ui = _.ui = function (cfg) {
 				return this.app.networkStatus.connected;
 			},
 			perms() {
-				return this.user.perms || this.user.allcaps || {};
+				return this.session.perms || this.session.allcaps || {};
 			},
 			session: {
 				get() {
