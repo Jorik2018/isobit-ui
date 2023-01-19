@@ -873,17 +873,36 @@ window.ui = _.ui = function (cfg) {
 			}
 		},
 		computed: {
+			app() {
+				return _.app;
+			},
+			user() {
+				return _.app.session;
+			},
 			online() {
 				return this.app.networkStatus.connected;
 			},
-			user() {
-				return window.app.session;
-			},
-			app() {
-				return window.app;
-			},
 			perms() {
 				return this.user.perms || this.user.allcaps || {};
+			},
+			session: {
+				get() {
+					if (!_._session) {
+						var s = localStorage.getItem('session');
+						if (s)
+							s = JSON.parse(s);
+						else s = {};
+						_._session = s;
+					}
+					return _._session;
+				},
+				set(d) {
+					if(!d)
+						localStorage.removeItem('session');
+					else
+					localStorage.setItem('session', JSON.stringify(d));
+					_._session = d;
+				}
 			},
 			rowSelectedCount() {
 				var me = this;
@@ -893,24 +912,7 @@ window.ui = _.ui = function (cfg) {
 				var t = me.$children[0].$children[0];
 				return t ? t.selected.length : 0;
 			},
-			baseURL() { return Vue.baseURL ? Vue.baseURL : axios.defaults.baseURL; },
-			session: {
-				get() {
-					var me = this;
-					if (!me._session) {
-						var s = localStorage.getItem('session');
-						if (s)
-							s = JSON.parse(s);
-						else s = {};
-						me._session = s;
-					}
-					return me._session;
-				},
-				set(d) {
-					localStorage.setItem('session', JSON.stringify(d));
-					this._session = d;
-				}
-			}
+			baseURL() { return Vue.baseURL ? Vue.baseURL : axios.defaults.baseURL; }
 		},
 		data() {
 			var me = this;
