@@ -18,13 +18,9 @@ export default {
   },
   methods: {
     setTitle(v) {
-      var me = this;
-      if (me.$parent.app) {
-        //console.log(window.app);
-        setTimeout(function () {
-          //console.log(v);
-          _.app.title = v;
-        }, 100);
+      var me = this,app=me.$parent.app;
+      if (app) {
+        setTimeout(()=>{app.title = v;}, 100);
       }
     },
     getAbsoluteHeight(el) {
