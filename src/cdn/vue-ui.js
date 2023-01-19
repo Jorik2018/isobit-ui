@@ -226,10 +226,12 @@ setTimeout(resize, 400);
 window.addEventListener('resize',function (){
     setTimeout(resize, 400);
 });
-if (Window.instance == 'undefined'){
-    Window.instance=axios;
+if (typeof window._ == 'undefined')window._={};
+var _=window._;
+if (_.instance == 'undefined'){
+    _.instance=axios;
 }
-var instance=Window.instance;
+var instance=_.instance;
 if (typeof Object.assign != 'function') {
     Object.assign = function (target) {
         'use strict';
@@ -251,8 +253,7 @@ if (typeof Object.assign != 'function') {
          return to;
     };
 }
-if (typeof Window._ == 'undefined')Window._={};
-var _=Window._;
+
 _=Object.assign(_,{
         remoteServer:'',
 	_id:0,
