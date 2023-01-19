@@ -2028,6 +2028,7 @@ function configureAxios(a) {
 window._ = _;
 window.Vue = Vue;
 window.axios = axios;
+_.axios = axios;
 Vue.configureAxios = configureAxios;
 configureAxios(axios);
 export default {
