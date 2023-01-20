@@ -34,12 +34,6 @@ var ol={
 	layer:{Tile:Tile,Vector:VectorLayer},
 	style:{Style:Style,Stroke:Stroke,Text:Text,Fill:Fill,Circle:Circle,RegularShape:RegularShape}
 }
-if (typeof window._ == 'undefined')window._={};
-var _=window._;
-if (!_.instance){
-    _.instance=axios;
-}
-var instance=_.instance;
 if (typeof Object.assign != 'function') {
     Object.assign = function (target) {
         'use strict';
