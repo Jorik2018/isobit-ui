@@ -27,8 +27,12 @@ import VOverlay from "./v-overlay.vue";
 import VPopup from "./v-popup.vue";
 
 window.isMobile = 1;
-if (typeof Window._ == 'undefined') Window._ = {};
-var _ = Window._;
+if (typeof window._ == 'undefined') window._ = {};
+var _=window._;
+if (!_.instance){
+    _.instance=axios;
+}
+var instance=_.instance;
 Vue.config.ignoredElements = [...Vue.config.ignoredElements || [], ...['v-filter', 'v-footer']];
 Vue.n = (v) => {
 	v = v ? (v == '' ? null : Number('' + v)) : 0;

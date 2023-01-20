@@ -228,7 +228,7 @@ window.addEventListener('resize',function (){
 });
 if (typeof window._ == 'undefined')window._={};
 var _=window._;
-if (_.instance == 'undefined'){
+if (!_.instance){
     _.instance=axios;
 }
 var instance=_.instance;
