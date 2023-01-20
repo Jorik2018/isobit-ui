@@ -1047,7 +1047,7 @@ window.ui = _.ui = function (cfg) {
 					action = window.location.pathname;
 				action = _.processURL(action);
 				if(action)action=action.replace("/api", "");
-				if (window.app) {
+				if (_.app) {
 					me.open(action + '/create');
 				} else {
 					instance.get(_.currentPath = (action + '/create').replace(/([^:]\/)\/+/g, "$1") + '?modal')
@@ -1076,7 +1076,7 @@ window.ui = _.ui = function (cfg) {
 				if (selected.tmpId) id = -selected.tmpId;
 				console.log(selected);
 				if (me.getSelectedId) id = me.getSelectedId(selected);
-				if (window.app) {
+				if (_.app) {
 					me.open(action + '/' + id + '/edit');
 				} else {
 					axios.get((_.currentPath = (action + '/' + id + '/edit').replace(/([^:]\/)\/+/g, "$1")) + '?modal')
@@ -1489,8 +1489,8 @@ window.ui = _.ui = function (cfg) {
 				}
 				if (!dlg) dlg = this.$el.parentElement;
 				var mask = dlg.parentElement;
-				if (!mask && window.app.$router) {
-					window.app.$router.back();
+				if (!mask && _.app.$router) {
+					_.app.$router.back();
 					return;
 				}
 				dlg.style.display = "none";
@@ -2009,9 +2009,9 @@ function configureAxios(a) {
 			}
 			mask = _.unmask(mask);
 			if (r && r.status == 401) {
-				if (window.app) {
-					window.app.toast('Session terminada');
-					window.app.logout();
+				if (_.app) {
+					_.app.toast('Session terminada');
+					_.app.logout();
 					return;
 				}
 			}
