@@ -487,7 +487,9 @@ _ = Object.assign(_, {
 	},
 	clean(obj) {
 		for (var propName in obj) {
-			if (obj[propName] === '' || obj[propName] === null || obj[propName] === undefined) {
+			if (obj[propName] === '' || obj[propName] === null 
+			|| typeof obj[propName] === 'function'
+			|| obj[propName] === undefined) {
 				delete obj[propName];
 			}
 		}

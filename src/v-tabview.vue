@@ -1,7 +1,7 @@
 <template>
-	<div class="v-tabview" v-bind:style="{height:height+'px'}">
+	<div class="v-tabview" :style="{height:height+'px'}">
 		<ul class="v-tab-nav">
-			<li v-bind:class="{'v-selected': index==currentTabIndex }" v-for="(tab,index) in tabs" v-on:click="currentTabIndex=index">
+			<li :class="{'v-selected': index==currentTabIndex }" v-for="(tab,index) in tabs" :key="index" @click="currentTabIndex=index">
 				{{tab.title}}
 			</li>
 		</ul>

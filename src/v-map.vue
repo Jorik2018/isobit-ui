@@ -35,10 +35,8 @@ export default {
             }
             c = point.flatCoordinates;
             var c = c[0] < -10000 ? ol.proj.toLonLat(c) : c;
-            
             me.$emit('translateend', {lon: c[0], lat: c[1]});
 			f.geometry=point;
-			console.log(f);
             var feature = new ol.Feature(f);
             feature.data = f;
 			if(f.draggable){
