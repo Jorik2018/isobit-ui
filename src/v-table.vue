@@ -465,14 +465,6 @@ export default {
                 m.load()
             }
         },
-        _selectRow(event,rec, r) {
-            var me=this;
-            if (me.selectable0&&_.whichChild(event.target) == 0)
-                return;
-            //se debe tener en cuenta si es 
-            //record, numero fila 
-            this.rowSelect(rec, r, 1);
-        },
         rowCreated(/*r*/) {
             /*this.$parent.$parent.row=r;
              console.log(this.$parent.$parent.row);
@@ -488,7 +480,14 @@ export default {
         isSelected(r){
             return this.selected.contains(r);
         },
-		
+        _selectRow(event,rec, r) {
+            var me=this;
+            if (me.selectable0&&_.whichChild(event.target) == 0)
+                return;
+            //se debe tener en cuenta si es 
+            //record, numero fila 
+            this.rowSelect(rec, r, 1);
+        },
         rowSelect(r, i, c) {
             var me = this,j;
             if (i === -10) {

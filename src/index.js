@@ -876,9 +876,21 @@ window.ui = _.ui = function (cfg) {
 			connected(v) {
 				window._.networkStatus.connected = v;
 				this.networkStatus.connected = v;
+			},
+			cleanedFilters(){
+				if(this.$el){
+				if(this.t)clearTimeout(this.t);
+				this.t=setTimeout(()=>{
+				  this.refresh();
+				},1200);
+		  
+			  }
 			}
 		},
 		computed: {
+			cleanedFilters(){
+				  return _.clean(this.filters);
+			  },
 			app() {
 				return _.app;
 			},
