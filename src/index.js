@@ -325,7 +325,8 @@ _ = Object.assign(_, {
 		var loadedStores;
         try{
           loadedStores=JSON.parse(sessionStorage.getItem('loadedStores'));
-        }catch(e){loadedStores={};}
+        }catch(e){}
+		if(loadedStores==null)loadedStores={};
         if(!loadedStores[store]&&_.networkStatus.connected){
           //await 
 		  //load info to store
