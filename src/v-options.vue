@@ -124,10 +124,10 @@ export default {
       return me.filterList[p.selectedIndex - 1];
     },
     async load(p, nou, clearQueue) {
-      //console.log('================load');
       var me = this;
       if (!clearQueue) me.queue.push([p, nou]);
-
+      console.log(me.getParentE().name+'================load');
+      
       if (me.queue.length > 1) return;
       var pa = me.$el.parentElement;
       me.data2 = me.data;

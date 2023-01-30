@@ -331,9 +331,8 @@ _ = Object.assign(_, {
           //await 
 		  //load info to store
 			var e=_.stores.filter(e=>e[0]==store);
-			console.log(params);
 			var data=await axios.get(e[2]);
-			var objectStore = db
+			var objectStore = _.db
 				.transaction([e[1]], "readwrite")
 				.objectStore(e[1]);
 			data = data.data;
