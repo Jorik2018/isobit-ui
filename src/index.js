@@ -332,7 +332,7 @@ _ = Object.assign(_, {
 		  //load info to store
 		  var stores=_.stores;
 		
-			var e=_.stores.filter(e=>e[0]==store);
+			var e=_.stores.filter(e=>e[0]==store)[0];
 			
 			var data=await axios.get(e[2]);
 			console.log(e[0]);
