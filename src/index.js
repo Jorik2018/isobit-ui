@@ -330,7 +330,10 @@ _ = Object.assign(_, {
         if(!loadedStores[store]&&_.networkStatus.connected){
           //await 
 		  //load info to store
+		  console.log(stores);
+		  console.log(store);
 			var e=_.stores.filter(e=>e[0]==store);
+			console.log(e);
 			var data=await axios.get(e[2]);
 			var objectStore = _.db
 				.transaction([e[0]], "readwrite")
