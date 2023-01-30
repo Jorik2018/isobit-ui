@@ -124,7 +124,8 @@ export default {
                 }
                 columns.push(column);
             });
-            //if(!me.columns)me.columns=columns;
+            //if(!me.columns)
+            me.columns=columns;
         }
         //se altera el virtual don of each row deleting v-filters
         me.$scopedSlots.default=function(r,r2,r3){
