@@ -321,7 +321,32 @@ var f = {
 if (![].contains) Object.defineProperty(Array.prototype, 'contains', f);
 if (!"".contains) Object.defineProperty(String.prototype, 'contains', f);
 _ = Object.assign(_, {
-	async getStoredList(store) {
+	async getStoredList(store,params) {
+		var loadedStores;
+        try{
+          loadedStores=JSON.parse(sessionStorage.getItem('loadedStores'));
+        }catch(e){loadedStores={};}
+        if(!loadedStores[store]&&_.networkStatus.connected){
+          //await 
+		  //load info to store
+			var e=_.stores.filter(e=>e[0]==store);
+			console.log(params);
+			var data=await axios.get(e[2]);
+			var objectStore = db
+				.transaction([e[1]], "readwrite")
+				.objectStore(e[1]);
+			data = data.data;
+			await objectStore.clear();
+			for (var i in data) {
+				try {
+					await objectStore.add(data[i]);
+				} catch (exception) {
+					throw exception;
+				}
+			}
+			loadedStores[store]=1;
+			sessionStorage.setItem('loadedStores',JSON.stringify(loadedStores));
+        }
 		let p = new Promise((resolve) => {
 			var t = _.db.transaction(store), objectStore = t.objectStore(store);//,d=[];
 			var r = objectStore.getAll();
