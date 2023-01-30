@@ -106,7 +106,7 @@ export default {
         var me=this,columns=[],def=me.$scopedSlots.default;
         var children=def({row:{}});
         if(children){
-            me.columns=[];
+            //me.columns=[];
             children.forEach((e,i)=>{
                 var column=e.data.attrs;
                 if(e.children){
@@ -124,7 +124,7 @@ export default {
                 }
                 columns.push(column);
             });
-            //if(!me.columns)
+            if(!me.columns)
             me.columns=columns;
         }
         //se altera el virtual don of each row deleting v-filters
@@ -147,6 +147,7 @@ export default {
         };
         console.log('render');
         var ct=compiledTemplate.render.call(this, createElement);
+        console.log(ct);
         //Se agregan los filtros a las columnas
         me.columns.forEach(e=>{if(e.filter)ct.children[ct.children.length-1].children.push(e.filter)});
         ;
