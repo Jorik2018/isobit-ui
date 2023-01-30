@@ -331,11 +331,11 @@ _ = Object.assign(_, {
           //await 
 		  //load info to store
 		  var stores=_.stores;
-		  console.log(stores);
-		  console.log(store);
+		
 			var e=_.stores.filter(e=>e[0]==store);
-			console.log(e);
+			
 			var data=await axios.get(e[2]);
+			console.log(e[0]);
 			var objectStore = _.db
 				.transaction([e[0]], "readwrite")
 				.objectStore(e[0]);
