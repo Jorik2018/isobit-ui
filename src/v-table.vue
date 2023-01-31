@@ -107,6 +107,7 @@ export default {
         var children=def({row:{}});
         if(children){
             //me.columns=[];
+            console.log(children);
             children.forEach((e,i)=>{
                 var column=e.data.attrs;
                 if(e.children){
