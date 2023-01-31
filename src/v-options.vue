@@ -164,8 +164,7 @@ export default {
             );
           } catch (e) {
             console.log("Error trying to filter ", ittt);
-            console.log(ittt);
-            console.log(storedList);
+            console.error(e);
           }
           //console.log("data filtrada");
         } else {
