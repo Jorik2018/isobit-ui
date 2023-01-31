@@ -99,12 +99,12 @@ export default {
             remoteLoaded:null,
             loaded:false,
             sortOrders: sortOrders,
-            rowStyleClassFunc:null,
-            originalDef:null
+            rowStyleClassFunc:null
         };
     },
     render(createElement) {
         var me=this,columns=[];
+
         if(!me.def)me.def=me.$scopedSlots.default;
         var children=me.def({row:{}});
         if(children){
@@ -153,7 +153,7 @@ export default {
         var ct=compiledTemplate.render.call(this, createElement);
         console.log(ct.children);
         //Se agregan los filtros a las columnas
-        me.columns.forEach(e=>{if(e.filter)ct.children[ct.children.length-1].children.push(e.filter)});
+        me.co.forEach(e=>{if(e.filter)ct.children[ct.children.length-1].children.push(e.filter)});
         ;
         return ct;
     },
