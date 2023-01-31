@@ -99,12 +99,14 @@ export default {
             remoteLoaded:null,
             loaded:false,
             sortOrders: sortOrders,
-            rowStyleClassFunc:null
+            rowStyleClassFunc:null,
+            originalDef:null
         };
     },
     render(createElement) {
-        var me=this,columns=[],def=me.$scopedSlots.default;
-        var children=def({row:{}});
+        var me=this,columns=[];
+        if(!me.def)me.def=me.$scopedSlots.default;
+        var children=me.def({row:{}});
         if(children){
             //me.columns=[];
             console.log(children);
@@ -132,7 +134,7 @@ export default {
         }
         //se altera el virtual don of each row deleting v-filters
         me.$scopedSlots.default=function(r,r2,r3){
-            let item=def(r,r2,r3);
+            let item=me.def(r,r2,r3);
             item.forEach((e,i)=>{
                 delete e.data.attrs.header;
                 delete e.data.attrs.width;
