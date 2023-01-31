@@ -126,6 +126,7 @@ export default {
             });
             if(!me.columns)
             me.columns=columns;
+            console.log(columns);
         }
         //se altera el virtual don of each row deleting v-filters
         me.$scopedSlots.default=function(r,r2,r3){
@@ -147,7 +148,7 @@ export default {
         };
         console.log('render');
         var ct=compiledTemplate.render.call(this, createElement);
-        console.log(ct);
+        console.log(ct.children);
         //Se agregan los filtros a las columnas
         me.columns.forEach(e=>{if(e.filter)ct.children[ct.children.length-1].children.push(e.filter)});
         ;
