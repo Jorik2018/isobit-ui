@@ -109,12 +109,10 @@ export default {
         var children=me.def({row:{}});
         if(children){
             //me.columns=[];
-            console.log(children);
             children.forEach((e,i)=>{
                 var column=e.data.attrs;
                 if(e.children){
                     e.children.filter((e)=>e.tag=='v-filter').forEach((e2)=>{
-                        console.log(e2);
                         column.filter=e2;
                         me.hasFilters=1;
 //console.log(createElement('div',column.filter));
@@ -131,6 +129,7 @@ export default {
             if(!me.columns)
             me.columns=columns;
             console.log(columns);
+            me.co=columns;
         }
         //se altera el virtual don of each row deleting v-filters
         me.$scopedSlots.default=function(r,r2,r3){
@@ -207,7 +206,7 @@ export default {
     },
     mounted() {
         var me=this;
-        //console.log('mounted');
+        console.log('mounted');
         //me.columns.forEach(e=>{console.log(e.filter)});
         //console.log(me.$el.querySelectorAll('.v-datatable-scrollable-header-box > th'));
         var h=me.$el.style?me.$el.style.height:null;
@@ -280,10 +279,12 @@ export default {
             me.resize(parseInt(me.$el.style.height));
             me.resizeAfterUpddate=0;
         }
+
         me.paginatio_=me.pagination?me.pagination:0;
         var t = me.$el.querySelectorAll(".v-table");
         var p = me.$el.querySelectorAll(".v-datatable-scrollable-header-box")[0];
         if (p) {      
+            console.log(me.co);
             var clonedHeader = me.$el.querySelectorAll(".v-cloned-header");
             if (clonedHeader.length === 0) {
                 clonedHeader = document.createElement("table");
