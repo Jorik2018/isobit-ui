@@ -128,7 +128,7 @@ export default {
             });
             if(!me.columns)
             me.columns=columns;
-            console.log(columns);
+            //console.log(columns);
             me.co=columns;
         }
         //se altera el virtual don of each row deleting v-filters
@@ -149,9 +149,9 @@ export default {
             });
             return item;
         };
-        console.log('render');
+        //console.log('render');
         var ct=compiledTemplate.render.call(this, createElement);
-        console.log(ct.children);
+        //console.log(ct.children);
         //Se agregan los filtros a las columnas
         me.co.forEach(e=>{if(e.filter)ct.children[ct.children.length-1].children.push(e.filter)});
         ;
@@ -206,7 +206,7 @@ export default {
     },
     mounted() {
         var me=this;
-        console.log('mounted');
+        //console.log('mounted');
         //me.columns.forEach(e=>{console.log(e.filter)});
         //console.log(me.$el.querySelectorAll('.v-datatable-scrollable-header-box > th'));
         var h=me.$el.style?me.$el.style.height:null;
@@ -284,7 +284,7 @@ export default {
         var t = me.$el.querySelectorAll(".v-table");
         var p = me.$el.querySelectorAll(".v-datatable-scrollable-header-box")[0];
         if (p) {      
-            console.log(me.co);
+            //console.log(me.co);
             var clonedHeader = me.$el.querySelectorAll(".v-cloned-header");
             if (clonedHeader.length === 0) {
                 clonedHeader = document.createElement("table");
@@ -612,7 +612,7 @@ export default {
                 }else{
                     me.data=[];
                     var result=me.loadStore();
-                    if(result.then)result.then(result=>{console.log(me.data=result)});
+                    if(result.then)result.then(result=>{me.data=result});
                     me.$emit('row-select', {target:me});
                 }
             }else{
