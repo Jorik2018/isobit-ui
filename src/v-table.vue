@@ -111,6 +111,7 @@ export default {
                 var column=e.data.attrs;
                 if(e.children){
                     e.children.filter((e)=>e.tag=='v-filter').forEach((e2)=>{
+                        console.log(e2);
                         column.filter=e2;
                         me.hasFilters=1;
 //console.log(createElement('div',column.filter));
