@@ -394,7 +394,7 @@ export default {
                 //.v-widget-header
                 p.parentElement.style.height = p.style.height;
 
-                console.log(p.parentElement.nextSibling);
+                console.log(p.parentElement.nextElementSibling);
 
                 originalHeader.className='v-head-cloned';
             }
