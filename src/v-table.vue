@@ -1,53 +1,52 @@
 <script>
 import Vue from 'vue'
 const template = `
-	<div v-bind:class={reflow:reflow} :key="'v-table-'+keyBody" 
-    :style={width:width}
+	<div :class={reflow:reflow} :key="'v-table-'+keyBody" :style={width:width}
     class="v-datatable v-resize">
     <template v-if="active">
 		<div v-if="hasSlot('header')" class="v-datatable-header v-widget-header ui-corner-top"><slot name="header"></slot>
 		</div>
 		<div v-if="pagination" class="v-paginator v-paginator-top v-widget-header v-paginator-pages center">
 		
-		<v-button value="|<" v-bind:disabled="page<=1" v-on:click.prevent="to(1)"/><v-button value="<" v-on:click.prevent="to(page-1)" v-bind:disabled="page<=1"/><div style="padding:3px 8px;display:inline-block">
-		<input type="number" v-on:change="to(page,true)" style="width:60px" min="1" v-bind:max="pages" v-model="page"/> / {{pages}}</div>
-		<v-button value=">" v-on:click.prevent="to(page+1)" v-bind:disabled="page==pages"/><v-button v-on:click.prevent="to(pages)" value=">|" v-bind:disabled="page==pages"/>
+		<v-button value="|<" :disabled="page<=1" v-on:click.prevent="to(1)"/><v-button value="<" v-on:click.prevent="to(page-1)" :disabled="page<=1"/><div style="padding:3px 8px;display:inline-block">
+		<input type="number" v-on:change="to(page,true)" style="width:60px" min="1" :max="pages" v-model="page"/> / {{pages}}</div>
+		<v-button value=">" v-on:click.prevent="to(page+1)" :disabled="page==pages"/><v-button v-on:click.prevent="to(pages)" value=">|" :disabled="page==pages"/>
 			</div>
 		<div v-if="scrollable0" class="v-widget-header v-datatable-scrollable-header" style="position:relative">
 		<div class="v-datatable-scrollable-header-box" style=""></div></div>
-		<div v-bind:class="{'v-datatable-scrollable-body':scrollable0}">
-		<table class="v-table" v-bind:style="{width:width}" v-if="columns">
+		<div :class="{'v-datatable-scrollable-body':scrollable0}">
+		<table class="v-table" :style="{width:width}" v-if="columns">
 			<thead>
             <tr>
-                <th v-if="selectable0" v-bind:width="getCheckColumnWidth" >
-                    <span class="v-check" v-on:click="rowSelect(null,-10)" v-bind:data-icon="selected.length?'square-check':'square'">
-                        <i class="fa fa-lg" v-bind:class="selected.length?'fa-square-check':'fa-square'"></i>
+                <th v-if="selectable0" :width="getCheckColumnWidth" >
+                    <span class="v-check" v-on:click="rowSelect(null,-10)" :data-icon="selected.length?'square-check':'square'">
+                        <i class="fa fa-lg" :class="selected.length?'fa-square-check':'fa-square'"></i>
                     </span>
                 </th>
-                <th v-bind:class="k['h-class']" v-for="k in columns" v-bind:width="k.width" v-on:click="sortBy(k)">
+                <th :class="k['h-class']" v-for="k in columns" :width="k.width" v-on:click="sortBy(k)">
                     <div v-html="k.header"></div>
                 </th>
 			</tr>
             </thead>
-			<tbody class="v-datatable-data" v-bind:key="kc">
+			<tbody class="v-datatable-data" :key="kc">
 				<tr v-for="(entry,r) in sortedData" @row="rowCreated(entry)" @click="_selectRow($event,entry,r)" 
-                v-bind:class="getRowClass(r,entry)">
+                :class="getRowClass(r,entry)">
 					<td v-if="selectable0" width="18" class="center">
-						<span v-bind:data-index="r" class="v-check" v-on:click="rowSelect(entry,r)"
-						v-bind:data-icon="isSelected(r)?'square-check':'square'"><i class="far fa-lg" v-bind:class="isSelected(r)?'fa-square-check':'fa-square'" ></i></span>
+						<span :data-index="r" class="v-check" v-on:click="rowSelect(entry,r)"
+						:data-icon="isSelected(r)?'square-check':'square'"><i class="far fa-lg" :class="isSelected(r)?'fa-square-check':'fa-square'" ></i></span>
 					</td>
-					<slot v-bind:row="entry" v-bind:index="r+(page-1)*paginatio_"></slot>
+					<slot :row="entry" :index="r+(page-1)*paginatio_"></slot>
 				</tr>
 				<tr v-if="!sortedData||sortedData.length==0">
-					<td v-bind:colspan="columns.length+(selectable0?1:0)">{{emptyMessage}}</td>
+					<td :colspan="columns.length+(selectable0?1:0)">{{emptyMessage}}</td>
 				</tr>
 			</tbody>
 		</table>
 		</div>
-		<div v-if="summary||hasSlot('summary')" class="v-table-summary" v-bind:class="{'v-datatable-scrollable-body':scrollable}">
+		<div v-if="summary||hasSlot('summary')" class="v-table-summary" :class="{'v-datatable-scrollable-body':scrollable}">
 			<table class="v-table v-table-summary"><tr>
-			<td v-if="selectable0" v-bind:width="getCheckColumnWidth" ></td>
-			<slot name="summary" v-bind:data="sortedData"></slot>
+			<td v-if="selectable0" :width="getCheckColumnWidth" ></td>
+			<slot name="summary" :data="sortedData"></slot>
 			</tr></table>
 		</div>
 		<div class="hide filters"><slot name="filters"></slot><slot name="columns"></slot></div></template></div>
@@ -437,6 +436,7 @@ export default {
         resize(h){
             var el=this.$el;
             setTimeout(() => {
+                h=el.style.maxHeight?Math.min(parseInt(el.style.maxHeight,10),h):h;
                 var e=el.querySelector(".v-datatable-header");
                 if(e)h-=e.offsetHeight;
                 e=el.querySelector(".v-paginator");
