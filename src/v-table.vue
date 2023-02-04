@@ -245,7 +245,7 @@ export default {
         if(h){
             me.resize(parseInt(h));
         }else{
-            me.resize(me.$el.offsetHeight);
+           // me.resize(me.$el.offsetHeight);
         }
         //console.log('mointed');
     },
@@ -394,7 +394,8 @@ export default {
                 //.v-widget-header
                 p.parentElement.style.height = p.style.height;
 
-                console.log(p.parentElement.nextElementSibling);
+                if(me.$el.style.maxHeight)
+                p.parentElement.nextElementSibling.style.maxHeight=(parseInt(me.$el.style.maxHeight)-maxLabelHeight)+'px';
 
                 originalHeader.className='v-head-cloned';
             }
@@ -442,7 +443,7 @@ export default {
         resize(h){
             var el=this.$el;
             setTimeout(() => {
-                h=el.style.maxHeight?Math.min(parseInt(el.style.maxHeight,10),h):h;
+                //h=el.style.maxHeight?Math.min(parseInt(el.style.maxHeight,10),h):h;
                 var e=el.querySelector(".v-datatable-header");
                 if(e)h-=e.offsetHeight;
                 e=el.querySelector(".v-paginator");
