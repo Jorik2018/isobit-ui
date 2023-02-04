@@ -437,10 +437,8 @@ export default {
             var el=this.$el;
             setTimeout(() => {
                 h=el.style.maxHeight?Math.min(parseInt(el.style.maxHeight,10),h):h;
-console.log('h==='+h);
                 var e=el.querySelector(".v-datatable-header");
                 if(e)h-=e.offsetHeight;
-
                 e=el.querySelector(".v-paginator");
                 if(e)h-=e.offsetHeight;
                 e=el.querySelector(".v-datatable-scrollable-header");
