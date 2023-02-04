@@ -208,7 +208,7 @@ export default {
         //console.log('mounted');
         //me.columns.forEach(e=>{console.log(e.filter)});
         //console.log(me.$el.querySelectorAll('.v-datatable-scrollable-header-box > th'));
-        var h=me.$el.style?(me.$el.style.height||me.$el.style.maxHeight):null;
+        var h=me.$el.style?me.$el.style.height:null;
         if(h){
             me.scrollable0=1;
             //console.log('scroll for '+me.$el.id);
@@ -244,6 +244,8 @@ export default {
         });
         if(h){
             me.resize(parseInt(h));
+        }else{
+            me.resize(me.$el.offsetHeight);
         }
         //console.log('mointed');
     },
