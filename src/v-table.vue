@@ -391,7 +391,11 @@ export default {
                 p.style.position='absolute';
 				//no se para q agrego 37  -------
                 p.style.height = (maxLabelHeight+37-37) + 'px';
+                //.v-widget-header
                 p.parentElement.style.height = p.style.height;
+
+                console.log(p.parentElement.nextSibling);
+
                 originalHeader.className='v-head-cloned';
             }
             //resize();
