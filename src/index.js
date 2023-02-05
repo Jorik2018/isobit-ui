@@ -321,6 +321,44 @@ var f = {
 if (![].contains) Object.defineProperty(Array.prototype, 'contains', f);
 if (!"".contains) Object.defineProperty(String.prototype, 'contains', f);
 _ = Object.assign(_, {
+	initDB(version,stores){
+		var db=window.indexedDB ||
+        window.mozIndexedDB ||
+        window.webkitIndexedDB ||
+        window.msIndexedDB;
+      _.IDBTransaction =
+        window.IDBTransaction ||
+        window.webkitIDBTransaction ||
+        window.msIDBTransaction;
+      _.IDBKeyRange =
+        window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+		if(!db){
+			window.alert(
+				"Your browser doesn't support a stable version of IndexedDB."
+			  );
+		}else{
+			_.indexedDB=db;
+			if (_.indexedDB) {
+				_.stores=stores;
+				var request = window.indexedDB.open("db", 9);
+				request.onerror = ()=> {
+				  alert("error al crear db :/!");
+				};
+				request.onsuccess = function () {
+				  _.db = request.result;
+				};
+				request.onupgradeneeded =  (event) => {
+				  var db = event.target.result;
+				  stores.forEach((e) => {
+					if (!db.objectStoreNames.contains(e[0])) {
+					  db.createObjectStore(e[0], e[1]);
+					}
+				  });
+				};
+			  }
+		}
+		return db;
+	},
 	async getStoredList(store,params) {
 		var loadedStores;
         try{
@@ -1556,17 +1594,22 @@ window.ui = _.ui = function (cfg) {
 				t.load();
 			},
 			async getStoredList(storage, tt) {
-				if (window._.db) {
+				if (_.db) {
 					let p = new Promise((resolve) => {
-						var t = (tt ? window._.db.transaction(storage, tt) : window._.db.transaction(storage)), objectStore = t.objectStore(storage);//,d=[];
+						var t = (tt ? _.db.transaction(storage, tt) : _.db.transaction(storage)), objectStore = t.objectStore(storage);//,d=[];
 						var r = objectStore.getAll();
 						r.onsuccess = function () {
 							resolve(r.result, t);
 						}
 						//t.onerror = event => reject(event.target.error);
 					});
+					try{
 					let result = await p;
 					return result;
+					}catch(e){
+						alert(tt);
+						throw e;
+					}
 				} else {
 					var vvv = localStorage.getItem(storage);
 					try {
@@ -1597,8 +1640,9 @@ window.ui = _.ui = function (cfg) {
 				if (callback) callback();
 			},
 			async setStoredList(store, data) {
-				if (window._.db) {
-					var db = window._.db, objectStore = db.transaction([store], "readwrite").objectStore(store);
+				if (_.db) {
+					try{
+					var db = _.db, objectStore = db.transaction([store], "readwrite").objectStore(store);
 					var objectStoreRequest = objectStore.clear();
 					objectStoreRequest.onsuccess = function () {
 						for (var i in data) {
@@ -1608,6 +1652,10 @@ window.ui = _.ui = function (cfg) {
 							}
 						}
 					};
+					}catch(e){
+						alert(store);
+						throw e;
+					}
 				} else {
 					localStorage.setItem(store, JSON.stringify(data))
 				}
