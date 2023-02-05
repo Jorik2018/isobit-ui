@@ -175,7 +175,7 @@ let resize = function () {
 				if(body.children[0].tagName=='FORM'){
 					body=body.children[0].children[0]
 				}
-				console.log(body);
+				//console.log(body);
 				buildPopupMenu(body);
 			}
 			return;
@@ -1784,19 +1784,25 @@ window.ui = _.ui = function (cfg) {
 								}
 							}
 						}
-						var db = window._.db;
+						var db = _.db;
 						var objectStore = db.transaction([store], "readwrite").objectStore(store);
 						if (!o.id) {
 							o.tmpId = 1 * new Date();
 							o.id = -o.tmpId;
-							//add new item to start to array
-							storedList.unshift(o);
-							objectStore.add(o);
-							me.$emit('stored', o, storedList, objectStore);
-							if (me.app && me.app.toast) me.app.toast('El registro fue grabado exitosamente!');
-							o0.tmpId = o.tmpId;
-							o0.id = o.id;
-							me.close({ success: true, data: o });
+							//add new item to start to array							
+							var objectStoreRequest=objectStore.add(o);
+							objectStoreRequest.onsuccess = () => {
+								storedList.unshift(o);
+								me.$emit('stored', o, storedList, objectStore);
+								if (me.app && me.app.toast) me.app.toast('El registro fue grabado exitosamente!');
+								o0.tmpId = o.tmpId;
+								o0.id = o.id;
+								me.close({ success: true, data: o });
+							};
+							objectStoreRequest.onerror = (e) => {
+								if (me.app && me.app.toast) me.app.toast('Error!');
+								console.log(e);
+							};
 						} else {
 							delete o.synchronized;
 							var item = objectStore.get(o.tmpId);
