@@ -545,9 +545,14 @@ export default {
 				}
 				//t.onerror = event => reject(event.target.error);
 			});
+            try{
 			let result = await p;
 			//console.log(result);
 			return result;
+            }catch(e){
+                alert(store);
+                throw e;
+            }
 		},
         async loadStore(){
             var me=this,store=me.store;
