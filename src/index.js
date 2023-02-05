@@ -1791,7 +1791,9 @@ window.ui = _.ui = function (cfg) {
 							o.id = -o.tmpId;
 							//add new item to start to array							
 							var objectStoreRequest=objectStore.add(o);
-							objectStoreRequest.onsuccess = () => {
+							objectStoreRequest.onsuccess = (e) => {
+								console.log(e);
+								console.log('saved to '+store);
 								storedList.unshift(o);
 								me.$emit('stored', o, storedList, objectStore);
 								if (me.app && me.app.toast) me.app.toast('El registro fue grabado exitosamente!');
