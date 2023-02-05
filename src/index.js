@@ -340,7 +340,7 @@ _ = Object.assign(_, {
 			_.indexedDB=db;
 			if (_.indexedDB) {
 				_.stores=stores;
-				var request = window.indexedDB.open("db", 9);
+				var request = window.indexedDB.open("db", version);
 				request.onerror = ()=> {
 				  alert("error al crear db :/!");
 				};
@@ -1785,7 +1785,8 @@ window.ui = _.ui = function (cfg) {
 							}
 						}
 						var db = _.db;
-						var objectStore = db.transaction([store], "readwrite").objectStore(store);
+						var transaction=db.transaction([store], "readwrite");
+						var objectStore = transaction.objectStore(store);
 						if (!o.id) {
 							o.tmpId = 1 * new Date();
 							o.id = -o.tmpId;

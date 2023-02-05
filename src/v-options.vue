@@ -126,7 +126,7 @@ export default {
     async load(p, nou, clearQueue) {
       var me = this;
       if (!clearQueue) me.queue.push([p, nou]);
-      console.log(me.getParentE().name+'================load');
+      //console.log(me.getParentE().name+'================load');
       
       if (me.queue.length > 1) return;
       var pa = me.$el.parentElement;
