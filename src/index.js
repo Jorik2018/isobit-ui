@@ -1199,7 +1199,7 @@ window.ui = _.ui = function (cfg) {
 				if (dat.tmpId) {
 					me.MsgBox('Esta seguro que desea eliminar los registros temporales seleccionados ?', function (r) {
 						if (r == 0) {
-							var c = 0, db = window._.db;
+							var c = 0, db = _.db;
 							var objectStore = db.transaction([t.store], "readwrite").objectStore(t.store);
 							var ele = [];
 							for (var k = t.selected.length - 1; k >= 0; k--) {
@@ -1210,14 +1210,13 @@ window.ui = _.ui = function (cfg) {
 								t.data.splice(t.selected[k], 1);
 							}
 							if (c) {
-								if (me.app && me.app.toast) me.app.toast(c + ' registros eliminados');
+									if (me.app && me.app.toast) me.app.toast(c + ' registros eliminados');
 								else
 									me.MsgBox(c + ' registros eliminados');
 							}
 							t.rowSelect(null, -1);
 							t.selected = [];
-							console.log('cbb===' + cb);
-							me.$emit('destroyed', ele);
+							me.$emit('destroyed', ele,t.store);
 							if (cb) cb();
 
 						}
