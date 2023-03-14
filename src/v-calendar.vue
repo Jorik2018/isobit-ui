@@ -26,8 +26,10 @@
                 var me = this;
                 var t = me.toDate(v);
                 if(me.max){
-                    if(t&&t.getTime()>=me.toDate(me.max).getTime())
+                    if(t&&t.getTime()>=me.toDate(me.max).getTime()){
                         me.$emit('invalid',t);
+                        t=null;
+                    }
                 }
 
                 if (me.$props.type === 'time') {
