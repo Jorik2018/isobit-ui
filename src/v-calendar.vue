@@ -27,7 +27,7 @@
                 var t = me.toDate(v);
                 if(me.max){
                     if(t&&t.getTime()>=me.toDate(me.max).getTime()){
-                        me.$emit('invalid',t);
+                        me.$emit('invalid',{target:me,value:t});
                         t=null;
                         this.$emit('input', t);
                         return;
