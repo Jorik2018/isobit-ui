@@ -28,11 +28,11 @@ import VPopup from "./v-popup.vue";
 
 window.isMobile = 1;
 if (typeof window._ == 'undefined') window._ = {};
-var _=window._;
-if (!_.instance){
-    _.instance=axios;
+var _ = window._;
+if (!_.instance) {
+	_.instance = axios;
 }
-var instance=_.instance;
+var instance = _.instance;
 Vue.config.ignoredElements = [...Vue.config.ignoredElements || [], ...['v-filter', 'v-footer']];
 Vue.n = (v) => {
 	v = v ? (v == '' ? null : Number('' + v)) : 0;
@@ -66,7 +66,7 @@ if (typeof Object.assign != 'function') {
 }
 let buildPopupMenu = function (parent) {
 	var pid = parent.getAttribute("v--popup");
-	if (!pid){ 
+	if (!pid) {
 		parent.setAttribute("v--popup", pid = _.id());
 		var popup = _.storeFunction[pid];
 
@@ -170,10 +170,10 @@ let resize = function () {
 			p.dispatchEvent(event);
 
 			//pass body panel it must have a form > v-datatable
-			if (p.children[1]){
-				var body=p.children[1];
-				if(body.children[0].tagName=='FORM'){
-					body=body.children[0].children[0]
+			if (p.children[1]) {
+				var body = p.children[1];
+				if (body.children[0].tagName == 'FORM') {
+					body = body.children[0].children[0]
 				}
 				//console.log(body);
 				buildPopupMenu(body);
@@ -184,9 +184,9 @@ let resize = function () {
 			p.style.height = h + 'px';
 			p.style.overflowY = 'auto';
 			h = h - ph.offsetHeight - 0;
-			if (p.classList.contains('ui-panel')){
+			if (p.classList.contains('ui-panel')) {
 				//is v-form
-			}else{
+			} else {
 				p = p.children[0];
 			}
 			var event = new Event("parentResize", { bubbles: true });
@@ -321,58 +321,58 @@ var f = {
 if (![].contains) Object.defineProperty(Array.prototype, 'contains', f);
 if (!"".contains) Object.defineProperty(String.prototype, 'contains', f);
 _ = Object.assign(_, {
-	initDB(version,stores){
-		var db=window.indexedDB ||
-        window.mozIndexedDB ||
-        window.webkitIndexedDB ||
-        window.msIndexedDB;
-      _.IDBTransaction =
-        window.IDBTransaction ||
-        window.webkitIDBTransaction ||
-        window.msIDBTransaction;
-      _.IDBKeyRange =
-        window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
-		if(!db){
+	initDB(version, stores) {
+		var db = window.indexedDB ||
+			window.mozIndexedDB ||
+			window.webkitIndexedDB ||
+			window.msIndexedDB;
+		_.IDBTransaction =
+			window.IDBTransaction ||
+			window.webkitIDBTransaction ||
+			window.msIDBTransaction;
+		_.IDBKeyRange =
+			window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+		if (!db) {
 			window.alert(
 				"Your browser doesn't support a stable version of IndexedDB."
-			  );
-		}else{
-			_.indexedDB=db;
+			);
+		} else {
+			_.indexedDB = db;
 			if (_.indexedDB) {
-				_.stores=stores;
+				_.stores = stores;
 				var request = window.indexedDB.open("db", version);
-				request.onerror = ()=> {
-				  alert("error al crear db :/!");
+				request.onerror = () => {
+					alert("error al crear db :/!");
 				};
 				request.onsuccess = function () {
-				  _.db = request.result;
+					_.db = request.result;
 				};
-				request.onupgradeneeded =  (event) => {
-				  var db = event.target.result;
-				  stores.forEach((e) => {
-					if (!db.objectStoreNames.contains(e[0])) {
-					  db.createObjectStore(e[0], e[1]);
-					}
-				  });
+				request.onupgradeneeded = (event) => {
+					var db = event.target.result;
+					stores.forEach((e) => {
+						if (!db.objectStoreNames.contains(e[0])) {
+							db.createObjectStore(e[0], e[1]);
+						}
+					});
 				};
-			  }
+			}
 		}
 		return db;
 	},
-	async getStoredList(store,params) {
+	async getStoredList(store, params) {
 		var loadedStores;
-        try{
-          loadedStores=JSON.parse(sessionStorage.getItem('loadedStores'));
-        }catch(e){}
-		if(loadedStores==null)loadedStores={};
-        if(!loadedStores[store]&&_.networkStatus.connected){
-          //await 
-		  //load info to store
-		  var stores=_.stores;
-		
-			var e=_.stores.filter(e=>e[0]==store)[0];
-			
-			var data=await axios.get(e[2]);
+		try {
+			loadedStores = JSON.parse(sessionStorage.getItem('loadedStores'));
+		} catch (e) { }
+		if (loadedStores == null) loadedStores = {};
+		if (!loadedStores[store] && _.networkStatus.connected) {
+			//await 
+			//load info to store
+			var stores = _.stores;
+
+			var e = _.stores.filter(e => e[0] == store)[0];
+
+			var data = await axios.get(e[2]);
 			console.log(e[0]);
 			var objectStore = _.db
 				.transaction([e[0]], "readwrite")
@@ -386,9 +386,9 @@ _ = Object.assign(_, {
 					throw exception;
 				}
 			}
-			loadedStores[store]=1;
-			sessionStorage.setItem('loadedStores',JSON.stringify(loadedStores));
-        }
+			loadedStores[store] = 1;
+			sessionStorage.setItem('loadedStores', JSON.stringify(loadedStores));
+		}
 		let p = new Promise((resolve) => {
 			var t = _.db.transaction(store), objectStore = t.objectStore(store);//,d=[];
 			var r = objectStore.getAll();
@@ -554,9 +554,9 @@ _ = Object.assign(_, {
 	},
 	clean(obj) {
 		for (var propName in obj) {
-			if (obj[propName] === '' || obj[propName] === null 
-			|| typeof obj[propName] === 'function'
-			|| obj[propName] === undefined) {
+			if (obj[propName] === '' || obj[propName] === null
+				|| typeof obj[propName] === 'function'
+				|| obj[propName] === undefined) {
 				delete obj[propName];
 			}
 		}
@@ -944,20 +944,20 @@ window.ui = _.ui = function (cfg) {
 				window._.networkStatus.connected = v;
 				this.networkStatus.connected = v;
 			},
-			cleanedFilters(){
-				if(this.$el){
-				if(this.t)clearTimeout(this.t);
-				this.t=setTimeout(()=>{
-				  this.refresh();
-				},1200);
-		  
-			  }
+			cleanedFilters() {
+				if (this.$el) {
+					if (this.t) clearTimeout(this.t);
+					this.t = setTimeout(() => {
+						this.refresh();
+					}, 1200);
+
+				}
 			}
 		},
 		computed: {
-			cleanedFilters(){
-				  return _.clean(this.filters);
-			  },
+			cleanedFilters() {
+				return _.clean(this.filters);
+			},
 			app() {
 				return _.app;
 			},
@@ -982,10 +982,10 @@ window.ui = _.ui = function (cfg) {
 					return _._session;
 				},
 				set(d) {
-					if(!d)
+					if (!d)
 						localStorage.removeItem('session');
 					else
-					localStorage.setItem('session', JSON.stringify(d));
+						localStorage.setItem('session', JSON.stringify(d));
 					_._session = d;
 				}
 			},
@@ -1127,7 +1127,7 @@ window.ui = _.ui = function (cfg) {
 				if (!action)
 					action = window.location.pathname;
 				action = _.processURL(action);
-				if(action)action=action.replace("/api", "");
+				if (action) action = action.replace("/api", "");
 				if (_.app) {
 					me.open(action + '/create');
 				} else {
@@ -1138,21 +1138,21 @@ window.ui = _.ui = function (cfg) {
 			edit(e) {
 				var me = this;
 				var f = me.$children[0];
-				var action =f.action;
-                var t=[].filter.call(e.component.$parent.$children,(e)=>{
-                    return e.$el.classList.contains('v-datatable');
-                })[0];
-                if(t&&t.src)action=t.src.replace("/api", "").replace("api/", "").replace("/0/0", "");
+				var action = f.action;
+				var t = [].filter.call(e.component.$parent.$children, (e) => {
+					return e.$el.classList.contains('v-datatable');
+				})[0];
+				if (t && t.src) action = t.src.replace("/api", "").replace("api/", "").replace("/0/0", "");
 				if (e.action) action = e.action;
-                if(!t)
-				t = e.$vnode ? e : (e.target && e.target.$vnode) ? e : me.$children[0].$children[0];
-				
+				if (!t)
+					t = e.$vnode ? e : (e.target && e.target.$vnode) ? e : me.$children[0].$children[0];
+
 				if (!action && t.src) action = t.src.replace("/api", "").replace("/0/0", "");
-				
+
 				if (!action)
 					action = window.location.pathname;
-				if(action)action=action.replace("/api", "");
-					var selected = me.getSelected(t)[0];
+				if (action) action = action.replace("/api", "");
+				var selected = me.getSelected(t)[0];
 				var id = selected[t.rowKey];
 				if (selected.tmpId) id = -selected.tmpId;
 				console.log(selected);
@@ -1182,16 +1182,16 @@ window.ui = _.ui = function (cfg) {
 				var me = this;
 				var f = me.$children[0];
 				var action = f.action;
-				var t=[].filter.call(e.component.$parent.$children,(e)=>{
-                    return e.$el.classList.contains('v-datatable');
-                })[0];
-				if(!t)
-				t = e.$vnode ? e : me.$children[0].$children[0];
-				
+				var t = [].filter.call(e.component.$parent.$children, (e) => {
+					return e.$el.classList.contains('v-datatable');
+				})[0];
+				if (!t)
+					t = e.$vnode ? e : me.$children[0].$children[0];
+
 				if (!action)
 					action = window.location.pathname;
 				var cb = e.$vnode ? e.load : null;
-				
+
 				var key = t.$attrs.rowkey;
 				if (!key) key = t.rowKey;
 				var dat = t.data[t.selected[0]];
@@ -1210,13 +1210,13 @@ window.ui = _.ui = function (cfg) {
 								t.data.splice(t.selected[k], 1);
 							}
 							if (c) {
-									if (me.app && me.app.toast) me.app.toast(c + ' registros eliminados');
+								if (me.app && me.app.toast) me.app.toast(c + ' registros eliminados');
 								else
 									me.MsgBox(c + ' registros eliminados');
 							}
 							t.rowSelect(null, -1);
 							t.selected = [];
-							me.$emit('destroyed', ele,t.store);
+							me.$emit('destroyed', ele, t.store);
 							if (cb) cb();
 
 						}
@@ -1602,10 +1602,10 @@ window.ui = _.ui = function (cfg) {
 						}
 						//t.onerror = event => reject(event.target.error);
 					});
-					try{
-					let result = await p;
-					return result;
-					}catch(e){
+					try {
+						let result = await p;
+						return result;
+					} catch (e) {
 						alert(tt);
 						throw e;
 					}
@@ -1640,18 +1640,18 @@ window.ui = _.ui = function (cfg) {
 			},
 			async setStoredList(store, data) {
 				if (_.db) {
-					try{
-					var db = _.db, objectStore = db.transaction([store], "readwrite").objectStore(store);
-					var objectStoreRequest = objectStore.clear();
-					objectStoreRequest.onsuccess = function () {
-						for (var i in data) {
-							var request = objectStore.add(data[i]);
-							request.onerror = function (event) {
-								console.log(event);
+					try {
+						var db = _.db, objectStore = db.transaction([store], "readwrite").objectStore(store);
+						var objectStoreRequest = objectStore.clear();
+						objectStoreRequest.onsuccess = function () {
+							for (var i in data) {
+								var request = objectStore.add(data[i]);
+								request.onerror = function (event) {
+									console.log(event);
+								}
 							}
-						}
-					};
-					}catch(e){
+						};
+					} catch (e) {
 						alert(store);
 						throw e;
 					}
@@ -1784,16 +1784,16 @@ window.ui = _.ui = function (cfg) {
 							}
 						}
 						var db = _.db;
-						var transaction=db.transaction([store], "readwrite");
+						var transaction = db.transaction([store], "readwrite");
 						var objectStore = transaction.objectStore(store);
 						if (!o.id) {
 							o.tmpId = 1 * new Date();
 							o.id = -o.tmpId;
 							//add new item to start to array							
-							var objectStoreRequest=objectStore.add(o);
+							var objectStoreRequest = objectStore.add(o);
 							objectStoreRequest.onsuccess = (e) => {
 								console.log(e);
-								console.log('saved to '+store);
+								console.log('saved to ' + store);
 								storedList.unshift(o);
 								me.$emit('stored', o, storedList, objectStore);
 								if (me.app && me.app.toast) me.app.toast('El registro fue grabado exitosamente!');
@@ -2083,7 +2083,7 @@ function configureAxios(a) {
 		_.eeee = config;
 		if (config.mask) {
 			config.mask();
-		} else if (!mask) 
+		} else if (!mask)
 			mask = _.mask();
 		return config;
 	}, function (e) {
