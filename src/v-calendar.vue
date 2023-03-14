@@ -29,6 +29,8 @@
                     if(t&&t.getTime()>=me.toDate(me.max).getTime()){
                         me.$emit('invalid',t);
                         t=null;
+                        this.$emit('input', t);
+                        return;
                     }
                 }
 
