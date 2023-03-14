@@ -20,12 +20,15 @@
                 value2: null
             }
         },
-        template: '<div v-bind:value="toDate(value)" ><input v-bind:required="required" style2="width:calc(100% - 0px)" v-on:change="enterD" v-bind:type="type?type:\'date\'"/></div>',
         methods: {
             enterD() {
                 var v = event.target.value;
                 var me = this;
                 var t = me.toDate(v);
+                if(me.max){
+                    console.log(me.toDate(me.max));
+                }
+
                 if (me.$props.type === 'time') {
                     this.$emit('input', me.pad(t.getHours(), 2) + ':' + me.pad(t.getMinutes(), 2) + ':00');
                 } else {
