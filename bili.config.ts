@@ -11,7 +11,7 @@ const config: Config = {
 		}
 	},
 	output: {
-		format: 'esm',
+		//format: 'esm',
 		fileName:'index.js',
 	  }
 }

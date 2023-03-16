@@ -24,16 +24,25 @@
             enterD() {
                 var v = event.target.value;
                 var me = this;
-                var t = me.toDate(v);
+                var t = me.toDate(v);console.log(t);
                 if(me.max){
                     if(t&&t.getTime()>=me.toDate(me.max).getTime()){
                         me.$emit('invalid',{target:me,value:t});
                         t=null;
-                        this.$emit('input', t);
+                        event.target.value=t;
+                        //this.$emit('input', t);
                         return;
                     }
                 }
-
+                if(me.min){
+                    if(t&&t.getTime()<=me.toDate(me.min).getTime()){
+                        me.$emit('invalid',{target:me,value:t});
+                        t=null;
+                        event.target.value=t;
+                        //this.$emit('input', t);
+                        return;
+                    }
+                }
                 if (me.$props.type === 'time') {
                     this.$emit('input', me.pad(t.getHours(), 2) + ':' + me.pad(t.getMinutes(), 2) + ':00');
                 } else {
@@ -83,7 +92,7 @@
                 var me = this;
                 //console.log(me.value);
                 var d = me.toDate(me.value);
-                //console.log(d);
+                console.log(d);
                 var fd;
                 if (d) {
                     if (me.$props.type === 'time') {

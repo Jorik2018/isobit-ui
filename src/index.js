@@ -369,9 +369,7 @@ _ = Object.assign(_, {
 			//await 
 			//load info to store
 			var stores = _.stores;
-
 			var e = _.stores.filter(e => e[0] == store)[0];
-
 			var data = await axios.get(e[2]);
 			console.log(e[0]);
 			var objectStore = _.db
@@ -390,6 +388,7 @@ _ = Object.assign(_, {
 			sessionStorage.setItem('loadedStores', JSON.stringify(loadedStores));
 		}
 		let p = new Promise((resolve) => {
+			if(!_.db)alert('db=null');
 			var t = _.db.transaction(store), objectStore = t.objectStore(store);//,d=[];
 			var r = objectStore.getAll();
 			r.onsuccess = function () {
@@ -858,8 +857,10 @@ _.MsgBox = function MsgBox(m, cb, b) {
 
 		dialog.parentNode.removeChild(dialog);
 		overlay.parentNode.removeChild(overlay);
-		if (cb) cb(this.getAttribute("index"));
-		//_.RSZ();
+		if (cb){
+			console.log(cb);
+			cb(this.getAttribute("index"));
+		}
 	};
 	for (var i = 0; i < b.length; i++) {
 		var button = document.createElement("button");
