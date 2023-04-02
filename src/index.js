@@ -371,7 +371,7 @@ _ = Object.assign(_, {
 			var stores = _.stores;
 			var e = _.stores.filter(e => e[0] == store)[0];
 			var data = await axios.get(e[2]);
-			console.log(e[0]);
+			
 			var objectStore = _.db
 				.transaction([e[0]], "readwrite")
 				.objectStore(e[0]);
@@ -381,6 +381,8 @@ _ = Object.assign(_, {
 				try {
 					await objectStore.add(data[i]);
 				} catch (exception) {
+					console.log(data[i]));
+					console.log(e[0]);
 					throw exception;
 				}
 			}

@@ -19,7 +19,6 @@
 		"eslint": "eslint",
 		"build": "bili --name index --plugin vue --vue.css false",
 		"patch": "bili & npm version patch & npm publish"
-
 	},
 	"files": [
 		"dist/*"
