@@ -934,6 +934,7 @@ Vue.mergeDeep = function () {
 	return Vue.mergeDeep.apply(null, args);
 	//return mergeDeep(target, ...sources);
 }
+
 window.ui = _.ui = function (cfg) {
 	var defs = {
 		watch: {
@@ -942,8 +943,12 @@ window.ui = _.ui = function (cfg) {
 				this.changeRoute(v);
 			},
 			connected(v) {
-				window._.networkStatus.connected = v;
-				this.networkStatus.connected = v;
+				let me=this;
+				_.networkStatus.connected = v;
+				me.networkStatus.connected = v;
+				let session=me.session;
+				session.connected=me.connected;
+				me.session=session;
 			},
 			cleanedFilters() {
 				if (this.$el) {
