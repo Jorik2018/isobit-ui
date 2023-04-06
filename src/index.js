@@ -338,23 +338,27 @@ _ = Object.assign(_, {
 			);
 		} else {
 			_.indexedDB = db;
-			if (_.indexedDB) {
+			if (db) {
 				_.stores = stores;
-				var request = window.indexedDB.open("db", version);
-				request.onerror = () => {
-					alert("error al crear db :/!");
-				};
-				request.onsuccess = function () {
-					_.db = request.result;
-				};
-				request.onupgradeneeded = (event) => {
-					var db = event.target.result;
-					stores.forEach((e) => {
-						if (!db.objectStoreNames.contains(e[0])) {
-							db.createObjectStore(e[0], e[1]);
-						}
-					});
-				};
+				return new Promise((resolve,reject) => {
+					var request = db.open("db", version);
+					request.onupgradeneeded = (event) => {
+						var db = event.target.result;
+						stores.forEach((e) => {
+							if (!db.objectStoreNames.contains(e[0])) {
+								db.createObjectStore(e[0], e[1]);
+							}
+						});
+					};
+					request.onerror = (e) => {
+						reject(e);
+					};
+					request.onsuccess = () => {
+						_.db = request.result;
+						resolve(_.db);
+					};
+				});
+
 			}
 		}
 		return db;
@@ -370,18 +374,20 @@ _ = Object.assign(_, {
 			//load info to store
 			var stores = _.stores;
 			var e = _.stores.filter(e => e[0] == store)[0];
+			if(!e[2]) throw "store url is empty";
+			
 			var data = await axios.get(e[2]);
 			
 			var objectStore = _.db
 				.transaction([e[0]], "readwrite")
 				.objectStore(e[0]);
-			data = data.data;
+			data = data.data||data;
 			await objectStore.clear();
 			for (var i in data) {
 				try {
 					await objectStore.add(data[i]);
 				} catch (exception) {
-					console.log(data[i]));
+					console.log(data[i]);
 					console.log(e[0]);
 					throw exception;
 				}
@@ -389,13 +395,14 @@ _ = Object.assign(_, {
 			loadedStores[store] = 1;
 			sessionStorage.setItem('loadedStores', JSON.stringify(loadedStores));
 		}
-		let p = new Promise((resolve) => {
-			if(!_.db)alert('db=null');
-			var t = _.db.transaction(store), objectStore = t.objectStore(store);//,d=[];
-			var r = objectStore.getAll();
-			r.onsuccess = function () {
-				resolve(r.result);
-			}
+		let p = new Promise((resolve,rejected) => {
+			if(_.db){
+				var t = _.db.transaction(store), objectStore = t.objectStore(store);//,d=[];
+				var r = objectStore.getAll();
+				r.onsuccess = function () {
+					resolve(r.result);
+				}
+			}else rejected('db is null');
 			//t.onerror = event => reject(event.target.error);
 		});
 		let result = await p;
@@ -1601,28 +1608,20 @@ window.ui = _.ui = function (cfg) {
 				t.load();
 			},
 			async getStoredList(storage, tt) {
-				if (_.db) {
-					let p = new Promise((resolve) => {
-						var t = (tt ? _.db.transaction(storage, tt) : _.db.transaction(storage)), objectStore = t.objectStore(storage);//,d=[];
-						var r = objectStore.getAll();
-						r.onsuccess = function () {
-							resolve(r.result, t);
-						}
-						//t.onerror = event => reject(event.target.error);
-					});
-					try {
-						let result = await p;
-						return result;
-					} catch (e) {
-						alert(tt);
-						throw e;
+				let p = new Promise((resolve) => {
+					var t = (tt ? _.db.transaction(storage, tt) : _.db.transaction(storage)), objectStore = t.objectStore(storage);//,d=[];
+					var r = objectStore.getAll();
+					r.onsuccess = function () {
+						resolve(r.result, t);
 					}
-				} else {
-					var vvv = localStorage.getItem(storage);
-					try {
-						if (vvv) vvv = JSON.parse(vvv);
-					} catch (e) { me.MsgBox(e); vvv = null }
-					return vvv;
+					//t.onerror = event => reject(event.target.error);
+				});
+				try {
+					let result = await p;
+					return result;
+				} catch (e) {
+					alert(tt);
+					throw e;
 				}
 			},
 			removeStored(storage) {
@@ -1651,10 +1650,11 @@ window.ui = _.ui = function (cfg) {
 					try {
 						var db = _.db, objectStore = db.transaction([store], "readwrite").objectStore(store);
 						var objectStoreRequest = objectStore.clear();
-						objectStoreRequest.onsuccess = function () {
+						objectStoreRequest.onsuccess = ()=> {
 							for (var i in data) {
+								console.log(data[i]);
 								var request = objectStore.add(data[i]);
-								request.onerror = function (event) {
+								request.onerror = (event)=> {
 									console.log(event);
 								}
 							}
