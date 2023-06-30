@@ -1136,6 +1136,7 @@ window.ui = _.ui = function (cfg) {
 				var t = me.$children[0].$children[0];
 				return t ? t.selected.length : 0;
 			},
+			override(url){return url;},
 			create() {
 				var me = this;
 				var action = me.$children[0].action;
@@ -1151,22 +1152,25 @@ window.ui = _.ui = function (cfg) {
 				}
 			},
 			edit(e) {
+				
 				var me = this;
 				var f = me.$children[0];
 				var action = f.action;
 				var t = [].filter.call(e.component.$parent.$children, (e) => {
 					return e.$el.classList.contains('v-datatable');
 				})[0];
-				if (t && t.src) action = t.src.replace("/api", "").replace("api/", "").replace("/0/0", "");
-				if (e.action) action = e.action;
-				if (!t)
-					t = e.$vnode ? e : (e.target && e.target.$vnode) ? e : me.$children[0].$children[0];
-
-				if (!action && t.src) action = t.src.replace("/api", "").replace("/0/0", "");
-
-				if (!action)
+				if(!action){
 					action = window.location.pathname;
-				if (action) action = action.replace("/api", "");
+				}
+				if (t && t.src) action = t.src;
+				if (e.action) action = e.action;
+				if (!t){
+					t = e.$vnode ? e : (e.target && e.target.$vnode) ? e : me.$children[0].$children[0];
+					if(t.src)
+						action = t.src;
+				}
+
+				if (action) action = me.override(action.replace("/api", "").replace("/0/0", ""));
 				var selected = me.getSelected(t)[0];
 				var id = selected[t.rowKey];
 				if (selected.tmpId) id = -selected.tmpId;
