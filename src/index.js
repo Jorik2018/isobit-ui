@@ -322,7 +322,7 @@ if (![].contains) Object.defineProperty(Array.prototype, 'contains', f);
 if (!"".contains) Object.defineProperty(String.prototype, 'contains', f);
 _ = Object.assign(_, {
 	initDB(version, stores) {
-		var db = window.indexedDB ||
+		let db = window.indexedDB ||
 			window.mozIndexedDB ||
 			window.webkitIndexedDB ||
 			window.msIndexedDB;
@@ -341,9 +341,9 @@ _ = Object.assign(_, {
 			if (db) {
 				_.stores = stores;
 				return new Promise((resolve,reject) => {
-					var request = db.open("db", version);
+					let request = db.open("db", version);
 					request.onupgradeneeded = (event) => {
-						var db = event.target.result;
+						let db = event.target.result;
 						stores.forEach((e) => {
 							if (!db.objectStoreNames.contains(e[0])) {
 								db.createObjectStore(e[0], e[1]);
@@ -362,52 +362,6 @@ _ = Object.assign(_, {
 			}
 		}
 		return db;
-	},
-	async getStoredList(store, params) {
-		var loadedStores;
-		try {
-			loadedStores = JSON.parse(sessionStorage.getItem('loadedStores'));
-		} catch (e) { }
-		if (loadedStores == null) loadedStores = {};
-		if (!loadedStores[store] && _.networkStatus.connected) {
-			//await 
-			//load info to store
-			var stores = _.stores;
-			var e = _.stores.filter(e => e[0] == store)[0];
-			if(!e[2]) throw "store url is empty";
-			
-			var data = await axios.get(e[2]);
-			
-			var objectStore = _.db
-				.transaction([e[0]], "readwrite")
-				.objectStore(e[0]);
-			data = data.data||data;
-			await objectStore.clear();
-			for (var i in data) {
-				try {
-					await objectStore.add(data[i]);
-				} catch (exception) {
-					console.log(data[i]);
-					console.log(e[0]);
-					throw exception;
-				}
-			}
-			loadedStores[store] = 1;
-			sessionStorage.setItem('loadedStores', JSON.stringify(loadedStores));
-		}
-		let p = new Promise((resolve,rejected) => {
-			if(_.db){
-				var t = _.db.transaction(store), objectStore = t.objectStore(store);//,d=[];
-				var r = objectStore.getAll();
-				r.onsuccess = function () {
-					resolve(r.result);
-				}
-			}else rejected('db is null');
-			//t.onerror = event => reject(event.target.error);
-		});
-		let result = await p;
-		//console.log(result);
-		return result;
 	},
 	remoteServer: '',
 	_id: 0,
@@ -1136,7 +1090,7 @@ window.ui = _.ui = function (cfg) {
 				var t = me.$children[0].$children[0];
 				return t ? t.selected.length : 0;
 			},
-			override(url){return url;},
+			rewrite(url){return url;},
 			create() {
 				var me = this;
 				var action = me.$children[0].action;
@@ -1152,7 +1106,6 @@ window.ui = _.ui = function (cfg) {
 				}
 			},
 			edit(e) {
-				
 				var me = this;
 				var f = me.$children[0];
 				var action = f.action;
@@ -1170,7 +1123,7 @@ window.ui = _.ui = function (cfg) {
 						action = t.src;
 				}
 
-				if (action) action = me.override(action.replace("/api", "").replace("/0/0", ""));
+				if (action) action = me.rewrite(action.replace("/api", "").replace("/0/0", ""));
 				var selected = me.getSelected(t)[0];
 				var id = selected[t.rowKey];
 				if (selected.tmpId) id = -selected.tmpId;
@@ -1611,23 +1564,6 @@ window.ui = _.ui = function (cfg) {
 				var t = me.$children[0].$children[0];
 				t.load();
 			},
-			async getStoredList(storage, tt) {
-				let p = new Promise((resolve) => {
-					var t = (tt ? _.db.transaction(storage, tt) : _.db.transaction(storage)), objectStore = t.objectStore(storage);//,d=[];
-					var r = objectStore.getAll();
-					r.onsuccess = function () {
-						resolve(r.result, t);
-					}
-					//t.onerror = event => reject(event.target.error);
-				});
-				try {
-					let result = await p;
-					return result;
-				} catch (e) {
-					alert(tt);
-					throw e;
-				}
-			},
 			removeStored(storage) {
 				if (window.idb) {
 					var me = this, db = window._.db, objectStore = db.transaction([storage], "readwrite").objectStore(storage);
@@ -1670,6 +1606,47 @@ window.ui = _.ui = function (cfg) {
 				} else {
 					localStorage.setItem(store, JSON.stringify(data))
 				}
+			},
+			async getStoredList(store, params) {
+				let loadedStores;
+				try {
+					loadedStores = JSON.parse(sessionStorage.getItem('loadedStores'));
+				} catch (e) { }
+				if (loadedStores == null) loadedStores = {};
+				//console.log(loadedStores);
+				if (!loadedStores[store] && _.networkStatus.connected) {
+					let e = _.stores.filter(e => e[0] == store)[0];
+					//console.log(e);
+					if(!e[2]) throw "store url is empty";
+					let data = await axios.get(e[2]);
+					let objectStore = _.db.transaction([e[0]], "readwrite").objectStore(e[0]);
+					await objectStore.clear();
+					data = data.data||data;
+					for (var i in data) {
+						try {
+							await objectStore.add(data[i]);
+						} catch (exception) {
+							//console.log(data[i]);
+							//console.log(e[0]);
+							throw exception;
+						}
+					}
+					loadedStores[store] = 1;
+					sessionStorage.setItem('loadedStores', JSON.stringify(loadedStores));
+				}
+				let p = new Promise((resolve,rejected) => {
+					if(_.db){
+						var t = _.db.transaction(store), objectStore = t.objectStore(store);//,d=[];
+						var r = objectStore.getAll();
+						r.onsuccess = function () {
+							resolve(r.result);
+						}
+					}else rejected('db is null');
+					//t.onerror = event => reject(event.target.error);
+				});
+				let result = await p;
+				//console.log(result);
+				return result;
 			},
 			getStoreObject(storage, id) {
 				var db = window._.db, objectStore = db.transaction([storage], "readwrite").objectStore(storage);
@@ -1716,9 +1693,9 @@ window.ui = _.ui = function (cfg) {
 				//se envia solo los selccionados
 				if (sel2.length > 0) {
 					axios.post(action + '/bulk' + (e.sufix ? e.sufix : ''), sel3).then(function (r) {
-						var d = r.data;
-						console.log(d);
-						for (var k = 0; k < d.length; k++) {
+						let d = r.data;
+						//console.log(d);
+						for (let k = 0; k < d.length; k++) {
 							if (d[k].errors) { me.MsgBox(JSON.stringify(d[k].errors)); break; }
 							if (d[k].error) { me.MsgBox(d[k].error); break; }
 							for (var j = 0; j < dats.length; j++) {
@@ -1783,9 +1760,9 @@ window.ui = _.ui = function (cfg) {
 					if (!(typeof o === 'object'
 						&& !Array.isArray(o) && o !== null)) return;
 					if (!action || !me.app.networkStatus.connected) {
-						var store = me.$children[0].store;
+						let store = me.$children[0].store;
 						if (!store) { me.MsgBox('Store in form is undefined!'); return; }
-						var storedList = await me.getStoredList(store);
+						let storedList = await me.getStoredList(store);
 						if (!storedList) storedList = [];
 						if (o.id) {
 							for (var k = 0; k < storedList.length; k++) {

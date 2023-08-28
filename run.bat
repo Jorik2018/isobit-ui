@@ -1,0 +1,1 @@
+nodist global 15.14.0 & node dist/index.js

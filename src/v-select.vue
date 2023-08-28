@@ -7,6 +7,7 @@
       @change="onChange($event.target.value)"
       v-bind:required="required"
       v-bind:disabled="disabled"
+      v-bind:click="expand"
     >
       <slot></slot>
     </select>
@@ -68,8 +69,8 @@ export default {
     me.autoload_ = !(me.autoload + "" == "false" || me.autoload * 1 == 0);
   },
   mounted() {
-    this.lll();
-    this.uu();
+    this.internalLoad();
+    this.updateSelect();
   },
   watch: {
     //value: function(newVal/*, oldVal*/) {console.log('newv='+newVal)},
@@ -84,11 +85,11 @@ export default {
       }
     },
     readonly(newVal) {
-      var ll = this.lastLoad,
+      let ll = this.lastLoad,
         me = this;
       if (!newVal && ll) {
         this.$el.disabled = false;
-        setTimeout(function () {
+        setTimeout(() => {
           me.load(ll[0], ll[1]);
         }, 50);
       }
@@ -111,10 +112,11 @@ export default {
     },
   },
   updated() {
-    this.uu();
+    this.updateSelect();
   },
   methods: {
-    uu() {
+    expand(){console.log('click')},
+    updateSelect() {
       var me = this;
       var v = me.$attrs.value;
       //console.log(typeof v);
@@ -186,29 +188,31 @@ export default {
         });
       }
     },
-    lll() {
+    internalLoad() {
       var me = this;
       me.autoload_ = !(me.autoload + "" == "false" || me.autoload * 1 == 0);
-      var v = me.$attrs.value;
-
+      let v = me.$attrs.value;
       if (v != null && v.target) v = v.value;
       //console.log(v);
       var select = me.$el.childNodes[0];
       if (!v || v === "") {
         select.selectedIndex = 0;
       }
-      var v = me.$attrs.value;
-      for (var k = 0; k < select.length; k++) {
+      v = me.$attrs.value;
+      for (let k = 0; k < select.length; k++) {
         if (select[k].value == v) {
           select.selectedIndex = k;
         }
       }
-      if (this.autoload_) this.load();
+      //console.log('me.autoload_='+me.autoload_);
+      if (me.autoload_){
+        me.load();
+      }
       me.$emit("mounted", me);
       me.$on("changed", function (m) {
-        var op = m.querySelectorAll("option"),
+        let op = m.querySelectorAll("option"),
           d = [];
-        for (var j = 0; op.length > j; j++) {
+        for (let j = 0; op.length > j; j++) {
           d.push({ value: op[j].value, label: op[j].textContent });
         }
         me.data = d;
@@ -216,10 +220,12 @@ export default {
       });
     },
     load(a, b) {
-      var me = this;
-      for (var i = 0; i < me.$children.length; i++) {
-        if (me.$children[i].load) me.$children[i].load(a, b);
-      }
+      let me = this;
+      me.$children.forEach(child => {
+        if (child.load) {
+          child.load(a, b);
+        }
+      });
       if (!me.disabled && !me.readonly) {
         //console.log(this.$el.name+' loading with value='+me.$attrs.value);
 

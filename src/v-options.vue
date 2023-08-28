@@ -27,7 +27,7 @@ export default {
     data(/*nv,ov*/) {
       // if (this.$parent.$el && this.$parent.$el.id)
       // console.log("data changed " + this.$parent.$el.id);
-      this.$parent.uu();
+      this.$parent.updateSelect();
     },
   },
   data() {
@@ -58,22 +58,22 @@ export default {
     if (me.data) me.data2 = me.data;
   },
   updated() {
-    var me = this;
+    let me = this;
     if (!me.loaded && me.data) {
       me.data2 = me.data;
     }
-    var p = me.$el.parentElement;
+    let p = me.$el.parentElement;
 
     while (me.$el.childNodes.length > 0) {
       p.appendChild(me.$el.childNodes[0]);
     }
     me.$parent.$emit("changed", p);
-    me.$parent.uu();
+    me.$parent.updateSelect();
   },
   mounted() {
     var me = this;
     if (me.valueField) me.valueField_ = me.valueField.split(".");
-    if (me.$parent) me.$parent.uu();
+    if (me.$parent) me.$parent.updateSelect();
   },
   methods: {
     getParentE() {
@@ -124,15 +124,17 @@ export default {
       return me.filterList[p.selectedIndex - 1];
     },
     async load(p, nou, clearQueue) {
-      var me = this;
+      let me = this;
       if (!clearQueue) me.queue.push([p, nou]);
       if (me.queue.length > 1) return;
-      var pa = me.$el.parentElement;
+      let pa = me.$el.parentElement;
       me.data2 = me.data;
       if (!me.data2) me.data2 = [];
       if (me.store) {
+        console.log(me);
         //console.log(JSON.stringify(me.data2));
-        var storedList = await _.getStoredList(me.store,p);
+        
+        let storedList = await me.$root.$children[0].getStoredList(me.store,p);
 
         // if(this.getParentE().name){
         // console.log(this.$el.parentElement.parentElement);

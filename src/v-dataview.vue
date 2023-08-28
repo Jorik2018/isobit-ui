@@ -84,9 +84,9 @@ export default {
 			return result;
 		},
         async loadStore(){
-            var me=this,store=me.store;
+            let me=this,store=me.store;
             if(store!=null){
-                var datj;
+                let datj;
 				if(window._.db)datj=await me.getStoredList(store);
 				if(!datj)datj=[];
                 me.data = me.data?datj.concat(me.data):datj;
