@@ -920,7 +920,7 @@ window.ui = _.ui = function (cfg) {
 			connected:{
 				get() {
 					console.log(this);
-					if(this._connected){
+					if(this._connected===null){
 						this._connected = this.session.connected;
 					}
 					return this.online&&this._connected!==false;
