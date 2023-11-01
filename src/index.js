@@ -170,7 +170,7 @@ let resize = function () {
 			p.dispatchEvent(event);
 if(p.children[0]){
 	h = h - p.children[0].offsetHeight;
-			p.style.height = h + 'px';
+	p.children[1].style.height = h + 'px';
 }
 			//pass body panel it must have a form > v-datatable
 			if (p.children[1]) {
