@@ -16,6 +16,7 @@ export default {
       this.setTitle(v);
     },
   },
+  data(){return {timer:null}},
   methods: {
     setTitle(v) {
       var me = this,app=me.$parent.app;
@@ -37,10 +38,11 @@ export default {
         h = e.height;
       el.style.height = h + "px";
       //si tiene header
-     // clearTimeout(resizeTimer);
+      if(me.timer)
+      clearTimeout(me.timer);
 
 // Set a new timer to run the function 'handleResize' after a specific delay (e.g., 500 milliseconds)
-const resizeTimer = setTimeout(() => {
+ me.timer = setTimeout(() => {
  
 
 
