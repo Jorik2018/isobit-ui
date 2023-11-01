@@ -144,7 +144,7 @@ let buildPopupMenu = function (parent) {
 	}
 }
 let resize = function () {
-	//console.log('resize');
+	console.log('Vue.resize');
 	//dialog.style.left = (window.innerWidth - dialog.offsetWidth) / 2 + 'px';
 	var h = window.innerHeight;
 	document.body.children[0].style.height = h + '.px';
@@ -980,7 +980,7 @@ window.ui = _.ui = function (cfg) {
 			return {
 				filters: {},
 				ui: me,
-				_session: null,x_connected_:null,opt:1111,
+				_session: null,x_connected_:null,
 				//rowSelectedCount: 0,
 				row: {}
 			}
@@ -1322,7 +1322,7 @@ window.ui = _.ui = function (cfg) {
 				} else if (response.data) {
 					path = response;
 				}
-				console.log("PATH====222");
+				console.log("open(path="+path+")");
 				console.log(path);
 				var dialog, nid = Vue.id(), scriptDom = [], for_, ifor = 0;
 				if (response instanceof HTMLElement) {
@@ -1429,7 +1429,7 @@ window.ui = _.ui = function (cfg) {
 					dialog.style.position = "unset";
 					//console.log(dialog);
 					var resize = (e) => {
-
+						console.log('resize ');
 						dialog.style.left = (window.innerWidth - dialog.offsetWidth) / 2 + 'px';
 						if (window.innerWidth < 600) {//console.log(333333);
 							console.log(dialog);
