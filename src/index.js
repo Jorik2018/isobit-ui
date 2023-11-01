@@ -924,6 +924,7 @@ window.ui = _.ui = function (cfg) {
 					let me=this;
 					let session=me.session;
 					this.x_connected_ = v;
+					console.log('this.x_connected_ = '+this.x_connected_);
 					//session.connected=v;
 					this.$set(session, 'connected', v);
 					me.session=session;
