@@ -950,7 +950,7 @@ window.ui = _.ui = function (cfg) {
 				}
 			},
 			online() {
-				return this.networkStatus.connected!==false;
+				return this.app.networkStatus.connected!==false;
 			},
 			cleanedFilters() {
 				return _.clean(this.filters);
