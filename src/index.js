@@ -905,14 +905,6 @@ window.ui = _.ui = function (cfg) {
 				Vue.resize();
 				this.changeRoute(v);
 			},
-			connected(v) {
-				let me=this;
-				_.networkStatus.connected = v;
-				me.networkStatus.connected = v;
-				let session=me.session;
-				session.connected=me.connected;
-				me.session=session;
-			},
 			cleanedFilters() {
 				if (this.$el) {
 					if (this.t) clearTimeout(this.t);
@@ -936,8 +928,16 @@ window.ui = _.ui = function (cfg) {
 			online() {
 				return this.app.networkStatus.connected!==false;
 			},
-			connected() {
-				return this.online&&this.session.connected!=false;
+			connected:{
+				get() {
+					return this.online&&this.session.connected!=false;
+				},
+				set(v) {
+					let me=this;
+					let session=me.session;
+					session.connected=v;
+					me.session=session;
+				},
 			},
 			perms() {
 				return this.session.perms || this.session.allcaps || {};
