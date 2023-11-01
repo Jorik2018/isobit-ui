@@ -40,7 +40,7 @@ export default {
 
       if (el.children[1]) {
         console.log(el.children[0].offsetHeight);
-        console.log(el.children[0].getTextContent());
+        console.log(el.children[0].textContent);
         //se obtiene el alto del headr
         h = h - el.children[0].offsetHeight;
 
