@@ -116,6 +116,9 @@ el.parentNode.style.overflow='hidden';
     });
     
   },
+  beforeUnmount(){
+    console.log('unmounted');
+  },
   updated() {
     var me = this;
     var t = me.$el.querySelectorAll("[type=number]:not(._)");
