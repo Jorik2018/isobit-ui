@@ -95,6 +95,7 @@ el.parentNode.style.overflow='hidden';
       return false;
     });
     me.$el.addEventListener("parentResize", (e) => {
+      console.log('=========================');
       if (e.target == me.$el) me.resize(e);
     });
     me.setTitle(me.header);
