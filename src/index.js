@@ -181,7 +181,7 @@ let resize = function () {
 			return;
 		} else if (pc[0].nodeName == "DIV") {
 			p = pc[0];
-			console.log('======================');
+			console.log('==========DIV============');
 			console.log(p);
 			p.style.height = h + 'px';
 			p.style.overflowY = 'auto';
@@ -200,6 +200,8 @@ let resize = function () {
 		pc[0].style.height = (h - ph.offsetHeight - 2) + 'px';
 		pc[0].style.overflowY = 'auto';
 		p = pc[0].querySelector(".ui-panel");
+		console.log('==========ppp============');
+			console.log(p);
 		if (p) {
 			//console.log(p);
 			pc = p.children;
