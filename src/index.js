@@ -918,7 +918,7 @@ window.ui = _.ui = function (cfg) {
 		computed: {
 			connected:{
 				get() {
-					return /*this.online&&*/_._connected!==false;
+					return this.online&&this.session.connected!==false;
 				},
 				set(v) {
 					let me=this;
@@ -926,7 +926,6 @@ window.ui = _.ui = function (cfg) {
 					//session.connected=v;
 					this.$set(session, 'connected', v);
 					me.session=session;
-					_._connected = v; 
 				},
 			},
 			session: {
