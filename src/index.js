@@ -180,7 +180,7 @@ if(p.children[0]){
 				//console.log(body);
 				buildPopupMenu(body);
 			}
-			return;
+			//return;
 		} else if (pc[0].nodeName == "DIV") {
 			p = pc[0];
 			console.log('==========DIV============');
