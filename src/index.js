@@ -989,7 +989,7 @@ window.ui = _.ui = function (cfg) {
 			this.x_connected_ = this.session.connected;
 		},
 		updated() {
-			//            console.log(this);
+			console.log('main.update')
 		},
 		mounted() {
 			var me = this;
