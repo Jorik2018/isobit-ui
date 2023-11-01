@@ -36,10 +36,12 @@ export default {
       var me = this,
         el = me.$el,
         h = e.height;
+      
       el.style.height = h + "px";
       //si tiene header
       if(me.timer)
       clearTimeout(me.timer);
+      if(!el.parentElement)return;
 
 // Set a new timer to run the function 'handleResize' after a specific delay (e.g., 500 milliseconds)
  me.timer = setTimeout(() => {
