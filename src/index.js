@@ -915,6 +915,7 @@ window.ui = _.ui = function (cfg) {
 	var defs = {
 		watch: {
 			$route(v) {
+				console.log('$route');
 				Vue.resize();
 				this.changeRoute(v);
 			},
