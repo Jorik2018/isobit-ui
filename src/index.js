@@ -251,7 +251,9 @@ let resize = function () {
 
 	} else {
 		var ww = document.querySelectorAll(".ion-page");
+
 		if (ww[0]) {
+			console.log('?????????????');
 			var hr = 0;
 			for (var kk = 0; kk < ww[0].childNodes.length; kk++) {
 				if (ww[0].childNodes[kk].nodeName == 'ION-HEADER' || ww[0].childNodes[kk].nodeName == 'ION-FOOTER') {
