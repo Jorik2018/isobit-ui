@@ -31,6 +31,7 @@ export default {
       return Math.ceil(el.offsetHeight + margin);
     },
     resize(e) {
+      console.log('v-form.resize');
       var me = this,
         el = me.$el,
         h = e.height;

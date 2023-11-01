@@ -168,12 +168,12 @@ let resize = function () {
 			var event = new Event("parentResize", { bubbles: true });
 			event.height = h;
 			p.dispatchEvent(event);
-if(p.children[0]){
-	console.log(p.children[0]);
-	console.log(p.children[0].offsetHeight);
-	h = h - p.children[0].offsetHeight;
-	p.children[1].style.height = h + 'px';
-}
+			if(p.children[0]){
+				console.log(p.children[0]);
+				console.log(p.children[0].offsetHeight);
+				h = h - p.children[0].offsetHeight;
+				p.children[1].style.height = h + 'px';
+			}
 			//pass body panel it must have a form > v-datatable
 			if (p.children[1]) {
 				var body = p.children[1];
