@@ -272,6 +272,8 @@ let resize = function () {
 				}
 			}
 			//console.log(ww[0].childNodes);
+		}else{
+			console.log(12);
 		}
 	}
 };
