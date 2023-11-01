@@ -144,14 +144,14 @@ let buildPopupMenu = function (parent) {
 	}
 }
 let resize = function () {
-	console.log('Vue.resize');
+	console.log('Vue.resize2');
 	//dialog.style.left = (window.innerWidth - dialog.offsetWidth) / 2 + 'px';
 	var h = window.innerHeight;
 	document.body.children[0].style.height = h + '.px';
 	var ph = document.querySelectorAll("#page-header,.ui-layout-north,.v-layout-north,.ion-page >ion-header");
 	ph = ph[0];
 	var pc = document.querySelectorAll(".ion-page >ion-header + .ui-panel,#page-content,.ui-layout-pane-center,.v-layout-center ,.ion-page > ion-content");
-	//console.log(pc);
+	console.log(pc);
 	if (pc && pc[0]) {
 		//console.log('cccccccccccc');
 		//console.log(ph.dataset);
