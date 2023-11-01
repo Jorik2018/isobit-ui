@@ -915,7 +915,6 @@ window.ui = _.ui = function (cfg) {
 				}
 			},
 		},
-		data(){return {_connected:null,opt:112}},
 		computed: {
 			connected:{
 				get() {
@@ -984,7 +983,7 @@ window.ui = _.ui = function (cfg) {
 			return {
 				filters: {},
 				ui: me,
-				_session: null,
+				_session: null,_connected:null,
 				//rowSelectedCount: 0,
 				row: {}
 			}
