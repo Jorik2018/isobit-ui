@@ -915,14 +915,20 @@ window.ui = _.ui = function (cfg) {
 				}
 			},
 		},
+		data(){return {_connected:null}},
 		computed: {
 			connected:{
 				get() {
-					return this.online&&this.session.connected!==false;
+					console.log(this);
+					if(this._connected){
+						this._connected = this.session.connected;
+					}
+					return this.online&&this._connected!==false;
 				},
 				set(v) {
 					let me=this;
 					let session=me.session;
+					this._connected = v;
 					//session.connected=v;
 					this.$set(session, 'connected', v);
 					me.session=session;
