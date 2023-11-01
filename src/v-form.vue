@@ -37,7 +37,9 @@ export default {
         h = e.height;
       el.style.height = h + "px";
       //si tiene header
+
       if (el.children[1]) {
+        console.log(el.children[0].offsetHeight);
         //se obtiene el alto del headr
         h = h - el.children[0].offsetHeight;
 
