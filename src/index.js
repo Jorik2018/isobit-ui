@@ -980,7 +980,7 @@ window.ui = _.ui = function (cfg) {
 			return {
 				filters: {},
 				ui: me,
-				_session: null,x_connected_:null,opt:1111,
+				_session: null,x_connected_:me.session.connected,opt:1111,
 				//rowSelectedCount: 0,
 				row: {}
 			}
