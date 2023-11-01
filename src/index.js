@@ -918,7 +918,7 @@ window.ui = _.ui = function (cfg) {
 		computed: {
 			connected:{
 				get() {
-					return /*this.online&&*/this.session.connected!==false;
+					return /*this.online&&*/_._connected!==false;
 				},
 				set(v) {
 					let me=this;
@@ -926,6 +926,7 @@ window.ui = _.ui = function (cfg) {
 					//session.connected=v;
 					this.$set(session, 'connected', v);
 					me.session=session;
+					_._connected = v; 
 				},
 			},
 			session: {
@@ -939,12 +940,12 @@ window.ui = _.ui = function (cfg) {
 					}
 					return _._session;
 				},
-				set(d) {
-					if (!d)
+				set(session) {
+					if (!session)
 						localStorage.removeItem('session');
 					else
-						localStorage.setItem('session', JSON.stringify(d));
-					_._session = d;
+						localStorage.setItem('session', JSON.stringify(session));
+					_._session = session;
 				}
 			},
 			online() {
