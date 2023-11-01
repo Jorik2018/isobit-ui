@@ -930,7 +930,7 @@ window.ui = _.ui = function (cfg) {
 			},
 			connected:{
 				get() {
-					return this.online&&this.session.connected!=false;
+					return this.online&&this.session.connected!==false;
 				},
 				set(v) {
 					let me=this;
