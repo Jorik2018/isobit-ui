@@ -913,36 +913,25 @@ window.ui = _.ui = function (cfg) {
 					}, 1200);
 
 				}
-			}
+			}/*,
+			online(newStatus) {
+				this.connected = newStatus && this.session.connected !== false;
+			}*/
 		},
 		computed: {
-			cleanedFilters() {
-				return _.clean(this.filters);
-			},
-			app() {
-				return _.app;
-			},
-			user() {
-				return _.app.session;
-			},
-			online() {
-				return this.app.networkStatus.connected!==false;
-			},
 			connected:{
 				get() {
-					return this.online&&this.session.connected!==false;
+					return /*this.online&&*/this.session.connected!==false;
 				},
 				set(v) {
 					let me=this;
 					let session=me.session;
 					session.connected=v;
+					this.$set(this.session, 'connected', v);
 					console.log('v='+v);
 					console.log(v);
 					me.session=session;
 				},
-			},
-			perms() {
-				return this.session.perms || this.session.allcaps || {};
 			},
 			session: {
 				get() {
@@ -962,6 +951,22 @@ window.ui = _.ui = function (cfg) {
 						localStorage.setItem('session', JSON.stringify(d));
 					_._session = d;
 				}
+			},
+			online() {
+				return this.networkStatus.connected!==false;
+			},
+			cleanedFilters() {
+				return _.clean(this.filters);
+			},
+			app() {
+				return _.app;
+			},
+			user() {
+				return _.app.session;
+			},
+
+			perms() {
+				return this.session.perms || this.session.allcaps || {};
 			},
 			rowSelectedCount() {
 				var me = this;
