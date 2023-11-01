@@ -936,6 +936,9 @@ window.ui = _.ui = function (cfg) {
 			online() {
 				return this.app.networkStatus.connected!==false;
 			},
+			connected() {
+				return this.online&&this.session.connected!=false;
+			},
 			perms() {
 				return this.session.perms || this.session.allcaps || {};
 			},
