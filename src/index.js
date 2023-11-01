@@ -915,7 +915,7 @@ window.ui = _.ui = function (cfg) {
 				}
 			},
 		},
-		data(){return {_connected:null}},
+		data(){return {_connected:null,opt:112}},
 		computed: {
 			connected:{
 				get() {
