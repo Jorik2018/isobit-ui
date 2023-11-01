@@ -37,6 +37,12 @@ export default {
         h = e.height;
       el.style.height = h + "px";
       //si tiene header
+     // clearTimeout(resizeTimer);
+
+// Set a new timer to run the function 'handleResize' after a specific delay (e.g., 500 milliseconds)
+const resizeTimer = setTimeout(() => {
+ 
+
 
       if (el.children[1]) {
         console.log(el.children[0].textContent);
@@ -87,6 +93,8 @@ el.parentNode.style.overflow='hidden';
         event.$target=me;
         me.$emit("resize",event);
       }
+
+    }, 500); 
     },
   },
   mounted() {
