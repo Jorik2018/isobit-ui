@@ -918,10 +918,6 @@ window.ui = _.ui = function (cfg) {
 		computed: {
 			connected:{
 				get() {
-					console.log(this);
-					if(this._connected===null){
-						this._connected = this.session.connected;
-					}
 					return this.online&&this._connected!==false;
 				},
 				set(v) {
