@@ -936,6 +936,7 @@ window.ui = _.ui = function (cfg) {
 					let me=this;
 					let session=me.session;
 					session.connected=v;
+					console.log('v='+v);
 					me.session=session;
 				},
 			},
