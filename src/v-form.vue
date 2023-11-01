@@ -96,13 +96,13 @@ el.parentNode.style.overflow='hidden';
       if (p.refresh) p.refresh();
       return false;
     });
+    me.setTitle(me.header);
     me.$el.addEventListener("parentResize", (e) => {
       if (e.target == me.$el){
-        console.log('===========22222222222222222==============');
         me.resize(e);
       }
     });
-    me.setTitle(me.header);
+    
   },
   updated() {
     var me = this;
