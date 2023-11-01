@@ -95,7 +95,6 @@ el.parentNode.style.overflow='hidden';
       return false;
     });
     me.$el.addEventListener("parentResize", (e) => {
-      console.log('=========================');
       if (e.target == me.$el){
         console.log('===========22222222222222222==============');
         me.resize(e);
