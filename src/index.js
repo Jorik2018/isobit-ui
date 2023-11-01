@@ -169,7 +169,8 @@ let resize = function () {
 			event.height = h;
 			p.dispatchEvent(event);
 if(p.children[0]){
-	console.log(p.children[0]);
+	h = h - p.children[0].offsetHeight - 0;
+			p.style.height = h + 'px';
 }
 			//pass body panel it must have a form > v-datatable
 			if (p.children[1]) {
@@ -180,7 +181,7 @@ if(p.children[0]){
 				//console.log(body);
 				buildPopupMenu(body);
 			}
-			//return;
+			return;
 		} else if (pc[0].nodeName == "DIV") {
 			p = pc[0];
 			console.log('==========DIV============');
