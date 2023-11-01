@@ -918,12 +918,12 @@ window.ui = _.ui = function (cfg) {
 		computed: {
 			connected:{
 				get() {
-					return this.online&&this._connected!==false;
+					return this.online&&this.x_connected_!==false;
 				},
 				set(v) {
 					let me=this;
 					let session=me.session;
-					this._connected = v;
+					this.x_connected_ = v;
 					//session.connected=v;
 					this.$set(session, 'connected', v);
 					me.session=session;
@@ -979,7 +979,7 @@ window.ui = _.ui = function (cfg) {
 			return {
 				filters: {},
 				ui: me,
-				_session: null,_connected:null,opt:1111,
+				_session: null,x_connected_:null,opt:1111,
 				//rowSelectedCount: 0,
 				row: {}
 			}
