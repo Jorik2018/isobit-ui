@@ -96,7 +96,10 @@ el.parentNode.style.overflow='hidden';
     });
     me.$el.addEventListener("parentResize", (e) => {
       console.log('=========================');
-      if (e.target == me.$el) me.resize(e);
+      if (e.target == me.$el){
+        console.log('===========22222222222222222==============');
+        me.resize(e);
+      }
     });
     me.setTitle(me.header);
   },
