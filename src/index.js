@@ -151,7 +151,7 @@ let resize = function () {
 	var ph = document.querySelectorAll("#page-header,.ui-layout-north,.v-layout-north,.ion-page >ion-header");
 	ph = ph[0];
 	var pc = document.querySelectorAll(".ion-page >ion-header + .ui-panel,#page-content,.ui-layout-pane-center,.v-layout-center ,.ion-page > ion-content");
-	console.log(pc);
+
 	if (pc && pc[0]) {
 		//console.log('cccccccccccc');
 		//console.log(ph.dataset);
@@ -168,7 +168,7 @@ let resize = function () {
 			var event = new Event("parentResize", { bubbles: true });
 			event.height = h;
 			p.dispatchEvent(event);
-
+console.log('==========00000000');
 			//pass body panel it must have a form > v-datatable
 			if (p.children[1]) {
 				var body = p.children[1];
