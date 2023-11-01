@@ -169,6 +169,7 @@ let resize = function () {
 			event.height = h;
 			p.dispatchEvent(event);
 if(p.children[0]){
+	console.log(p.children[0]);
 	h = h - p.children[0].offsetHeight;
 	p.children[1].style.height = h + 'px';
 }
