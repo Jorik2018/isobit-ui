@@ -144,7 +144,7 @@ let buildPopupMenu = function (parent) {
 	}
 }
 let resize = function () {
-	console.log('Vue.resize2');
+	//console.log('Vue.resize2');
 	//dialog.style.left = (window.innerWidth - dialog.offsetWidth) / 2 + 'px';
 	var h = window.innerHeight;
 	document.body.children[0].style.height = h + '.px';
@@ -180,8 +180,8 @@ let resize = function () {
 			return;
 		} else if (pc[0].nodeName == "DIV") {
 			p = pc[0];
-			console.log('==========DIV============');
-			console.log(p);
+			//console.log('==========DIV============');
+			//console.log(p);
 			p.style.height = h + 'px';
 			p.style.overflowY = 'auto';
 			h = h - ph.offsetHeight - 0;
@@ -199,14 +199,14 @@ let resize = function () {
 		pc[0].style.height = (h - ph.offsetHeight - 2) + 'px';
 		pc[0].style.overflowY = 'auto';
 		p = pc[0].querySelector(".ui-panel");
-		console.log('==========ppp============');
-			console.log(p);
+		//console.log('==========ppp============');
+		//	console.log(p);
 		if (p) {
 			//console.log(p);
 			pc = p.children;
 			if (ph) h -= (ph.offsetHeight + pc[0].offsetHeight + 2);
 			if (pc[1]) {
-				console.log(pc[1]);
+				//console.log(pc[1]);
 				pc[1].style.height = h + 'px';
 				var e = pc[1].querySelectorAll(".v-resize,.v-datatable");
 				for (i = 0; i < e.length; i++) {
@@ -221,10 +221,10 @@ let resize = function () {
 				var style = window.getComputedStyle(el);
 				return (style.display === 'none')
 			}
-			console.log(pc[0]);
+			//console.log(pc[0]);
 			//function isHidden(el) {return (el.offsetParent === null)}
 			if (!pc[0].children[0]) return;
-			console.log(h);
+			//console.log(h);
 			var items = pc[0].children;
 			for (i = 0; i < items.length; i++) {
 				var evt = new Event("parentResize", { bubbles: true });
@@ -252,7 +252,7 @@ let resize = function () {
 		var ww = document.querySelectorAll(".ion-page");
 
 		if (ww[0]) {
-			console.log('?????????????');
+			//console.log('?????????????');
 			var hr = 0;
 			for (var kk = 0; kk < ww[0].childNodes.length; kk++) {
 				if (ww[0].childNodes[kk].nodeName == 'ION-HEADER' || ww[0].childNodes[kk].nodeName == 'ION-FOOTER') {
@@ -327,7 +327,16 @@ var f = {
 };
 if (![].contains) Object.defineProperty(Array.prototype, 'contains', f);
 if (!"".contains) Object.defineProperty(String.prototype, 'contains', f);
+Vue.pad = function (num, size) {
+	if (num != null) {
+		var s = (1 * num) + "";
+		while (s.length < size)
+			s = "0" + s;
+		return s;
+	}
+};
 _ = Object.assign(_, {
+	pad:Vue.pad,
 	initDB(version, stores) {
 		let db = window.indexedDB ||
 			window.mozIndexedDB ||
@@ -655,14 +664,6 @@ if (typeof ol !== 'undefined') {
 	ol.getLayerById = getLayerById;
 	window.ol = ol;
 }
-Vue.pad = function (num, size) {
-	if (num != null) {
-		var s = (1 * num) + "";
-		while (s.length < size)
-			s = "0" + s;
-		return s;
-	}
-};
 Vue.filter('upper', _.upper = (s) => {
 	return s ? s.toUpperCase() : s;
 });
@@ -828,7 +829,7 @@ _.MsgBox = function MsgBox(m, cb, b) {
 		dialog.parentNode.removeChild(dialog);
 		overlay.parentNode.removeChild(overlay);
 		if (cb){
-			console.log(cb);
+			//console.log(cb);
 			cb(this.getAttribute("index"));
 		}
 	};
@@ -909,7 +910,7 @@ window.ui = _.ui = function (cfg) {
 	var defs = {
 		watch: {
 			$route(v) {
-				console.log('$route');
+				//console.log('$route');
 				Vue.resize();
 				this.changeRoute(v);
 			},
@@ -997,7 +998,7 @@ window.ui = _.ui = function (cfg) {
 			this.x_connected_ = this.session.connected;
 		},
 		updated() {
-			console.log('main.update')
+			//console.log('main.update')
 		},
 		mounted() {
 			var me = this;
@@ -1022,7 +1023,7 @@ window.ui = _.ui = function (cfg) {
 							try {
 								session = JSON.parse(session);
 							} catch (e) {
-								console.log(e);
+								//console.log(e);
 								session = {};
 							}
 							session.connected = v;
@@ -1145,7 +1146,7 @@ window.ui = _.ui = function (cfg) {
 				var selected = me.getSelected(t)[0];
 				var id = selected[t.rowKey];
 				if (selected.tmpId) id = -selected.tmpId;
-				console.log(selected);
+				//console.log(selected);
 				if (me.getSelectedId) id = me.getSelectedId(selected);
 				if (_.app) {
 					me.open(action + '/' + id + '/edit');
@@ -1219,17 +1220,17 @@ window.ui = _.ui = function (cfg) {
 						if (r == 0) {
 							var src = t.src.replace('/0/0', '');
 							var ele = [];
-							console.log(t.selected);
+							//console.log(t.selected);
 							var k = (t.selected.length - 1)
 							axios.delete(src + '/' + id, { params: t.filters }).then(function () {
 								console.log(t.selected);
 								for (; k >= 0; k--) {
-									console.log('k=' + k);
-									console.log(t.data);
-									console.log('t.selected[k]=' + t.selected[k]);
+									//console.log('k=' + k);
+									//console.log(t.data);
+								//	console.log('t.selected[k]=' + t.selected[k]);
 									dat = t.data[t.selected[k]];
 									ele.push(dat);
-									console.log(ele);
+									//console.log(ele);
 									t.data.splice(t.selected[k], 1);
 								}
 								if (me.app && me.app.toast)
@@ -1268,7 +1269,7 @@ window.ui = _.ui = function (cfg) {
 						t = t.pathname;
 					}
 					if (me.$route.path !== t) {
-						console.log('path=' + t);
+						//console.log('path=' + t);
 						me.$router.push(t);
 					}
 					return;
@@ -1280,8 +1281,8 @@ window.ui = _.ui = function (cfg) {
 				} else if (response instanceof HTMLElement) {
 
 					path = (path && path.closeOnClickOut) ? (path) : {};
-					console.log("PATH====");
-					console.log(path);
+					//console.log("PATH====");
+					//console.log(path);
 				} else if (response.target) {
 					el = response.target;
 					return me.open(el.pathname ? el.pathname : el.href);
@@ -1330,8 +1331,8 @@ window.ui = _.ui = function (cfg) {
 				} else if (response.data) {
 					path = response;
 				}
-				console.log("open(path="+path+")");
-				console.log(path);
+				//console.log("open(path="+path+")");
+				//console.log(path);
 				var dialog, nid = Vue.id(), scriptDom = [], for_, ifor = 0;
 				if (response instanceof HTMLElement) {
 					dialog = response;
@@ -1635,6 +1636,7 @@ window.ui = _.ui = function (cfg) {
 				if (!loadedStores[store] && _.networkStatus.connected) {
 					let e = _.stores.filter(e => e[0] == store)[0];
 					//console.log(e);
+					if(!e) throw "store "+store+" undefined";
 					if(!e[2]) throw "store url is empty";
 					let data = await axios.get(e[2]);
 					let objectStore = _.db.transaction([e[0]], "readwrite").objectStore(e[0]);
@@ -1799,8 +1801,8 @@ window.ui = _.ui = function (cfg) {
 							//add new item to start to array							
 							var objectStoreRequest = objectStore.add(o);
 							objectStoreRequest.onsuccess = (e) => {
-								console.log(e);
-								console.log('saved to ' + store);
+								//console.log(e);
+								//console.log('saved to ' + store);
 								storedList.unshift(o);
 								me.$emit('stored', o, storedList, objectStore);
 								if (me.app && me.app.toast) me.app.toast('El registro fue grabado exitosamente!');
@@ -1810,15 +1812,15 @@ window.ui = _.ui = function (cfg) {
 							};
 							objectStoreRequest.onerror = (e) => {
 								if (me.app && me.app.toast) me.app.toast('Error!');
-								console.log(e);
+								//console.log(e);
 							};
 						} else {
 							delete o.synchronized;
 							var item = objectStore.get(o.tmpId);
 							item.onsuccess = function () {
-								console.log(item.result);
+								//console.log(item.result);
 								if (item.result) {
-									console.log('objectStore.put(o)');
+									//console.log('objectStore.put(o)');
 									objectStore.put(o);
 								} else {
 									storedList.forEach((ee) => {
@@ -1869,13 +1871,13 @@ window.ui = _.ui = function (cfg) {
 									me.close({ success: true, data: data });
 								});
 							else {
-								console.log(data);
+								//console.log(data);
 								me.MsgBox('El registro fue grabado exitosamente!', function () {
 									me.close({ success: true, data: data });
 								});
 							}
 						}).catch(function (r) {
-							console.log(r);
+							//console.log(r);
 							if (r.response) {
 								var l, e;
 								if ((typeof r.response.data) === 'string') {
@@ -2122,14 +2124,14 @@ function configureAxios(a) {
 				}
 			}
 			if (e.config.error) {
-				console.log('error');
+				//console.log('error');
 				e.config.error(e, msg);
 			} else {
-				console.log('mssg');
+				//console.log('mssg');
 				_.MsgBox('<b>' + e.request.responseURL + '</b><br/><br/>' + msg);
 			}
-			console.log(msg);
-			console.log(r);
+			//console.log(msg);
+			//console.log(r);
 		}
 		delete axios.error;
 		return Promise.reject(e);

@@ -179,10 +179,10 @@ export default {
                         });
                     }
                     //console.log('me.feature__='+me.feature2.id_);
-                    console.log('emit scopee '+me.feature2.id_);
+                    //console.log('emit scopee '+me.feature2.id_);
                     me.$emit('scope',{feature:me.feature2,target:me});
                     me.feature2=null;
-                    console.log('layer moveend termina');
+                    //console.log('layer moveend termina');
                 }
             };
             map.on('moveend', moveend);

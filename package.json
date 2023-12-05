@@ -30,6 +30,7 @@
 		"vue-template-compiler": "^2.6.12"
 	},
 	"dependencies": {
+		"ol": "^8.2.0",
 		"vue": "^2.6.12"
 	}
 }

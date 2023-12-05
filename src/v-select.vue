@@ -14,29 +14,34 @@
     <template v-if="multiple">
       <div
         class="v-widget-header"
+        ref="button"
         style="padding-top: 3px; padding-bottom: 3px"
         v-bind:class="{ 'v-selected': show }"
         v-on:click="toggle"
       >
         &nbsp;
       </div>
-      <div v-show="show" style="padding: 5px; border: 1px solid lightgray">
-        <div
-          class="_ ui-widget ui-state-default ui-corner-all"
-          style="padding: 5px 5px 1px 5px; margin-bottom: 5px"
-        >
-          <v-checkbox v-model="sela" v-on:input="selectAll" />
+      <div v-show="show" ref="popup"  @click="close" style="background-color: #0000009c;">
+        <div style="border: 1px solid lightgray;background-color: white; padding:5px;">
+          <div
+            class="_ ui-widget ui-state-default ui-corner-all"
+            style="padding: 3px 3px 1px 3px; margin-bottom: 5px"
+          >
+            <v-checkbox v-model="sela" v-on:input="selectAll" />
+          </div>
+          <v-checkbox-group class="v-select-checkbox-group" style="overflow-y: auto;"
+            v-bind:key="'p' + ik"
+            v-model="sel"
+            v-on:input="checkboxInput"
+          >
+            <template v-if="data.length">
+              <div v-for="d in data">
+                <v-checkbox v-bind:value="d.value" v-bind:label="d.label" />
+              </div> </template
+          ></v-checkbox-group>
+          <div class="center"  style="padding-top: 4px;"><v-button icon="fa-sync" value="Filtrar"></v-button>
+          </div>
         </div>
-        <v-checkbox-group
-          v-bind:key="'p' + ik"
-          v-model="sel"
-          v-on:input="checkboxInput"
-        >
-          <template v-if="data.length">
-            <div v-for="d in data">
-              <v-checkbox v-bind:value="d.value" v-bind:label="d.label" />
-            </div> </template
-        ></v-checkbox-group>
       </div>
     </template>
     <template v-if="readonly">{{ label ? label : "---" }}</template>
@@ -62,6 +67,8 @@ export default {
       show: false,
       sel: [],
       sela: null,
+      tmp:[],
+      sel2:[]
     };
   },
   created() {
@@ -95,19 +102,39 @@ export default {
       }
     },
     show(s) {
+      let me = this;
       if (s) {
-        var cn = this.$el.childNodes[1];
-        if (!this.popup) {
-          this.popup = this.$el.childNodes[2];
-          this.popup.style.position = "absolute";
-          this.popup.style.backgroundColor = "white";
-          document.body.append(this.popup);
+        let cn = this.$refs.button,popup = this.popup;
+        if (!popup) {
+          popup = this.$refs.popup;
+          popup.style.position = "absolute";
+          document.body.append(popup);
         }
-        var rect = cn.getBoundingClientRect();
-        this.popup.style.top = rect.bottom + 0 + "px";
-        this.popup.style.left = rect.left + 0 + "px";
+        let rect = cn.getBoundingClientRect();
+        const body = popup.children[0];
+        if(window.innerWidth<400){
+          popup.style.padding = "40px";
+          popup.style.height = "100%";
+          body.style.height = "100%";
+        }else{
+          popup.style.top = rect.bottom + 0 + "px";
+          popup.style.left = rect.left + 0 + "px";
+          popup.style.maxHeight = (window.innerHeight - rect.bottom - 30)+'px'
+          body.style.maxHeight = popup.style.maxHeight;
+        }
+        body.style.display = 'flex';
+        body.style.flexDirection = 'column';
+        me.tmp=me.sel.sort().join(',');
       } else {
-        if (this.$parent.load) this.$parent.load();
+        var d=me.sel,t=me.$el.parentNode.tagName;
+        if(t!='TH'&&d&&d.length)d=d.join(',');
+        else if(d&&d.length==0)d=null;
+        if(me.tmp!==me.sel.sort().join(','))
+          if(me.$parent.load){
+            me.$parent.load();
+          }else{
+            me.$emit('input',d);
+          }
       }
     },
   },
@@ -238,6 +265,9 @@ export default {
     toggle() {
       this.show = !this.show;
     },
+    close(){
+      this.show = false;
+    },
     selectAll() {
       var ee = [];
       for (var j = 0; j < this.data.length; j++) {
@@ -288,3 +318,22 @@ export default {
   },
 };
 </script>
+<style>
+.v-select-checkbox-group .v-checkbox{
+  height: auto;
+  margin-bottom: 5px;
+}
+
+.v-select-checkbox-group > div {
+         
+            background: linear-gradient(to bottom, #ffffff, #e0e0e0); /* Gradient from white to light gray */
+            z-index: -1; /* Move it behind the content */
+        }
+.v-select-checkbox-group .checkmark{
+margin: 3px;;
+}
+
+.v-select-checkbox-group{
+  font-size: 20px;
+}
+</style>
