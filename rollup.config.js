@@ -1,10 +1,28 @@
+import typescript from '@rollup/plugin-typescript';
 import vue from 'rollup-plugin-vue';
-import commonjs from 'rollup-plugin-commonjs';
+import peerDepsExternal from 'rollup-plugin-peer-deps-external';
+import css from 'rollup-plugin-css-only';
+import terser from '@rollup/plugin-terser';
 
-export default {
-    entry: 'index.js',
+export default [
+  {
+    input: 'src/index.ts',
+    output: [
+      {
+        format: 'esm',
+        file: 'dist/library.mjs'
+      },
+      {
+        format: 'cjs',
+        file: 'dist/library.js'
+      }
+    ],
     plugins: [
-        commonjs(),
-        vue(),
+      vue(),
+      peerDepsExternal(),
+      typescript(),terser(),
+      css({ output: 'theme.css' }),
+      
     ]
-}
+  }
+];

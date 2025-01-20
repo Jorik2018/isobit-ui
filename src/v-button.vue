@@ -3,6 +3,7 @@
 </template>
 <script>
 export default {
+    name: 'VButton',
     mounted() {
 		var me = this;
         var span = document.createElement("span");
@@ -12,7 +13,7 @@ export default {
         //me.$el.appendChild(span);
         me.$el.addEventListener('click',(event)=>{
             event.component=me;
-            me.$emit('click', event);
+            //me.$emit('click', event);
         });
         if (me.$attrs.icon) {
             if (!me.$attrs.value)

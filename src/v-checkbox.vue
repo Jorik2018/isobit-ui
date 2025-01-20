@@ -6,6 +6,7 @@
 </template>
 <script>
 export default {
+    name: 'VCheckbox',
     model: {
         prop: 'vmodel',
         event2: 'change'

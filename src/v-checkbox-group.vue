@@ -3,6 +3,7 @@
 </template>
 <script>
 export default {
+    name: 'VCheckboxGroup',
 props: {
         required: String,
         name: String

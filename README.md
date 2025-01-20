@@ -1,3 +1,7 @@
+https://www.freecodecamp.org/news/how-to-create-and-publish-a-vue-component-library-update/
+https://blog.logrocket.com/building-vue-3-component-library/
+
+
 https://snyk.io/advisor/npm-package/cili
 
 Install

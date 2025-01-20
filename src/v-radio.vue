@@ -4,6 +4,7 @@
 </template>
 <script>
     export default {
+        name: 'VRadio',
         props: {
             value: String,
             label: String
@@ -16,7 +17,7 @@
             if (me.$parent.required)
                 r.required = me.$parent.required;
             r.onclick = function () {
-                me.$parent.onChange(me.value);
+               // me.$parent.onChange(me.value);
                 //this.$parent.$emit('input', value);
             }
         }

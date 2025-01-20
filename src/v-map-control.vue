@@ -8,6 +8,7 @@
 </template>
 <script>
 export default {
+    name: 'VMapControl',
 	props: {
         icon: String,
 		visible:{
@@ -28,7 +29,7 @@ export default {
 	},
 	created(){this.visible0=!!this.visible;},
     mounted(){
-        var me = this;
+        let me = this,ol=window.ol;;
 		me.slotUsed=!!this.$slots.default;
 		//onsole.log('slotUsed='+me.slotUsed);
         if(me.$parent.map){
