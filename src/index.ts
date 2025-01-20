@@ -348,7 +348,7 @@ export const ui = (cfg) => {
 					return me.open(el.pathname ? el.pathname : el.href);
 				} else if (response === 'GET') {
 					if (typeof path == 'string') {
-						var cfg = { path: _.currentPath = path + (typeof o == 'string' ? '/' + o : '') };
+						let cfg = { path: _.currentPath = path + (typeof o == 'string' ? '/' + o : '') };
 						if (typeof o == 'function') {
 							cfg.result = o;
 						} else if (typeof o == 'object') {

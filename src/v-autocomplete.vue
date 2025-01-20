@@ -28,6 +28,7 @@
 <script lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
 import axios from 'axios';
+import { mergeDeep } from './commons';
 
 export default {
     name: 'VAutocomplete',
@@ -100,9 +101,9 @@ export default {
                 page.value = 0;
                 if (props.data && props.autoload) return;
             }
-            const params = { query: query.value };
+            let params = { query: query.value };
 
-            if (props.params) params = Vue.mergeDeep(params, props.params);
+            if (props.params) params = mergeDeep(params, props.params);
 
             axios.get((src ? src : props.source) + (pagination > 0 ? '/' + page.value + '/' + pagination : ''), { params: params })
                 .then((r) => {
