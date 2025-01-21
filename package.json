@@ -15,7 +15,7 @@
     "bili": "bili",
     "eslint": "eslint",
     "build2": "bili --name index --plugin vue --vue.css false",
-    "patch": "git add . & git commit -m \"x\" & git push & bili & npm version patch & npm publish"
+    "patch": "npm version patch & git add . & git commit -m \"x\" & git push & bili &  npm publish"
   },
   "author": "",
   "license": "ISC",
