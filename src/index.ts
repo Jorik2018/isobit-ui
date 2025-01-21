@@ -2,37 +2,12 @@ import components from './components'
 import { clean, _, pad, resize, configureAxios, app, setApp, initDB, MsgBox, date, db, getStoredList } from './commons'
 import './cdn/theme.css'
 import axios from 'axios'
-
 export { resize, app, initDB, date, db,_ ,pad, getStoredList};
-
-const bindLinks = (el, callback) => {
-	var me = this;
-	el = el ? el : me.$el;
-	if (el.querySelectorAll) {
-		//var a=el.querySelectorAll('a:not(._),ion-item:not(._)'); 
-		var a = el.querySelectorAll('a:not(._),ion-item:not(._)');
-		//console.log(a)
-		var f0 = function (e) { e.preventDefault(); };
-		var f = function (e) {
-			e.preventDefault();
-			if (callback) callback();
-			me.open(e);
-		};
-		for (var i = 0; i < a.length; i++) {
-			if (a[i].attributes.href) {
-				a[i].onclick = f;
-			} else
-				a[i].onclick = f0;
-			a[i].classList ? a[i].classList.add('_') : a[i].className = '_';
-		}
-	}
-}
 
 export const IsobitUI = {
 	install(vApp: any) {
 		setApp(vApp);
 		vApp.BUILT_ON = import.meta.env.VITE_APP_BUILT_ON;
-		vApp.bindLinks = bindLinks;
 		configureAxios(axios)
 		for (const prop in components) {
 			if (components.hasOwnProperty(prop)) {
@@ -139,6 +114,27 @@ export const ui = (cfg) => {
 		},
 		methods: {
 			pad,
+			bindLinks (el, callback) {
+				const me = this;
+				//el = el ? el : me.$el;
+				if (el.querySelectorAll) {
+					//var a=el.querySelectorAll('a:not(._),ion-item:not(._)'); 
+					const a = el.querySelectorAll('a:not(._),ion-item:not(._)');
+					var f0 = (e) =>{ e.preventDefault(); };
+					var f = (e) => {
+						e.preventDefault();
+						if (callback) callback();
+						me.open(e);
+					};
+					for (let i = 0; i < a.length; i++) {
+						if (a[i].href||a[i].attributes.href) {
+							a[i].onclick = f;
+						} else
+							a[i].onclick = f0;
+						a[i].classList ? a[i].classList.add('_') : a[i].className = '_';
+					}
+				}
+			},
 			resize() {
 				//Vue.resize();
 			},
@@ -306,8 +302,6 @@ export const ui = (cfg) => {
 				return str.replace(_.contextPath, _.contextPath + '/api');
 			},
 			open(response, path, o) {
-
-
 				if (!(response.$el) && !(response instanceof HTMLElement)) {
 					var e = response;
 					var t = e.target;
