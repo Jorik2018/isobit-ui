@@ -1063,7 +1063,7 @@ window.ui = _.ui = function (cfg) {
 			changeRoute() {/*console.log(v)*/ },
 			pad: Vue.pad,
 			key() { return Math.random(); },
-			submitFile: function (f, name, cb) {
+			submitFile (f, name, cb) {
 				var formData = new FormData();
 				name = name ? name : f.name.replace(/[^\w\s.]/gi, '');
 				formData.append('filename', name);
@@ -1095,13 +1095,8 @@ window.ui = _.ui = function (cfg) {
 				this.row = r;
 			},
 			getSelected(e) {
-				var me = this;
-				var t = e && e.$vnode ? e : me.$children[0].$children[0];
-				var s = [];
-				for (var i = 0; i < t.selected.length; i++) {
-					s.push(t.data[t.selected[i]]);
-				}
-				return s;
+				const me = this, t = e && e.$vnode ? e : me.$children[0].$children[0];
+				return t.selected;
 			},
 			getRowSelectedCount() {
 				var me = this;
@@ -1865,7 +1860,7 @@ window.ui = _.ui = function (cfg) {
 							}
 
 							if (me.$ionic)
-								me.app.toast('El registro fue grabado exitosamente!', function () {
+								me.app.toast('El registro fue grabado exitosamente!', () => {
 									me.close({ success: true, data: data });
 								});
 							else {

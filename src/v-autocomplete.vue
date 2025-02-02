@@ -8,9 +8,10 @@
 		<span v-if="!selected" v-on:click="search" style="color:gray;top:4px;right:6px;position: absolute;cursor:pointer;">
 			<i class="fa fa-xs fa-sync"></i>
 		</span>
-		<input v-if="!selected" v-on:keyup="keyup" v-on:keyup.enter.stop.prevent="search" 
-			v-bind:class="inputClass"  v-on:focus="show=true" v-bind:disabled="disabled" v-bind:placeholder="placeholder" v-model="query">
-		<button class="hide" onclick="return false"/>
+		
+        <input v-if="!selected" v-on:keyup="keyup" v-on:keyup.enter.stop.prevent="search"
+            @keyup.esc="$emit('escape', query)" v-bind:class="inputClass" v-on:focus="show = true"
+            v-bind:disabled="disabled" v-bind:placeholder="placeholder" v-model="query"><button class="hide" onclick="return false"/>
 		<transition name="fade">
 			<div v-show="show&&!selected" class="v-resultpane" v-bind:style="{zIndex:2,width: 'calc(100% - 2px)',position: (floating?'absolute':'relative')}" 
 				style="z-index:2,width: calc(100% - 2px);max-height: 300px;overflow-y: auto;border: 1px solid #0f62ac" >
