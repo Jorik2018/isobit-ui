@@ -9,7 +9,6 @@
 </template>
 <script>
 export default {
-	name: 'VDataview',
     props: {
         value: Array,
         filterKey: String,
@@ -157,7 +156,7 @@ export default {
 	}
 }
 </script>
-<!-- <style>
+<style>
 	.v-dataview > .v-no-results{
 		padding: 15px;
 		color: rgb(255 193 7);
@@ -179,4 +178,4 @@ export default {
 		border-style:solid;
 		border-width: 1px;
 	}
-</style> -->
+</style>

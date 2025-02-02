@@ -3,7 +3,6 @@
 </template>
 <script>
 export default {
-	name: 'VPopup',
     data(){return {show:null,overlay:null}},
 	mounted(){
 		var me=this;

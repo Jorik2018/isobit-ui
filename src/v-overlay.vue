@@ -21,7 +21,6 @@ var _=window._;
 var axios=window.axios;
 
 export default {
-	name: 'VOverlay',
         props: {
         value: {
             value: Object
@@ -216,11 +215,11 @@ me.$el.parentNode.style.opacity=0;
     }
 }
 </script>
-<!-- <style>
+<style>
 	.v-ol-overlay > .v-panel-titlebar{
 		padding:10px;
 	}
 	.v-icon-close{
 		cursor:pointer;
 	}
-</style> -->
+</style>

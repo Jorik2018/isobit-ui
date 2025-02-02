@@ -3,7 +3,6 @@
 </template>
 <script>
 export default {
-    name: 'VGroup',
     props: {
         required: String,
         name: String

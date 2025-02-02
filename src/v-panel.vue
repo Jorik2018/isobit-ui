@@ -4,7 +4,6 @@
 </template>
 <script>
 export default {
-	name: 'VPanel',
 	props: {
         header: String
     },

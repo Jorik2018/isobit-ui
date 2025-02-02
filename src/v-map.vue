@@ -2,15 +2,14 @@
 	<div><slot></slot></div>
 </template>
 <script>
-
-const ol = window.ol;
-
 export default {
-    name: 'VMap',
     mounted() {
         var m = this;
-        m.$emit('beforeBuild');
-        m.build();
+        //_.loadCSS('/cdn/ol.css');
+        //_.loadScript('/cdn/ol.js',(r) => {
+            m.$emit('beforeBuild');
+            m.build();
+        //});
     },
     data() {
         return {moved:false,map: null,movingCompleted:null, collection: null, styleMap: null, coordinate: {}};
@@ -26,7 +25,6 @@ export default {
 			return results&&results[1] || 0;
 		},
         addFeature(f,cfg) {
-            let ol=window.ol;
             f = f ? f : {};
             var me = this, point, map = me.map;
             if (f.lon && f.lat) {
@@ -95,7 +93,7 @@ export default {
 			this.movingCompleted=o.complete;
 		},
         build(){
-            var m = this,ol=window.ol;
+            var m = this;
             m.styleMap = {
                 default: new ol.style.Style({
                     image: new ol.style.Circle({
@@ -136,8 +134,6 @@ export default {
             } else {
                 pageLocation = false;
             }
-
-            console.log('w='+m.$el.clientHeight+';h='+m.$el.clientWidth);
             var map = new ol.Map({
                 target: m.$el,
                 layers: [
@@ -193,11 +189,6 @@ export default {
                 ],
                 view: new ol.View({})
             });
-            const resizeObserver = new ResizeObserver((e)=>{
-                console.log('w='+m.$el.clientHeight+';h='+m.$el.clientWidth);
-                map.updateSize();
-            });
-    resizeObserver.observe(m.$el);
 			map.getLayerById=function(id) {
 				var ly;
 				map.getLayers().forEach((l) => {
@@ -216,7 +207,7 @@ export default {
             }));
             if(m.moved){
                 map.getView().setCenter(pageLocation);
-               // console.log('en el momento de cargar moved to pageLocation='+pageLocation);
+                console.log('en el momento de cargar moved to pageLocation='+pageLocation);
                 map.getView().setZoom(zoom?zoom:12);
                 m.map=map;
                 console.log('distarar evento buid  pageLocation='+pageLocation);

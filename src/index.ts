@@ -1,44 +1,941 @@
-import components from './components'
-import { clean, _, pad, resize, configureAxios, app, setApp, initDB, MsgBox, date, db, getStoredList } from './commons'
-import './cdn/theme.css'
+import Vue from 'vue'
 import axios from 'axios'
-export { resize, app, initDB, date, db,_ ,pad, getStoredList};
+import VAutocomplete from "./v-autocomplete.vue";
+import VButton from "./v-button.vue";
+import VCalendar from "./v-calendar.vue";
+import VCheckbox from "./v-checkbox.vue";
+import VCheckboxGroup from "./v-checkbox-group.vue";
+import VForm from "./v-form.vue";
+import VRadio from "./v-radio.vue";
+import VGroup from "./v-group.vue";
+import VRadioGroup from "./v-radio-group.vue";
+import VDataview from "./v-dataview.vue";
+import VFieldset from "./v-fieldset.vue";
+import VTable from "./v-table.vue";
+import VTabview from "./v-tabview.vue";
+import VTextarea from "./v-textarea.vue";
+import VSelect from "./v-select.vue";
+import VSwitch from "./v-switch.vue";
+import VNumber from "./v-number.vue";
+import VOptions from "./v-options.vue";
+import VUploader from "./v-uploader.vue";
+import VPanel from "./v-panel.vue";
+import VLayerControl from "./v-layer-control.vue";
+import VMap from "./v-map.vue";
+import VMapControl from "./v-map-control.vue";
+import VOverlay from "./v-overlay.vue";
+import VPopup from "./v-popup.vue";
 
-export const IsobitUI = {
-	install(vApp: any) {
-		setApp(vApp);
-		vApp.BUILT_ON = import.meta.env.VITE_APP_BUILT_ON;
-		configureAxios(axios)
-		for (const prop in components) {
-			if (components.hasOwnProperty(prop)) {
-				const component = (components as any)[prop]
-				vApp.component(component.name || prop, component)
+window.isMobile = 1;
+if (typeof window._ == 'undefined') window._ = {};
+var _ = window._;
+if (!_.instance) {
+	_.instance = axios;
+}
+var instance = _.instance;
+Vue.config.ignoredElements = [...Vue.config.ignoredElements || [], ...['v-filter', 'v-footer']];
+Vue.n = (v) => {
+	v = v ? (v == '' ? null : Number('' + v)) : 0;
+	return v;
+}
+if (typeof JSON.clone !== "function") {
+	JSON.clone = function (obj) {
+		return JSON.parse(JSON.stringify(obj));
+	};
+}
+if (typeof Object.assign != 'function') {
+	Object.assign = function (target) {
+		'use strict';
+		if (target == null) {
+			throw new TypeError('Cannot convert undefined or null to object');
+		}
+		var to = Object(target);
+		for (var index = 1; index < arguments.length; index++) {
+			var nextSource = arguments[index];
+
+			if (nextSource != null) {
+				for (var nextKey in nextSource) {
+					if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+						to[nextKey] = nextSource[nextKey];
+					}
+				}
 			}
+		}
+		return to;
+	};
+}
+let buildPopupMenu = function (parent) {
+	var pid = parent.getAttribute("v--popup");
+	if (!pid) {
+		parent.setAttribute("v--popup", pid = _.id());
+		var popup = _.storeFunction[pid];
+
+		var bu = parent.querySelectorAll('.v-datatable-header .v-button');
+
+		if (bu && bu.length && !popup && window.innerWidth <= 700) {
+			setTimeout(function () {
+				popup = document.createElement('ul');
+				popup.className = 'v-popup-2';
+				popup.style.backgroundColor = 'white';
+				popup.style.position = 'absolute';
+				popup.style.bottom = '0px';
+				popup.style.fontSize = '26px';
+				popup.style.right = '0px';
+				popup.style.display = 'none';
+				popup.style.width = '200px';
+				popup.style.zIndex = '12000';
+				parent.appendChild(popup);
+				var mask = null;
+				var itemClick = function () {
+					//console.log(this);
+					popup.style.display = 'none';
+					var id = this.getAttribute('commandId');
+					var cmd = document.querySelector('#' + id);
+					if (cmd.tagName == 'BUTTON')
+						cmd.click();
+					else
+						cmd.children[0].click();
+					//console.log(cmd);
+					_.unmask(mask);
+				}
+				parent.style.position = 'relative';
+				var pbutton = document.createElement('div');
+				pbutton.className = 'v-mobil v-table-buttons';
+				var i = document.createElement('i');
+				i.className = 'fa fa-bars fa-w-14';
+				pbutton.appendChild(i);
+				pbutton.onclick = function () {
+					bu = parent.querySelectorAll('.v-datatable-header .v-button');
+					while (popup.firstChild) {
+						popup.removeChild(popup.firstChild);
+					}
+					for (i = 0; i < bu.length; i++) {
+						//Debe tenerlo directamente no por herencia
+						if ((bu[i].style.display != 'none')) {
+							var ite = document.createElement('li');
+							if (!bu[i].id) bu[i].id = 'c-' + _.id();
+							ite.setAttribute('commandId', bu[i].id);
+							if (bu[i].tagName == 'BUTTON') {
+								if (bu[i].disabled) continue;
+								ite.appendChild(bu[i].children[0].cloneNode(true));
+								ite.appendChild(document.createTextNode(bu[i].value ? bu[i].value : bu[i].title));
+							} else if (bu[i].children[0].children[1]) {
+								ite.appendChild(bu[i].children[0].children[1]);//.cloneNode()
+								ite.appendChild(document.createTextNode(bu[i].textContent));
+							}
+							ite.onclick = itemClick;
+							popup.appendChild(ite);
+						}
+					}
+					mask = _.mask(popup);
+					//popup.style.top=(parseInt(pbutton.style.top)+pbutton.offsetHeight)+'px';
+					popup.style.display = 'block';
+					mask.onclick = function () {
+						popup.style.display = 'none';
+						_.unmask(mask);
+					}
+				}
+
+				parent.appendChild(pbutton);
+
+				_.storeFunction[pid] = popup;
+			}, 1000);
 		}
 	}
 }
+let resize = function () {
+	console.log('Vue.resize2');
+	//dialog.style.left = (window.innerWidth - dialog.offsetWidth) / 2 + 'px';
+	var h = window.innerHeight;
+	document.body.children[0].style.height = h + '.px';
+	var ph = document.querySelectorAll("#page-header,.ui-layout-north,.v-layout-north,.ion-page >ion-header");
+	ph = ph[0];
+	var pc = document.querySelectorAll(".ion-page >ion-header + .ui-panel,#page-content,.ui-layout-pane-center,.v-layout-center ,.ion-page > ion-content");
 
-setTimeout(resize, 400);
+	if (pc && pc[0]) {
+		//console.log('cccccccccccc');
+		//console.log(ph.dataset);
+		//console.log(ph.offsetHeight);
+		var p, i;
 
-window.addEventListener('resize', () => {
+		if (pc[0].nodeName == "ION-CONTENT") {
+			p = pc[0].children[0];
+			h = h - ph.offsetHeight - 0;
+			p.style.height = h + 'px';
+			p.style.overflowY = 'auto';
+			if (!p.classList.contains('ui-panel')) p = p.children[0];
+			//console.log(p);
+			var event = new Event("parentResize", { bubbles: true });
+			event.height = h;
+			p.dispatchEvent(event);
+			//pass body panel it must have a form > v-datatable
+			if (p.children[1]) {
+				var body = p.children[1];
+				if (body.children[0].tagName == 'FORM') {
+					body = body.children[0].children[0]
+				}
+				//console.log(body);
+				buildPopupMenu(body);
+			}
+			return;
+		} else if (pc[0].nodeName == "DIV") {
+			p = pc[0];
+			console.log('==========DIV============');
+			console.log(p);
+			p.style.height = h + 'px';
+			p.style.overflowY = 'auto';
+			h = h - ph.offsetHeight - 0;
+			if (p.classList.contains('ui-panel')) {
+				//is v-form
+			} else {
+				p = p.children[0];
+			}
+			var event = new Event("parentResize", { bubbles: true });
+			event.height = h;
+			p.dispatchEvent(event);
+			if (p.children[1]) buildPopupMenu(p.children[1]);
+			return;
+		}
+		pc[0].style.height = (h - ph.offsetHeight - 2) + 'px';
+		pc[0].style.overflowY = 'auto';
+		p = pc[0].querySelector(".ui-panel");
+		console.log('==========ppp============');
+			console.log(p);
+		if (p) {
+			//console.log(p);
+			pc = p.children;
+			if (ph) h -= (ph.offsetHeight + pc[0].offsetHeight + 2);
+			if (pc[1]) {
+				console.log(pc[1]);
+				pc[1].style.height = h + 'px';
+				var e = pc[1].querySelectorAll(".v-resize,.v-datatable");
+				for (i = 0; i < e.length; i++) {
+					var evt2 = new Event("parentResize", { bubbles: true });
+					evt2.height = h;
+					e[i].dispatchEvent(evt2);
+				}
+			}
+		} else {
+
+			var f = function (el) {
+				var style = window.getComputedStyle(el);
+				return (style.display === 'none')
+			}
+			console.log(pc[0]);
+			//function isHidden(el) {return (el.offsetParent === null)}
+			if (!pc[0].children[0]) return;
+			console.log(h);
+			var items = pc[0].children;
+			for (i = 0; i < items.length; i++) {
+				var evt = new Event("parentResize", { bubbles: true });
+				evt.height = h;
+				items[i].dispatchEvent(evt);
+			}
+			items = pc[0].children[0].children;
+			var vc = [];
+			for (i = 0; i < items.length; i++) {
+				if (!f(items[i])) vc.push(items[i]);
+			}
+			if (vc.length == 1) {
+				vc[0].style.overflowY = 'auto';
+				//se debe remover el padding
+				/*var cs=window.getComputedStyle(vc[0]);
+				var pt=parseInt(cs.getPropertyValue('padding-top'))||0;
+				var pb=parseInt(cs.getPropertyValue('padding-bottom'))||0;
+				vc[0].style.height=(h-(ph.offsetHeight+0+40))+'.px';*/
+			}
+		}
+		//console.log("p");
+		//console.log(p);
+
+	} else {
+		var ww = document.querySelectorAll(".ion-page");
+
+		if (ww[0]) {
+			console.log('?????????????');
+			var hr = 0;
+			for (var kk = 0; kk < ww[0].childNodes.length; kk++) {
+				if (ww[0].childNodes[kk].nodeName == 'ION-HEADER' || ww[0].childNodes[kk].nodeName == 'ION-FOOTER') {
+					hr += ww[0].childNodes[kk].offsetHeight;
+				}
+			}
+			var aft = 0;
+			for (kk = 0; kk < ww[0].childNodes.length; kk++) {
+				var cn = ww[0].childNodes[kk];
+				if (cn.nodeName == 'ION-HEADER')
+					aft = 1;
+				if (aft == 1 && cn.nodeName != 'ION-HEADER' && cn.nodeName != 'ION-FOOTER' && cn.style) {
+					cn.style.height = ww[0].offsetHeight - hr + 'px';
+					cn.style.overflowY = 'auto';
+					break;
+				}
+			}
+			//console.log(ww[0].childNodes);
+		}else{
+			console.log(12);
+		}
+	}
+};
+setTimeout(Vue.resize = resize, 400);
+window.addEventListener('resize', function () {
 	setTimeout(resize, 400);
 });
+function HTML2Canvas(props) {
+	this.props = props;
+	this.ctx = props.ctx;
+	this.lineHeight = props.lineHeight ? props.lineHeight : 20;
+	this.heightText = function (s, w) {
+		var ctx = this.ctx, me = this;
+		var s2 = '';
+		var t = me.lineHeight;
+		s.split('').forEach((e) => {
+			s2 += e;
+			if (ctx.measureText(s2).width >= (w - 15)) {
+				s2 = '';
+				t += me.lineHeight;
+			}
+		});
+		t += 7;
+		return t;
+	},
+		this.drawText = function (s, x, y, w, h, a) {
+			var ctx = this.ctx, me = this;
+			var s2 = '';
+			var t = me.lineHeight + y;
+			ctx.fillStyle = "#000000";
+			s.split('').forEach((e) => {
+				s2 += e;
+				if (ctx.measureText(s2).width >= (w - 15)) {
+					ctx.fillText(s2, x, t);
+					s2 = '';
+					t += me.lineHeight;
+				}
+			});
+			ctx.fillText(s2, x + (a == 'right' ? (w - ctx.measureText(s2).width) : 0), t);
+			ctx.beginPath();
+			t += 7;
+			return t;
+		}
+}
+var f = {
+	value: function (v) {
+		var a = this;
+		for (var i = 0; i < a.length; i++)
+			if (a[i] == v) return true;
+		return false;
+	}
+};
+if (![].contains) Object.defineProperty(Array.prototype, 'contains', f);
+if (!"".contains) Object.defineProperty(String.prototype, 'contains', f);
+_ = Object.assign(_, {
+	initDB(version, stores) {
+		let db = window.indexedDB ||
+			window.mozIndexedDB ||
+			window.webkitIndexedDB ||
+			window.msIndexedDB;
+		_.IDBTransaction =
+			window.IDBTransaction ||
+			window.webkitIDBTransaction ||
+			window.msIDBTransaction;
+		_.IDBKeyRange =
+			window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+		if (!db) {
+			window.alert(
+				"Your browser doesn't support a stable version of IndexedDB."
+			);
+		} else {
+			_.indexedDB = db;
+			if (db) {
+				_.stores = stores;
+				return new Promise((resolve,reject) => {
+					let request = db.open("db", version);
+					request.onupgradeneeded = (event) => {
+						let db = event.target.result;
+						stores.forEach((e) => {
+							if (!db.objectStoreNames.contains(e[0])) {
+								db.createObjectStore(e[0], e[1]);
+							}
+						});
+					};
+					request.onerror = (e) => {
+						reject(e);
+					};
+					request.onsuccess = () => {
+						_.db = request.result;
+						resolve(_.db);
+					};
+				});
 
-export const ui = (cfg) => {
-	const defs = {
+			}
+		}
+		return db;
+	},
+	remoteServer: '',
+	_id: 0,
+	networkStatus: { connected: true },
+	storeFunction: {},
+	varMap: {},
+	id() {
+		return ++_._id;
+	},
+	findForm(e) {
+		var parent = e.parentNode;
+		if (parent && parent.tagName != 'FORM') {
+			parent = _.findForm(parent);
+		}
+		return parent;
+	},
+	contains(a, b) {
+		return a && a.includes(b);
+	},
+	uiParent(e) {
+		return e.ui || !e ? e : _.uiParent(e.$parent);
+	},
+	closest(el, sel) {
+		while ((el = el.parentElement) && !((el.matches || el.matchesSelector).call(el, sel)));
+		return el;
+	},
+	fadeOut(id, val) {
+		if (isNaN(val)) { val = 9; }
+		document.getElementById(id).style.opacity = '0.' + val;
+		//For IE
+		document.getElementById(id).style.filter = 'alpha(opacity=' + val + '0)';
+		if (val > 0) {
+			val--;
+			setTimeout('fadeOut("' + id + '",' + val + ')', 90);
+		} else { return; }
+	},
+	fadeIn(id, val) {
+		// ID of the element to fade, Fade value[min value is 0]
+		if (isNaN(val)) { val = 0; }
+		document.getElementById(id).style.opacity = '0.' + val;
+		//For IE
+		document.getElementById(id).style.filter = 'alpha(opacity=' + val + '0)';
+		if (val < 9) {
+			val++;
+			setTimeout('fadeIn("' + id + '",' + val + ')', 90);
+		} else { return; }
+	},
+	whichChild(e) {
+		var i = 0;
+		while ((e = e.previousElementSibling) != null)
+			++i;
+		return i;
+	},
+	showerror(e, m) {
+		if (e.$el) e = e.$el;
+		var previousElementSibling = e.previousElementSibling;
+		if (previousElementSibling && previousElementSibling.classList && previousElementSibling.classList.contains('v-error')) {
+			previousElementSibling.parentNode.removeChild(previousElementSibling);
+		}
+		previousElementSibling = e.previousElementSibling;
+		while (previousElementSibling && previousElementSibling.nodeType != 1) {
+			previousElementSibling = previousElementSibling.previousElementSibling;
+		}
+		if (!previousElementSibling) {
+			previousElementSibling = e.parentElement.previousElementSibling;
+			while (previousElementSibling && previousElementSibling.nodeType != 1) {
+				previousElementSibling = previousElementSibling.previousElementSibling;
+			}
+		}
+		var error = document.createElement("div");
+		error.innerHTML = m ? m : "Este campo es requerido!";
+		//ok = false;
+		error.classList.add("v-error");
+		e.parentNode.insertBefore(error, e);
+	},
+	print(o) {
+		var e = document.createElement('iframe');
+		document.body.appendChild(e);
+		var d = e.contentWindow.document;
+		e.style.display = 'none';
+		d.open();
+		d.write('<html><head><title>TT' + o.title + '</title>');
+		d.write('<link rel="stylesheet" type="text/css" href="/cdn/isobit.css?v=0004">' +
+			'<style>table{background-color:red}</style>');
+		d.write('</head><body style="padding:20px;background-color:white !important">');
+		d.write('<style>body, body > * {padding:20px;background-color:white !important }</style>');
+		d.write('<h1>' + o.title + '</h1>');
+		d.write(o.body);
+		d.write('</body></html>');
+		d.close();
+		e.focus();
+		e.contentWindow.print();
+	},
+	mask(ms, cfg) {
+		if (!document.body) return;
+		var w = window;
+		var center = document.createElement("div");
+		center.style = 'top:50%;transform:translate(-50%,-50%);position:absolute;width:100%;z-index:2';
+		var s = center.style;
+		s.left = '50%';
+		s.textAlign = 'center';
+		if (ms !== false) {
+			if (ms instanceof Element) {
+				center = ms;//.append(ms);
+			} else {
+				if (ms) {
+					var d = document.createElement('div');
+					d.innerHTML = ms;
+					center.append(d);
+					center.style = "padding:4px;margin-bottom:5px;color:white;font-size:24px;text-align:center"
+				}
+				var img = document.createElement('div');
+				s = img.style;
+				s.width = '100%';
+				s.height = '180px';
+				img.className = 'loading';
+			}
+		}
+		var p = document.createElement('div');
+
+		s = p.style;
+		s.height = '100%'; w.innerHeight;
+		s.top = '0px';
+		s.position = 'absolute';
+		s.left = '0'
+		s.zIndex = 10000;
+		s.width = '100%';
+		var bg = document.createElement('div');
+
+		s = bg.style;
+		s.height = '100%';
+		s.width = '100%';
+		s.top = '0';
+		s.position = 'absolute';
+		s.left = '0';
+		s.backgroundColor = 'rgba(0,0,0,0.5)';
+		if (cfg && cfg.opacity) s.opacity = cfg.opacity;
+		if (cfg && cfg.backgroundColor) s.backgroundColor = cfg.backgroundColor;
+		p.appendChild(bg);
+		p.appendChild(center);
+		if (img)
+			center.appendChild(img);
+		document.body.appendChild(p);
+		return p;
+	},
+	unmask(m) {
+		if (m) {
+			m.style.display = "none";
+			if (m.parentNode)
+				m.parentNode.removeChild(m);
+		}
+	},
+	clean(obj) {
+		for (var propName in obj) {
+			if (obj[propName] === '' || obj[propName] === null
+				|| typeof obj[propName] === 'function'
+				|| obj[propName] === undefined) {
+				delete obj[propName];
+			}
+		}
+		return obj;
+	},
+	processURL(s) {
+		//console.log(s);
+		return s;
+	},
+	loadCSS(url) {
+		var head = document.getElementsByTagName('head')[0];
+		var link = document.createElement('link');
+		//link.id   = cssId;
+		link.rel = 'stylesheet';
+		link.type = 'text/css';
+		link.href = url;
+		link.media = 'all';
+		head.appendChild(link);
+	},
+	go(u) {
+		window.location = u;
+	},
+	getCurrentPosition() {
+		return new Promise(function (res, rej) {
+			if (_.location) {
+				var id = 'result' + _.id();
+				_[id] = function (r) {
+					delete _[id];
+					if (r.coords) {
+						res(r);
+					} else
+						rej(r);
+				};
+				_.location(id);
+			} else if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(res, rej);
+			}
+		})
+	},
+	URL(path) {
+		var me = this;
+		me.location = window.location;
+		me.path = path ? path : window.location.pathname;
+		var h = me.path.split('?');
+		if (h.length > 1) {
+			me.path = h[0];
+			h = h[1].split('#');
+			me.query = h[0];
+		} else {
+
+			h = h[0].split('#');
+			me.path = h[0];
+		}
+		me.get = function (key, def) {
+			if (me.query) {
+				var kvp = me.query.split('&');
+				var i = kvp.length;
+				var x;
+				while (i--) {
+					x = kvp[i].split('=');
+					if (x[0] == key) {
+						return x[1];
+					}
+				}
+			}
+			return def;
+		};
+		me.put = function (key, value) {
+			key = encodeURI(key);
+			value = encodeURI(value);
+			var kvp = me.path.split('?');
+			if (kvp.length > 1) kvp = kvp[1].split('&');
+			var i = kvp.length;
+			var x;
+			while (i--) {
+				x = kvp[i].split('=');
+				if (x[0] == key) {
+					x[1] = value;
+					kvp[i] = x.join('=');
+					break;
+				}
+			}
+			if (i < 0) {
+				kvp[kvp.length] = [key, value].join('=');
+			}
+			//this will reload the page, it's likely better to store this until finished
+			//document.location.search = kvp.join('&'); 
+			//console.log('pathname='+me.location.pathname);
+			//console.log('query='+kvp.join('&'));
+			//console.log('hash='+me.location.hash);
+			return me.location.pathname + '?' + kvp.join('&') + me.location.hash;
+		}
+	},
+	loadScript(url, callback) {
+		// adding the script tag to the head as suggested before
+		var head = document.getElementsByTagName('head')[0];
+		var script = document.createElement('script');
+		script.type = 'text/javascript';
+		script.src = url;
+		// then bind the event to the callback function 
+		// there are several events for cross browser compatibility
+		script.onreadystatechange = callback;
+		script.onload = callback;
+		// fire the loading
+		head.appendChild(script);
+	},
+	sum(c) {
+		return this.reduce((a, b) => {
+			b = (c ? b[c] : b);
+			return a + (b ? Number(b) : 0);
+		}, 0);
+	}
+});
+_.getLocation = _.getCurrentPosition;
+Vue.id = _.id;
+if (typeof ol !== 'undefined') {
+	function getLayerById(m, id) {
+		var ly;
+		m.getLayers().forEach(function (l) {
+			if (l.get("id") === id) {
+				ly = l;
+				return;
+			}
+		});
+		return ly;
+	}
+	ol.getLayerById = getLayerById;
+	window.ol = ol;
+}
+Vue.pad = function (num, size) {
+	if (num != null) {
+		var s = (1 * num) + "";
+		while (s.length < size)
+			s = "0" + s;
+		return s;
+	}
+};
+Vue.filter('upper', _.upper = (s) => {
+	return s ? s.toUpperCase() : s;
+});
+Vue.filter('capitalize', _.capitalize = (o) => {
+	if (o) {
+		o = o.replace('_', ' ').replace(/\b[a-z](?=[a-z]{2})/gi, function (letter) {
+			return letter.toUpperCase();
+		})
+	}
+	return o;
+});
+Vue.filter('number', function (s/*, type*/) {//s usa   d|date('time')
+	if (s) {
+		//console.log('number='+s);
+		//https://blog.abelotech.com/posts/number-currency-formatting-javascript/
+		return s.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ')
+	}
+	return s;
+});
+Vue.filter('date', _.toDate = (s, type) => {//s usa   d|date('time')
+	if (s) {
+		var pad = Vue.pad, d;
+		if (s instanceof Date) {
+			d = s;
+		} else if (typeof s === 'string') {
+			var t = s.split('T');
+			d = t[0].split('-');
+			if (t.length > 1) {
+				t = t[1].split(':');
+				d = new Date(parseInt(d[0]), parseInt(d[1]) - 1, parseInt(d[2]),
+					parseInt(t[0]), parseInt(t[1]), t.length > 2 ? parseInt(t[2]) : 0);
+			} else if (d.length > 2) {
+				d = new Date(parseInt(d[0]), parseInt(d[1]) - 1, parseInt(d[2]));
+			} else {
+				d = s.split(':');
+				if (d.length > 2) {
+					d = new Date(1981, 0, 6, parseInt(d[0]), parseInt(d[1]), parseInt(d[2]));
+				} else
+					d = new Date(s);
+			}
+		} else {
+			d = new Date(s);
+		}
+		//console.log(s);
+		if (type == 1) {
+			s = d;
+		} else if (type === 'time') {
+			s = pad(d.getHours(), 2) + ":" + pad(d.getMinutes(), 2) + ':' + pad(d.setSeconds() ? d.setSeconds() : 0, 2);
+		} else if (type == 'time a') {
+			if (typeof s === 'string' || s instanceof String) {
+				s = s.split(':');
+				var h = s[0];
+				s = pad(h > 12 ? (h - 12) : h, 2) + ':' + s[1] + ':' + s[2] + ' ' + (h > 12 ? 'PM' : 'AM');
+			} else {
+				h = d.getHours();
+				s = pad(h > 12 ? (h - 12) : h, 2) + ":" + pad((d.getMinutes()), 2) + (d.setSeconds() ? ":" + pad(d.setSeconds(), 2) : '') + ' ' + (h > 12 ? 'PM' : 'AM');
+			}
+		} else if (type == 'date-')
+			s = pad(d.getFullYear(), 4) + "-" + pad((d.getMonth() + 1), 2) + "-" + pad(d.getDate(), 2);
+		else if (type == 'dMY' || type == 'date')
+			s = pad(d.getDate(), 2) + "/" + pad((d.getMonth() + 1), 2) + "/" + pad(d.getFullYear(), 4) + '';
+		else if (type == 'datetime')
+			s = pad(d.getFullYear(), 4) + "-" + pad((d.getMonth() + 1), 2) + "-" + pad(d.getDate(), 2) + 'T'
+				+ pad(d.getHours(), 2) + ":" + pad((d.getMinutes()), 2) + ":" + pad(d.setSeconds() ? d.setSeconds() : 0, 2);
+		else
+			s = pad(d.getDate(), 2) + "/" + pad((d.getMonth() + 1), 2) + "/" + pad(d.getFullYear(), 4) + ' ' + pad(d.getHours(), 2) + ":" + pad((d.getMinutes()), 2);
+
+	}
+	return s;
+});
+_.HTML2Canvas = HTML2Canvas;
+Vue.dateDiff = function (fa, fb) {  //fa y fb dos fechas
+	if (Number(fa) === fa) fa = new Date(fa);
+	var totdias = fa - fb;
+	totdias /= 3600000;
+	totdias /= 24;
+	totdias = Math.floor(totdias);
+	totdias = Math.abs(totdias);
+	var ans, meses, dias, m2, m1, d3, d2, d1;
+	var f2 = new Date();
+	var f1 = new Date();
+	if (fa > fb) {
+		f2 = fa;
+		f1 = fb;
+	} else {
+		f2 = fb;
+		f1 = fa;
+	}  //Siempre f2 > f1
+	ans = f2.getFullYear() - f1.getFullYear(); // dif de años inicial
+	m2 = f2.getMonth();
+	m1 = f1.getMonth();
+	meses = m2 - m1;
+	if (0 > meses) {
+		meses += 12;
+		--ans;
+	}
+	d2 = f2.getDate();
+	d1 = f1.getDate();
+	dias = d2 - d1;
+	var f3 = new Date(f2.getFullYear(), m2, 1);
+	f3.setDate(f3.getDate() - 1);
+	d3 = f3.getDate();
+	if (d1 > d2) {
+		dias += d3;
+		--meses;
+		if (0 > meses) {
+			meses += 12;
+			--ans;
+		}
+		if (fa > fb) {  //corrección por febrero y meses de 30 días
+			f3 = new Date(f1.getFullYear(), m1 + 1, 1);
+			f3.setDate(f3.getDate() - 1);
+			d3 = f3.getDate();
+			if (d3 == 30)
+				dias -= 1;
+			if (d3 == 29)
+				dias -= 2;
+			if (d3 == 28)
+				dias -= 3;
+		}
+	}
+	return { ans: ans, meses: meses, dias: dias, Tdias: totdias };
+}
+var f = {
+	value: function (v) {
+		var a = this;
+		for (var i = 0; i < a.length; i++)
+			if (a[i] == v) return true;
+		return false;
+	}
+};
+if (![].contains) Object.defineProperty(Array.prototype, 'contains', f);
+if (!"".contains) Object.defineProperty(String.prototype, 'contains', f);
+_.contains = function (a, b) {
+	//    console.log(a);
+	//    console.log(a&&a.includes(b));
+	return a && a.includes(b);
+}
+_.MsgBox = function MsgBox(m, cb, b) {
+	if (!b) b = ['OK'];
+	//si el elemento debe cargarse en un dialog
+	if (!document.body) return;
+	var overlay = document.createElement("div");
+	overlay.classList.add("v-overlay");
+	overlay.style.padding = "40px";
+	overlay.style.zIndex = "2000";
+	document.body.appendChild(overlay);
+	var dialog = document.createElement("div");
+	var dialogContent = document.createElement("div");
+	var msgContent = document.createElement("div");
+	var buttons = document.createElement("div");
+
+	buttons.className = "v-msgbox-buttons";
+	dialog.classList.add("v-dialog");
+	dialog.classList.add("v-msgbox");
+	msgContent.innerHTML = m;
+	dialog.setAttribute("path", _.currentPath);
+	dialog.setAttribute("callback", nid);
+	var closeListener = function () {
+		dialog.style.display = "none";
+		overlay.style.display = "none";
+
+		dialog.parentNode.removeChild(dialog);
+		overlay.parentNode.removeChild(overlay);
+		if (cb){
+			console.log(cb);
+			cb(this.getAttribute("index"));
+		}
+	};
+	for (var i = 0; i < b.length; i++) {
+		var button = document.createElement("button");
+		button.innerHTML = b[i];
+		button.type = "button";
+		button.setAttribute("index", i);
+		button.className = "v-button ui-widget ui-state-default ui-corner-all";
+		buttons.appendChild(button);
+		button.addEventListener("click", closeListener);
+	}
+	dialogContent.className = "v-dialog-content v-widget-content";
+	dialogContent.appendChild(msgContent);
+	dialogContent.appendChild(buttons);
+	dialog.appendChild(dialogContent);
+	overlay.appendChild(dialog);
+	overlay.style.visibility = "unset";
+	overlay.style.opacity = "unset";
+	overlay.style.overflow = "auto";
+	dialog.style.margin = "0 auto";
+	dialog.style.position = "unset";
+	var nid = 'v_' + 0;// _.id();
+
+	/*var acl=h.querySelector('.ui-js-close');
+if (!acl) {
+	var span = document.createElement("span");
+	span.style.top = "5px";
+	span.style.right = "5px";
+	h.style.position = "relative";
+	span.style.position = "absolute";
+	span.className = "ui-icon ui-icon-closethick";
+	acl = document.createElement("a");
+	acl.className = "ui-js-close ui-dialog-titlebar-icon ui-dialog-titlebar-close ui-corner-all";
+	acl.appendChild(span);
+	h.appendChild(acl);
+	acl.addEventListener("click", closeListener);
+}*/
+	Vue.resize();
+}
+function isObject(item) {
+	return (item && typeof item === 'object' && !Array.isArray(item));
+}
+Vue.mergeDeep = function () {
+	var target = arguments[0];
+	var sources = [];
+	for (var i = 1; i < arguments.length; i++)sources.push(arguments[i]);
+	//Vue.mergeDeep = function(target, ...sources) {
+	if (!sources.length) return target;
+	//Se obtiene el primer elemento de source
+	var source = sources.shift(), nv;
+	//const source = sources.shift();
+	if (isObject(target) && isObject(source)) {
+		for (var key in source) {
+			//for (const key in source) {
+			if (isObject(source[key])) {
+				/*console.log(key);
+				console.log(source[key]);
+				console.log(typeof source[key]);*/
+				if (!target[key]) { nv = {}; nv[key] = {}; Object.assign(target, nv); }
+				Vue.mergeDeep(target[key], source[key]);
+			} else {
+				nv = {};
+				nv[key] = source[key];
+				Object.assign(target, nv);
+				//Object.assign(target, { [key]: source[key] });
+			}
+		}
+	}
+	var args = [];
+	args.push(target);
+	args.concat(sources);
+	return Vue.mergeDeep.apply(null, args);
+	//return mergeDeep(target, ...sources);
+}
+
+window.ui = _.ui = function (cfg) {
+	var defs = {
+		watch: {
+			$route(v) {
+				console.log('$route');
+				Vue.resize();
+				this.changeRoute(v);
+			},
+			cleanedFilters() {
+				if (this.$el) {
+					if (this.t) clearTimeout(this.t);
+					this.t = setTimeout(() => {
+						this.refresh();
+					}, 1200);
+
+				}
+			},
+		},
 		computed: {
-			connected: {
+			connected:{
 				get() {
 					return this.online&&this.x_connected_!==false;
 				},
 				set(v) {
-					let me = this;
-					let session = me.session;
+					let me=this;
+					let session=me.session;
 					this.x_connected_ = v;
-					console.log('this.x_connected_ = ' + this.x_connected_);
+					console.log('this.x_connected_ = '+this.x_connected_);
 					//session.connected=v;
 					this.$set(session, 'connected', v);
-					me.session = session;
+					me.session=session;
 				},
 			},
 			session: {
@@ -55,20 +952,16 @@ export const ui = (cfg) => {
 				set(session) {
 					if (!session)
 						localStorage.removeItem('session');
-					else {
-						if (Array.isArray(session.perms)) {
-							session.perms = session.perms.reduce((a, v) => { a[v] = true; return a; }, {});
-						}
+					else
 						localStorage.setItem('session', JSON.stringify(session));
-					}
 					_._session = session;
 				}
 			},
 			online() {
-				return this.app2&&this.app2.networkStatus?.connected;
+				return this.app.networkStatus.connected!==false;
 			},
 			cleanedFilters() {
-				return clean(this.filters);
+				return _.clean(this.filters);
 			},
 			app() {
 				return _.app;
@@ -83,60 +976,42 @@ export const ui = (cfg) => {
 			rowSelectedCount() {
 				var me = this;
 				//console.log(me.$children);
-				return 1;
-				/*if (!me.$children[0]) return 0;
+				if (!me.$children[0]) return 0;
+
 				var t = me.$children[0].$children[0];
-				return t ? t.selected.length : 0;*/
+				return t ? t.selected.length : 0;
 			},
-			baseURL() { return axios.defaults.baseURL; }
+			baseURL() { return Vue.baseURL ? Vue.baseURL : axios.defaults.baseURL; }
 		},
 		data() {
-			let me = this;
+			var me = this;
 			return {
-				app2:null,
 				filters: {},
 				ui: me,
-				_session: null, x_connected_: null,
+				_session: null,x_connected_:null,
 				//rowSelectedCount: 0,
-				row: {},
-				networkStatus: { connected: null }
+				row: {}
 			}
 		},
 		created(){
-			let me=this;
-			if(!_.app2){
-				
-				_.app2=me;
-				console.log('app created',_.app2);
+			this.x_connected_ = this.session.connected;
+		},
+		updated() {
+			console.log('main.update')
+		},
+		mounted() {
+			var me = this;
+			var vueid = _.id();
+			//error cuando se carga un mapa con v-panel el mapa de turismo  es ejemplo
+			if (me.$el && me.$el.setAttribute) {
+				me.$el.setAttribute("vueid", vueid);
 			}
-			me.app2=_.app2;
-
+			_.varMap[vueid] = me;
+			me.ddd(me.$root);
 		},
 		methods: {
-			pad,
-			bindLinks (el, callback) {
-				const me = this;
-				//el = el ? el : me.$el;
-				if (el.querySelectorAll) {
-					//var a=el.querySelectorAll('a:not(._),ion-item:not(._)'); 
-					const a = el.querySelectorAll('a:not(._),ion-item:not(._)');
-					var f0 = (e) =>{ e.preventDefault(); };
-					var f = (e) => {
-						e.preventDefault();
-						if (callback) callback();
-						me.open(e);
-					};
-					for (let i = 0; i < a.length; i++) {
-						if (a[i].href||a[i].attributes.href) {
-							a[i].onclick = f;
-						} else
-							a[i].onclick = f0;
-						a[i].classList ? a[i].classList.add('_') : a[i].className = '_';
-					}
-				}
-			},
 			resize() {
-				//Vue.resize();
+				Vue.resize();
 			},
 			vv(v) {
 				var me = this;
@@ -147,7 +1022,7 @@ export const ui = (cfg) => {
 							try {
 								session = JSON.parse(session);
 							} catch (e) {
-								//console.log(e);
+								console.log(e);
 								session = {};
 							}
 							session.connected = v;
@@ -160,21 +1035,89 @@ export const ui = (cfg) => {
 				};
 				Network.getStatus().then(sf);
 			},
-			getSelected(e) {
+			bindLinks(el, callback) {
 				var me = this;
-				var t = e && e.$vnode ? e : me.$children[0].$children[0];
-				var s = [];
-				for (var i = 0; i < t.selected.length; i++) {
-					s.push(t.data[t.selected[i]]);
+				el = el ? el : me.$el;
+				//console.log(el);
+				//console.log("ENTLO")
+				if (el.querySelectorAll) {
+					//var a=el.querySelectorAll('a:not(._),ion-item:not(._)'); 
+					var a = el.querySelectorAll('a:not(._),ion-item:not(._)');
+					//console.log(a)
+					var f0 = function (e) { e.preventDefault(); };
+					var f = function (e) {
+						e.preventDefault();
+						if (callback) callback();
+						me.open(e);
+					};
+					for (var i = 0; i < a.length; i++) {
+						if (a[i].attributes.href) {
+							a[i].onclick = f;
+						} else
+							a[i].onclick = f0;
+						a[i].classList ? a[i].classList.add('_') : a[i].className = '_';
+					}
 				}
-				return s;
+			},
+			MsgBox: _.MsgBox,
+			changeRoute() {/*console.log(v)*/ },
+			pad: Vue.pad,
+			key() { return Math.random(); },
+			submitFile (f, name, cb) {
+				var formData = new FormData();
+				name = name ? name : f.name.replace(/[^\w\s.]/gi, '');
+				formData.append('filename', name);
+				formData.append('file', f, name);
+				axios.post('/api/file/upload', formData, {
+					headers: {
+						'Content-Type': 'multipart/form-data',
+						filename: name
+					}
+				}).then(function (r) {
+					cb(r.data);
+				}).catch(function () {
+					console.log('FAILURE!!');
+				});
+			},
+			go(e) { window.o(e); },
+			ddd(/*o*/) {
+				//                for(var i=0;i<o.$children.length;i++){
+				//                    var child=o.$children[i];
+				//                    console.log(child);
+				//                    if (child.$vnode.tag && child.$vnode.tag.includes("v-table")) {
+				//                        //child.setColumns(columns);
+				//                    }else{
+				//                        this.ddd(child);
+				//                    }
+				//                }
+			},
+			rowCreated(r) {
+				this.row = r;
+			},
+			getSelected(e) {
+				const me = this, t = e && e.$vnode ? e : me.$children[0].$children[0];
+				return t.selected;
 			},
 			getRowSelectedCount() {
 				var me = this;
 				var t = me.$children[0].$children[0];
 				return t ? t.selected.length : 0;
 			},
-			rewrite(url) { return url; },
+			rewrite(url){return url;},
+			create() {
+				var me = this;
+				var action = me.$children[0].action;
+				if (!action)
+					action = window.location.pathname;
+				action = _.processURL(action);
+				if (action) action = action.replace("/api", "");
+				if (_.app) {
+					me.open(action + '/create');
+				} else {
+					instance.get(_.currentPath = (action + '/create').replace(/([^:]\/)\/+/g, "$1") + '?modal')
+						.then(_.open).catch(me.error);
+				}
+			},
 			edit(e) {
 				var me = this;
 				var f = me.$children[0];
@@ -182,14 +1125,14 @@ export const ui = (cfg) => {
 				var t = [].filter.call(e.component.$parent.$children, (e) => {
 					return e.$el.classList.contains('v-datatable');
 				})[0];
-				if (!action) {
+				if(!action){
 					action = window.location.pathname;
 				}
 				if (t && t.src) action = t.src;
 				if (e.action) action = e.action;
-				if (!t) {
+				if (!t){
 					t = e.$vnode ? e : (e.target && e.target.$vnode) ? e : me.$children[0].$children[0];
-					if (t.src)
+					if(t.src)
 						action = t.src;
 				}
 
@@ -197,7 +1140,7 @@ export const ui = (cfg) => {
 				var selected = me.getSelected(t)[0];
 				var id = selected[t.rowKey];
 				if (selected.tmpId) id = -selected.tmpId;
-				//console.log(selected);
+				console.log(selected);
 				if (me.getSelectedId) id = me.getSelectedId(selected);
 				if (_.app) {
 					me.open(action + '/' + id + '/edit');
@@ -271,17 +1214,17 @@ export const ui = (cfg) => {
 						if (r == 0) {
 							var src = t.src.replace('/0/0', '');
 							var ele = [];
-							//console.log(t.selected);
+							console.log(t.selected);
 							var k = (t.selected.length - 1)
-							axios.delete(src + '/' + id, { params: t.filters }).then(() => {
-								//console.log(t.selected);
+							axios.delete(src + '/' + id, { params: t.filters }).then(function () {
+								console.log(t.selected);
 								for (; k >= 0; k--) {
-									//console.log('k=' + k);
-									//console.log(t.data);
-									//	console.log('t.selected[k]=' + t.selected[k]);
+									console.log('k=' + k);
+									console.log(t.data);
+									console.log('t.selected[k]=' + t.selected[k]);
 									dat = t.data[t.selected[k]];
 									ele.push(dat);
-									//console.log(ele);
+									console.log(ele);
 									t.data.splice(t.selected[k], 1);
 								}
 								if (me.app && me.app.toast)
@@ -307,7 +1250,6 @@ export const ui = (cfg) => {
 					var t = e.target;
 
 					var me = this;
-
 					if (typeof e == 'string') {
 						t = e;
 					} else if (t.tagName == "ION-ITEM" && t.href) {
@@ -320,10 +1262,8 @@ export const ui = (cfg) => {
 						if (!t.pathname) t = t.parentNode;
 						t = t.pathname;
 					}
-
 					if (me.$route.path !== t) {
-						//console.log('path=' + t);
-						console.log('me.$route=', me.$router, t);
+						console.log('path=' + t);
 						me.$router.push(t);
 					}
 					return;
@@ -335,18 +1275,18 @@ export const ui = (cfg) => {
 				} else if (response instanceof HTMLElement) {
 
 					path = (path && path.closeOnClickOut) ? (path) : {};
-					//console.log("PATH====");
-					//console.log(path);
+					console.log("PATH====");
+					console.log(path);
 				} else if (response.target) {
 					el = response.target;
 					return me.open(el.pathname ? el.pathname : el.href);
 				} else if (response === 'GET') {
 					if (typeof path == 'string') {
-						let cfg = { path: _.currentPath = path + (typeof o == 'string' ? '/' + o : '') };
+						var cfg = { path: _.currentPath = path + (typeof o == 'string' ? '/' + o : '') };
 						if (typeof o == 'function') {
 							cfg.result = o;
 						} else if (typeof o == 'object') {
-							cfg = mergeDeep(cfg, o);
+							cfg = Vue.mergeDeep(cfg, o);
 						}
 						return me.open(response, cfg);
 					} else if (!path.data) {
@@ -385,8 +1325,8 @@ export const ui = (cfg) => {
 				} else if (response.data) {
 					path = response;
 				}
-				//console.log("open(path="+path+")");
-				//console.log(path);
+				console.log("open(path="+path+")");
+				console.log(path);
 				var dialog, nid = Vue.id(), scriptDom = [], for_, ifor = 0;
 				if (response instanceof HTMLElement) {
 					dialog = response;
@@ -631,31 +1571,99 @@ export const ui = (cfg) => {
 				//si history esta activo
 				//history.back();
 			},
-			create() {
-				const me = this;
-				const exposed = me.$el.__vnode.ctx.exposed;
-				console.log(exposed);
-				var action = exposed.action;
-				if (!action) {
-					action = window.location.pathname;
-				}
-				//action = _.processURL(action);
-				if (action) action = action.replace("/api", "");
-				if (app()) {
-					me.open(action + '/create');
+			refresh() {
+				//Para que funcione se debe tener el listado respetando la estructura 
+				var me = this;
+				var t = me.$children[0].$children[0];
+				t.load();
+			},
+			removeStored(storage) {
+				if (window.idb) {
+					var me = this, db = window._.db, objectStore = db.transaction([storage], "readwrite").objectStore(storage);
+					var objectStoreRequest = objectStore.clear();
+					objectStoreRequest.onerror = function () {
+						me.MsgBox('Error al eliminar data temporal');
+					};
 				} else {
-					instance.get(_.currentPath = (action + '/create').replace(/([^:]\/)\/+/g, "$1") + '?modal')
-						.then(_.open).catch(me.error);
+					localStorage.removeItem(storage);
+				}
+
+			},
+			async toast(msx, callback) {
+				if (msx.message && !msx.duration) msx.duration = 2000;
+				const toast = await this.$ionic.toastController.create(msx.message ? msx : {
+					message: msx,
+					duration: 2000
+				});
+				await toast.present();
+				if (callback) callback();
+			},
+			async setStoredList(store, data) {
+				if (_.db) {
+					try {
+						var db = _.db, objectStore = db.transaction([store], "readwrite").objectStore(store);
+						var objectStoreRequest = objectStore.clear();
+						objectStoreRequest.onsuccess = ()=> {
+							for (var i in data) {
+								console.log(data[i]);
+								var request = objectStore.add(data[i]);
+								request.onerror = (event)=> {
+									console.log(event);
+								}
+							}
+						};
+					} catch (e) {
+						alert(store);
+						throw e;
+					}
+				} else {
+					localStorage.setItem(store, JSON.stringify(data))
 				}
 			},
-			refresh() {
-				const me = this;
-				//console.log(me.$el.__vnode.dynamicChildren[0].el.__vnode.dynamicChildren[1].children[0].type.setup().al())
-				const node = me.$el.__vnode;
-				console.log(node.children[1].children[0]);
-				const t = node.children[1].children[0].children[0].component.exposed;
-				//const t = node.dynamicChildren[0].el.__vnode.dynamicChildren[1].children[0].component.exposed;
-				t.load();
+			async getStoredList(store, params) {
+				let loadedStores;
+				try {
+					loadedStores = JSON.parse(sessionStorage.getItem('loadedStores'));
+				} catch (e) { }
+				if (loadedStores == null) loadedStores = {};
+				//console.log(loadedStores);
+				if (!loadedStores[store] && _.networkStatus.connected) {
+					let e = _.stores.filter(e => e[0] == store)[0];
+					//console.log(e);
+					if(!e[2]) throw "store url is empty";
+					let data = await axios.get(e[2]);
+					let objectStore = _.db.transaction([e[0]], "readwrite").objectStore(e[0]);
+					await objectStore.clear();
+					data = data.data||data;
+					for (var i in data) {
+						try {
+							await objectStore.add(data[i]);
+						} catch (exception) {
+							//console.log(data[i]);
+							//console.log(e[0]);
+							throw exception;
+						}
+					}
+					loadedStores[store] = 1;
+					sessionStorage.setItem('loadedStores', JSON.stringify(loadedStores));
+				}
+				let p = new Promise((resolve,rejected) => {
+					if(_.db){
+						var t = _.db.transaction(store), objectStore = t.objectStore(store);//,d=[];
+						var r = objectStore.getAll();
+						r.onsuccess = function () {
+							resolve(r.result);
+						}
+					}else rejected('db is null');
+					//t.onerror = event => reject(event.target.error);
+				});
+				let result = await p;
+				//console.log(result);
+				return result;
+			},
+			getStoreObject(storage, id) {
+				var db = window._.db, objectStore = db.transaction([storage], "readwrite").objectStore(storage);
+				return objectStore.get(id);
 			},
 			async sync(e) {
 				var me = this;
@@ -737,34 +1745,34 @@ export const ui = (cfg) => {
 			async save() {
 				var me = this;
 				me.$forceUpdate();
-				let p = me.$el;
+				var p = me.$el;
 				//Se debe buscar si abajo esta el form
-				let f = p.querySelector("form");
-				let va = this.validate(f);
+				var f = p.querySelector("form");
+				var va = this.validate(f);
 				if (va) {
-					let action = f.getAttribute('action');
+					var action = f.getAttribute('action');
 					//console.log('Action='+action);
 					if (!action) {
 						action = me.$el.parentNode.getAttribute('path');
 						if (action) {
 							//debe en ciertos casoss sobreescribirse ponr unas rglas definidas y una tabla extra
-							let tc = action.split('/');
-							if (tc[tc.length - 1] == 'edit') {
+							var tc = action.split('/');
+							if (tc[tc.length - 1] == 'edit')
 								tc = tc.splice(0, tc.length - 2);
-							} else {
+							else
 								tc = tc.splice(0, tc.length - 1);
-							}
 							action = me.apiLink(tc.join('/'));
 						}
 					}
-					//console.log(me);
-					let o0 = me.$data.data ? me.$data.data : me.$data.o;
+
+					var o0 = this._data.data ? this._data.data : this._data.o;
 					var o = JSON.parse(JSON.stringify(o0));
+
 					if (me.process) o = me.process(o);
-					
+					//console.log('o2='+o);
 					if (!(typeof o === 'object'
 						&& !Array.isArray(o) && o !== null)) return;
-					if (!action || !me.app2.connected) {
+					if (!action || !me.app.networkStatus.connected) {
 						let store = me.$children[0].store;
 						if (!store) { me.MsgBox('Store in form is undefined!'); return; }
 						let storedList = await me.getStoredList(store);
@@ -786,8 +1794,8 @@ export const ui = (cfg) => {
 							//add new item to start to array							
 							var objectStoreRequest = objectStore.add(o);
 							objectStoreRequest.onsuccess = (e) => {
-								//console.log(e);
-								//console.log('saved to ' + store);
+								console.log(e);
+								console.log('saved to ' + store);
 								storedList.unshift(o);
 								me.$emit('stored', o, storedList, objectStore);
 								if (me.app && me.app.toast) me.app.toast('El registro fue grabado exitosamente!');
@@ -797,15 +1805,15 @@ export const ui = (cfg) => {
 							};
 							objectStoreRequest.onerror = (e) => {
 								if (me.app && me.app.toast) me.app.toast('Error!');
-								//console.log(e);
+								console.log(e);
 							};
 						} else {
 							delete o.synchronized;
 							var item = objectStore.get(o.tmpId);
 							item.onsuccess = function () {
-								//console.log(item.result);
+								console.log(item.result);
 								if (item.result) {
-									//console.log('objectStore.put(o)');
+									console.log('objectStore.put(o)');
 									objectStore.put(o);
 								} else {
 									storedList.forEach((ee) => {
@@ -823,11 +1831,9 @@ export const ui = (cfg) => {
 							};
 						}
 					} else {
-						axios.post(action, o).then((result) => {
-
+						axios.post(action, o).then(function (result) {
 							var data = result.data;
 							if (o.tmpId) {
-								alert(12)
 								var store = me.$children[0].store;
 								var objectStore = window._.db.transaction([store], "readwrite").objectStore(store);
 								var item = objectStore.get(o.tmpId);
@@ -852,18 +1858,19 @@ export const ui = (cfg) => {
 									me.MsgBox('Error getting temporal record ' + o.tmpId);
 								};
 							}
-							
-							if (me.app&&me.app.toast)
+
+							if (me.$ionic)
 								me.app.toast('El registro fue grabado exitosamente!', () => {
 									me.close({ success: true, data: data });
 								});
 							else {
-								MsgBox('El registro fue grabado exitosamente!', () => {
+								console.log(data);
+								me.MsgBox('El registro fue grabado exitosamente!', function () {
 									me.close({ success: true, data: data });
 								});
 							}
 						}).catch(function (r) {
-							//console.log(r);
+							console.log(r);
 							if (r.response) {
 								var l, e;
 								if ((typeof r.response.data) === 'string') {
@@ -898,13 +1905,12 @@ export const ui = (cfg) => {
 						});
 					}
 				} else {
-					MsgBox('Verifique el formulario, aun tiene campos obligatorios sin completar.');
-					if (me.$el.parentNode.className == 'v-dialog') {
+					me.MsgBox('Verifique el formulario, aun tiene campos obligatorios sin completar.');
+					if (me.$el.parentNode.className == 'v-dialog')
 						me.$el.parentNode.parentNode.scroll({
 							top: 0,
 							behavior: 'smooth'
 						});
-					}
 				}
 			},
 			saveAs(url, o, config) {
@@ -939,16 +1945,13 @@ export const ui = (cfg) => {
 					const url = window.URL.createObjectURL(new Blob([response.data]));
 					const link = document.createElement('a');
 					link.href = url;
-					if (!cfg.fileName){
-						const disposition = response.headers['content-disposition'];
-						if (disposition && disposition.indexOf('attachment') !== -1) {
-							const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-							const matches = filenameRegex.exec(disposition);
-							if (matches != null && matches[1]) {
-								cfg.fileName = matches[1].replace(/['"]/g, '').trim();
-							}
-						} else {
-							console.warn('content-disposition: attachment; filename = <filename>; header no es accesible o no esta definido correctamente')
+					if (!cfg.fileName)
+						var disposition = response.headers['content-disposition'];
+					if (disposition && disposition.indexOf('attachment') !== -1) {
+						var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+						var matches = filenameRegex.exec(disposition);
+						if (matches != null && matches[1]) {
+							cfg.fileName = matches[1].replace(/['"]/g, '').trim();
 						}
 					}
 					//console.log('cfg.fileName='+cfg.fileName);
@@ -960,15 +1963,14 @@ export const ui = (cfg) => {
 			savePost() {
 
 			},
-			validate(e2?) {
-				const me = this;
+			validate(e2) {
+				var me = this;
 				var ok = true;
-				const fieldsWithErrors = [];
-				const fieldsOk = [];
-				e2 = e2 && e2 != 0 ? e2 : me.$el;
-				var input = e2?.querySelectorAll("input,select,textarea,div[required=required]");
+				e2 = e2 ? e2 : me.$el;
+				var input = e2.querySelectorAll("input,select,textarea,div[required=required]");
 				var radio = {}, previousElementSibling;
-				for (i = 0; input?.length > i; i++) {
+
+				for (i = 0; input.length > i; i++) {
 					var e = input[i];
 					if (e.type === 'radio') {
 						var oo = radio[e.name];
@@ -977,13 +1979,14 @@ export const ui = (cfg) => {
 						oo.push(e);
 						continue;
 					}
-					if (e.error) {
-						e.error.style.display = 'none';
+					previousElementSibling = e.previousElementSibling;
+					if (previousElementSibling && previousElementSibling.classList && previousElementSibling.classList.contains('v-error')) {
+						previousElementSibling.parentNode.removeChild(previousElementSibling);
 					}
-
-
 					if (!(e.disabled || e.getAttribute('disabled')) && (e.required || e.tagName === 'DIV')) {
-						//console.log(document.activeElement==e);
+						//console.log([e]);
+						//console.log(e.value);console.log(e.nodeValue);
+
 						if (e.tagName != 'DIV' && (!e.value/*||e.value == 0*/) || (e.tagName === 'DIV'
 							&& !e.attributes.value)) {
 							previousElementSibling = e.previousElementSibling;
@@ -996,14 +1999,14 @@ export const ui = (cfg) => {
 									previousElementSibling = previousElementSibling.previousElementSibling;
 								}
 							}
-							//console.log(e)
-							fieldsWithErrors.push(e);
-						} else {
-							fieldsOk.push(e);
+							var error = document.createElement("div");
+							error.innerHTML = "Este campo es requerido!";
+							ok = false;
+							error.classList.add("v-error");
+							e.parentNode.insertBefore(error, e);
 						}
 					}
 				}
-				console.log('valid radios');
 				for (var r in radio) {
 					if (Object.prototype.hasOwnProperty.call(radio, r)) {
 						var op = radio[r];
@@ -1040,25 +2043,191 @@ export const ui = (cfg) => {
 						}
 					}
 				}
-				console.log('ok=' + ok);
-				for (const field of fieldsWithErrors) {
-					if (!field.error) {
-						const error = document.createElement("div");
-						error.innerHTML = "Este campo es requerido!";
-						error.classList.add("v-error");
-						field.error = error;
-						field.parentNode.insertBefore(error, field.nextSibling)
-					} else {
-						field.error.style.display = 'unset';
+				return ok;
+			},
+			showerror: _.showerror
+		}
+	};
+	if (!cfg) cfg = { data: { o: {} } };
+	if (!window.isMobile) {
+		var el = cfg.el;
+		if (typeof cfg.el === 'string') {
+			el = document.querySelector(cfg.el);
+		} else {
+			var script = document.getElementsByTagName("script");
+			el = script[script.length - 1].previousElementSibling.previousElementSibling;
+		}
+		var tv = el.querySelectorAll("v-tabview");
+		for (var i = 0; i < tv.length; i++) {
+			var id = 'v-' + _.id();
+			tv[i].setAttribute("vid", id);
+			var cn = tv[i].childNodes;
+			var tabs = [];
+			_.varMap[id] = tabs;
+			for (var j = 0; j < cn.length; j++) {
+				if (cn[j].tagName) {
+					cn[j].className = 'hide';
+					tabs.push({
+						title: cn[j].title
+					});
+				}
+			}
+
+		}
+		cfg.el = el;
+	}
+	cfg = { mixins: [defs, cfg] };
+	return window.isMobile ? cfg : new Vue(cfg);
+}
+function configureAxios(a) {
+	var mask;
+	a.interceptors.request.use(function (config) {
+		_.eeee = config;
+		if (config.mask) {
+			config.mask();
+		} else if (!mask)
+			mask = _.mask();
+		return config;
+	}, function (e) {
+		mask = _.unmask(mask);
+		_.MsgBox('request ' + _.id() + ' ' + e.message)
+		return Promise.reject(e);
+	});
+	a.interceptors.response.use(function (response) {
+		mask = _.unmask(mask);
+		return response;
+	}, function (e) {
+		if (axios.error && axios.error(e) == false) {
+			mask = _.unmask(mask);
+		} else {
+			var r = e.response, msg = (r && r.data && r.data.msg) ? r.data.msg : e.message;
+			if (r) {
+				if (r.data && r.data.message) msg = r.data.message;
+				if ((typeof r.data) === 'string') msg = r.data;
+				if (!msg) {
+					msg = r.status + ': ' + r.statusText;
+				}
+			}
+			mask = _.unmask(mask);
+			if (r && r.status == 401) {
+				if (_.app) {
+					_.app.toast('Session terminada');
+					_.app.logout();
+					return;
+				}
+			}
+			if (e.config.error) {
+				console.log('error');
+				e.config.error(e, msg);
+			} else {
+				console.log('mssg');
+				_.MsgBox('<b>' + e.request.responseURL + '</b><br/><br/>' + msg);
+			}
+			console.log(msg);
+			console.log(r);
+		}
+		delete axios.error;
+		return Promise.reject(e);
+	});
+}
+window._ = _;
+window.Vue = Vue;
+window.axios = axios;
+_.axios = axios;
+Vue.configureAxios = configureAxios;
+configureAxios(axios);
+export default {
+	install(Vue, options) {
+		console.log(_.Vue);
+		Vue.filter('upper', (s) => {
+			return s ? s.toUpperCase() : s;
+		});
+		Vue.filter("date", _.toDate.bind(options));
+		Vue.filter("capitalize", _.capitalize.bind(options));
+		Vue.filter("upper", _.upper.bind(options));
+		console.log('filter date addedd!');
+		Vue.component("v-autocomplete", VAutocomplete);
+		Vue.component("v-button", VButton);
+		Vue.component("v-calendar", VCalendar);
+		Vue.component("v-checkbox", VCheckbox);
+		Vue.component("v-checkbox-group", VCheckboxGroup);
+		Vue.component("v-radio", VRadio);
+		Vue.component("v-radio-group", VRadioGroup);
+		Vue.component("v-group", VGroup);
+		Vue.component("v-dataview", VDataview);
+		Vue.component("v-fieldset", VFieldset);
+		Vue.component("v-form", VForm);
+		Vue.component("v-table", VTable);
+		Vue.component("v-tabview", VTabview);
+		Vue.component("v-switch", VSwitch);
+		Vue.component("v-select", VSelect);
+		Vue.component("v-layer-control", VLayerControl);
+		Vue.component("v-map", VMap);
+		Vue.component("v-map-control", VMapControl);
+		Vue.component("v-number", VNumber);
+		Vue.component("v-options", VOptions);
+		Vue.component("v-overlay", VOverlay);
+		Vue.component("v-uploader", VUploader);
+		Vue.component("v-panel", VPanel);
+		Vue.component("v-popup", VPopup);
+		Vue.component("v-textarea", VTextarea);
+		Vue.component('v-filter-calendar', {
+			template: '<div><v-button icon="fa-calendar" v-on:click.prevent="open"/>' +
+				'<v-panel style="text-align:left;position:absolute;display:none" v-bind:header="\'Configurar Filtro []\'"><div style="padding:20px"><div class="v-form"><label>Desde:</label><v-calendar v-model="from"/><label>Hasta:</label><v-calendar v-model="to"/></div>' +
+				'<center style="padding-top:20px"><v-button icon="fa-check" value="Aceptar"/><v-button icon="fa-ban" v-on:click.prevent="close" value="Cerrar"/></center></div>' +
+				'</v-panel></div>',
+			data: function () { return { el: null, mask: null } },
+			methods: {
+				open() {
+					var el = this.el ? this.el : (this.el = this.$el.children[1]);
+					this.mask = _.mask(el, { backgroundColor: 'rgba(0,0,0,0.95)' });
+					el.style.display = 'block';
+				},
+				close() {
+					_.unmask(this.mask);
+				}
+			}
+		});
+		Vue.component('v-accordion', {
+			mounted() {
+			},
+			methods: {
+				toggle(e) {
+					this.$emit('change', e);
+				}
+			},
+			template: '<div class="v-accordion"><slot></slot></div>'
+		});
+		Vue.component('v-tab', {
+			props: ['title', 'expanded'],
+			data() {
+				return {
+					count: 0, expanded_: 0
+				}
+			},
+			update() {
+				this.$el.querySelector('svg').dataset.icon = "chevron-down";
+			},
+			mounted() {
+				var me = this;
+				me.expanded_ = me.expanded;
+				setTimeout(function () {
+					me.$el.querySelector('svg').dataset.icon = "chevron-down";
+				}, 100)
+			},
+			methods: {
+				toggle() {
+					this.expanded_ = !this.expanded_;
+					this.$el.querySelector('svg').dataset.icon = this.expanded_ ? "chevron-up" : "chevron-down";
+					//avisa al padre q este hijo se expandera
+					if (this.$parent && this.$parent.toggle) {
+						this.$parent.toggle(this);
+
 					}
 				}
-				return !fieldsWithErrors.length;
 			},
-		}
+			template: '<div><div v-on:click="toggle" v-bind:class="{expanded:expanded_}" style="cursor:pointer;position: relative;padding: 10px 0px;">{{title}}<span style="position:absolute;right:0px" ><i data-icon="chevron-down" class="fa"></i></span></div>' +
+				'<transition name="fade"><div class="v-tab-content" v-if="expanded_"><slot></slot></div></transition></div>'
+		});
 	}
-	if (!cfg) cfg = { data: { o: {} } };
-	const { setup, ...other } = cfg;
-	cfg = { mixins: [defs, other], setup };
-	//if(setup)
-	return cfg;
-}
+};

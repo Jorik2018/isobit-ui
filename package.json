@@ -20,7 +20,7 @@
   "author": "",
   "license": "ISC",
   "peerDependencies": {
-    "vue": "^3.2.21"
+	"vue": "^2.6.12"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",

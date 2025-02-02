@@ -1,74 +1,53 @@
 <template>
-    <input
-        type="number"
-        @keyup.enter="handleInput"
-        v-model.number="v"
-        @input="handleInput"
-        class="_"
-    />
+	<input type="number" v-on:keyup.enter="input" vmodel.number="v" v-on:input="input" class="_"/>
 </template>
-
 <script>
-import { ref, onMounted, watch, computed, onUpdated } from 'vue';
-import { _, num } from './commons';
-
 export default {
-    name: 'VNumber',
-    props: {
-        value: Number,
-        max: Number,
-        min: Number,
-        delay: Number
+	props: {
+        delay:null
     },
-    setup(props, ctx) {
-        const { emit }=ctx;
-        const v = ref(null);
-
-        onMounted(() => {
-            v.value = props.value; // Initialize value on component mount
-        });
-
-        onUpdated(() => {
-            v.value = ctx.attrs.modelValue;
-        });
-
-        const handleInput = (event) => {
-            let inputValue = v.value;
-            const decimalPlaces = event.target.getAttribute('decimal');
-            
-            if (inputValue !== null) {
-                inputValue = num(inputValue);
-                if (props.max && inputValue > num(props.max)) {
-                    inputValue = num(props.max);
+    /*watch:{
+        value(v){
+			var me=this;
+            me.$el.value=v;
+            me.$emit('input', v);
+        }
+    },*/
+    data(){return {v:null};},
+    created(){
+        this.v=this.value;
+    },
+    methods:{
+        input(){
+            var me = this,t=me.$el,v=me.v,n=Vue.n;
+            if(v){
+                v=n(v);
+                if (me.max&&v > n(me.max)) {
+                    v = n(me.max);
                 }
-                if (props.min && inputValue < num(props.min)) {
-                    inputValue = num(props.min);
+                if (me.min&&v < n(me.min)) {
+                    v = n(me.min);
                 }
-                if (decimalPlaces !== null) {
-                    inputValue = inputValue.toFixed(Number(decimalPlaces));
+                var de=t.getAttribute('decimal');
+                if(de!==null){
+                    v=v.toFixed(1*de);
                 }
-            } else {
-                inputValue = null;
+                //Debe evitarse borrarse el valor por edicion y mostrar un mensaje de error
+            }else{
+                v=null;
             }
-
-            v.value = event.target.value; // Update the value from input
-
-            let timer = _.calendarTimer;
-            if (timer) clearTimeout(timer);
-
-            if (props.delay) {
-                _.calendarTimer = setTimeout(() => {
-                    emit('input', inputValue);
-                    _.calendarTimer = null;
-                }, event.keyCode === 13 ? 0 : props.delay);
-            } else {
-                emit('input', inputValue);
-            }
-        };
-        return {
-            v,
-            handleInput
-        };
+            v = event.target.value;
+			var ti=Vue.calendarTimer;
+            if(ti)clearTimeout(ti);
+            if(me.delay)
+                Vue.calendarTimer = setTimeout(function() {
+                    me.$emit('input',v);
+                    Vue.calendarTimer=null;
+                }, event.keyCode===13?0:me.delay);
+            else
+                me.$emit('input',v);
+        }
     }
-};
+
+}
 </script>

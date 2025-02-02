@@ -10,7 +10,6 @@
 </template>
 <script>
 export default {
-    name: 'VUploader',
     props: {
         value: String,
         onlyicon:Boolean,

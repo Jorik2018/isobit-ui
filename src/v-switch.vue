@@ -6,7 +6,6 @@ v-bind:style="'cursor:pointer;border: 1px solid #000;text-align:center;display:i
 </template>
 <script>
     export default {
-        name: 'VSwitch',
         props: {
             value: {
                 value: Object

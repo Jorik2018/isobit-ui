@@ -3,7 +3,6 @@
 </template>
 <script>
 export default {
-	name: 'VTextarea',
     props: {
         value: {
             type: String
@@ -60,9 +59,9 @@ export default {
     }
 }
 </script>
-<!-- <style>
+<style>
 	textarea {
 		box-sizing: border-box;
 		resize: none;
 	}
-</style> -->
+</style>
