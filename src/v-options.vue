@@ -1,64 +1,57 @@
 <script>
 import axios from "axios";
 import {
-  inject, ref, onUnmounted, h, onMounted, computed,
+  inject, ref, onUnmounted, h, onMounted, computed, watch,
   onUpdated
 } from "vue";
-import { mergeDeep, getStoredList } from "./commons";
+import { mergeDeep, getStoredList, log } from "./commons";
 
 export default ({
   setup(props, cxt) {
     const me = props;
-    const { displayField, store, filter } = me;
+    const { valueField, displayField, store, filter, name } = me;
     const { expose, emit } = cxt;
     const queue = ref([]);
     const data2 = ref([]);
     const valueField_ = ref([]);
-    const lastLoad = ref(null);
     const loaded = ref(null);
     const collect = inject('collect');
 
+    if (valueField) valueField_.value = valueField.split(".");
+
     const filterList = computed(() => {
-      return data2.value && filter
-        ? data2.value.filter((el) => {
-          return (
-            JSON.stringify(el)
-              .toLowerCase()
-              .indexOf(filter.toLowerCase()) !== -1
-          );
-        })
-        : data2.value;
+      const data = (me.data || []).concat(data2.value || [])
+      return filter ? data.filter((el) => {
+        return (
+          JSON.stringify(el)
+            .toLowerCase()
+            .indexOf(filter.toLowerCase()) !== -1
+        );
+      }) : data;
     })
 
-    const getIndexByValue = (v, c) => {
+    watch(filterList, (nv) => {
+      //console.log('options.' + name, nv)
+    })
+
+    const getIndexByValue = (v, callback) => {
       if (v && v.id) v = v.id;
       else if (v && v.code) v = v.code;
-      // var ee=this.getParentE();
-      // if(ee.id){
-
-      // console.log('=============getIndexByValue.this.filterList.length='+this.filterList.length);
-      // }
-      for (var j = 0; j < filterList.value.length; j++) {
-        //if(ee.id){
-
-        // console.log('compare '+this.getValueField(this.filterList[j])+' =? '+v);
-        //}
-        if (getValueField(filterList.value[j]) == v) {
-          //                    console.log('se encontro '+v+' en index='+j);
-          //console.log('c='+c);
-          if (c) c(j);
+      for (let j = 0; j < filterList.value.length; j++) {
+        const o = filterList.value[j];
+        if (getValueField(o) == v) {
+          if (callback) callback(j, o);
           return j;
         }
       }
-
-      if (c) c(-1);
+      if (callback) callback(-1);
       return -1;
     }
 
     const getValueField = (i, t) => {
       const vf = valueField_.value;
       if (vf && vf.length)
-        for (var j = 0; j < vf.length; j++) {
+        for (let j = 0; j < vf.length; j++) {
           if (i) i = i[vf[j]];
         }
       else if (i && !t) i = i.id ? i.id : i.code ? i.code : i; //es necesario que el elemento tenga la propiedad id
@@ -70,46 +63,43 @@ export default ({
       return f ? getValueField(f[i], 1) : null;
     }
 
+    let vf = valueField;
+    let df = displayField;
+    if (!df) {
+      df = vf;
+    }
     const load = async (params = null, nou = null, clearQueue = false) => {
       if (!clearQueue && nou && params) queue.value.push([params, nou]);
       if (queue.value.length > 1) return;
       //let pa = me.$el.parentElement;
-      data2.value = [];//me.data;
-      if (!data2.value) data2.value = [];
-      if (me.store) {
-        let storedList = await getStoredList(me.store, params);
-
+      data2.value = [];
+      if (store) {
+        let storedList = await getStoredList(store, params);
         const [key] = params ? Object.keys(params) : [];
         if (key) {
-          //console.log('load4', params, key);
           let itemTmp;
-          //console.log(key)
           try {
-
-            data2.value = /*data2.value.concat*/(storedList.filter((item) => {
+            const l = (storedList.filter((item) => {
               itemTmp = item;
               return itemTmp[key].startsWith(params[key]);
             }));
+            data2.value = l;
             //console.log('load4', params, data2.value);
-
-
           } catch (e) {
-            console.log("Error trying to filter ", itemTmp);
+            log(name, "options.error trying to filter ", itemTmp);
             console.error(e);
           }
         } else {
           data2.value = data2.value.concat(storedList);
         }
-        //console.log(JSON.stringify(me.data2));
       }
-      //console.log(pa.name+'.antes de preguntar disabled options.load '+JSON.stringify(p));
       if (false && (me.url || me.src)) {// && !pa.disabled) {
         if (!data2.value) data2.value = [];
         if (me.filters) params = mergeDeep(params ? params : {}, me.filters);
         //console.log(pa.name+'.options.load '+JSON.stringify(p));
         await axios.get('' + (me.url ? me.url : me.src), { params: params })
           .then((r) => {
-            var data = r.data.data ? r.data.data : r.data;
+            let data = r.data.data ? r.data.data : r.data;
             //me.$emit("loaded", { target: me, data: data });
             data2.value = data2.value.concat(data);
 
@@ -121,8 +111,8 @@ export default ({
           })
           .catch(() => {
             //r = r.response;
-            //var e = me.$parent.$el;
-            //var error = document.createElement("div");
+            //let e = me.$parent.$el;
+            //let error = document.createElement("div");
           });
       }
       collect(filterList)
@@ -143,14 +133,11 @@ export default ({
     load.getIndexByValue = getIndexByValue;
 
     collect.push(load);
+
     onUpdated(() => {
-      collect.updateSelect();
+      collect((me.data || []).concat(data2.value))
     })
-    onMounted(() => {
-      //console.log('xxxx2', me)
-      if (me.valueField) valueField_.value = me.valueField.split(".");
-      collect.updateSelect();
-    });
+
     onUnmounted(() => {
       collect.remove(load);
     });
@@ -160,13 +147,21 @@ export default ({
           {{ item[displayField] }}
           <slot v-bind:item="item"></slot>
         </option>*/
-      return filterList.value.map((item) => h('option', { value: getValueField(item) }, item[displayField]))
+
+      return filterList.value.map((item) => {
+        if (!vf) {
+          return h('option', { value: item }, item);
+        } else {
+          return h('option', { value: getValueField(item) }, item[df]);
+        }
+      })
     }
   },
   name: 'VOptions',
   props: {
     url: String,
     src: String,
+    name: String,
     displayField: String,
     data: Array,
     store: null,
@@ -174,17 +169,6 @@ export default ({
     filters: null,
     filter: null,
     mode: null,
-  },
-  watch: {
-    data(/*nv,ov*/) {
-      // if (this.$parent.$el && this.$parent.$el.id)
-      // console.log("data changed " + this.$parent.$el.id);
-      this.$parent.updateSelect();
-    },
-  },
-  created() {
-    var me = this;
-    if (me.data) me.data2 = me.data;
   },
   updated() {
     let me = this;
@@ -199,16 +183,10 @@ export default ({
       return this.$el.parentElement.parentElement;
     },
     getSelectedItem() {
-      var me = this;
-      var p = me.$el.parentElement;
-      return me.filterList[p.selectedIndex - 1];
-    },
-    async load2(p, nou, clearQueue) {
       let me = this;
-      //console.log(me);
-      //console.log(me.queue);
-      return;
-    },
+      let p = me.$el.parentElement;
+      return me.filterList[p.selectedIndex - 1];
+    }
   },
 });
 </script>

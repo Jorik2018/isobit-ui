@@ -27,8 +27,9 @@
 
 <script lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
-import axios from 'axios';
 import { mergeDeep } from './commons';
+import axios from 'axios';
+import { useAppStore } from './useAppStore';
 
 export default {
     name: 'VAutocomplete',
@@ -51,6 +52,7 @@ export default {
     },
     setup(props, ctx) {
         const { emit, slots } = ctx;
+        const appStore = useAppStore();
         // State variables using refs
         const page = ref(0);
         const selected = ref(null);

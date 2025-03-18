@@ -1,177 +1,196 @@
 <template>
-<div><slot></slot></div>
+    <div>
+        <slot></slot>
+    </div>
 </template>
 <script>
-import {unByKey} from 'ol/Observable'
+import { unByKey } from 'ol/Observable'
+import { inject, ref } from 'vue'
+import { Collection } from 'ol'
+import FullScreen from 'ol/control/FullScreen'
+import GeoJSON from 'ol/format/GeoJSON'
+import VectorLayer from 'ol/layer/Vector'
+import VectorSource from 'ol/source/Vector'
+import { Fill, Stroke, Style, Text } from 'ol/style'
+import axios from 'axios'
 
 export default {
     name: 'VLayerControl',
-	data() {
+    data() {
         return {
-            loaded: null,map:null,feature2:null,district:null,pl:null,selection:null,
-            dl:null,scope:null,lastScope:null,unmove:null,
+            loaded: null, map: null, district: null,
+            dl: null
         }
     },
-    methods:{
-        setScope(v,anim){
-            var me=this,map=me.map;
-			console.log('me.map='+me.map);
-            if(v==me.lastScope){
-				map.getView().fit([-8756221.995832639, -1207995.483261405, -8541070.763947014,
-                    -899052.0546471546],map.getSize()); 
-				return;
-			}
-            if(v<100)v=v*10000;//si es provincia se aumenta
-            if(v<10000)v*100;//si es distrito
-            //if(me.pl){
-                me.scope=v;
-           // }else{
-            //    me.scope=-v;
-            //}
-            //console.log(me.scope);
-            //console.log(me.lastScope);
-            if(me.scope==0){
+    setup({ baseURL = 'http://web.regionancash.gob.pe' }, { emit }) {
+        const selectionRef = ref()
+        const collector = inject('collector');
+        const plRef = ref()
+        const mapRef = ref();
+        let feature2
+        let scope;
+        let lastScope;
+        let unmove;
+        const setScope = (v, anim) => {
+            let map = mapRef.value;
+            if (v == lastScope) {
                 map.getView().fit([-8756221.995832639, -1207995.483261405, -8541070.763947014,
-                    -899052.0546471546],map.getSize()); 
-                me.lastScope=v;
+                -899052.0546471546], map.getSize());
+                return;
+            }
+            if (v < 100) v = v * 10000;//si es provincia se aumenta
+            if (v < 10000) v * 100;//si es distrito
+            //if(me.pl){
+            scope = v;
+            if (scope == 0) {
+                map.getView().fit([-8756221.995832639, -1207995.483261405, -8541070.763947014,
+                -899052.0546471546], map.getSize());
+                lastScope = v;
                 map.getLayerById('districts').getSource().clear();
-                me.$emit('scope',{feature:{getId(){return null}},target:me});
-            }else{
-                //var f=event.feature;
-                if(map){
-                    if(v>9999){
-                        var dl=map.getLayerById('districts');
-                        var fl=dl.getSource().getFeatures();
+                emit('scope', { feature: { getId() { return null } }, target: me });
+            } else {
+                if (map) {
+                    if (v > 9999) {
+                        let districtLayer = map.getLayerById('districts');
+                        let fl = districtLayer.getSource().getFeatures();
                         //console.log('nscope='+v);
-                        for(var i=0;i<fl.length;i++){ 
+                        for (let i = 0; i < fl.length; i++) {
                             //console.log('nscope='+v+'=='+(1*fl[i].id_));
-                            if((1*fl[i].id_)==v){
-                                dl.onChange({feature:fl[i]});
+                            if ((1 * fl[i].id_) == v) {
+                                districtLayer.onChange({ feature: fl[i] });
                                 break;
                             }
                         }
-                    }else if(v){
-                        //console.log('nscope2='+v);
-                        var pl=map.getLayerById('provinces');
-                        var v=1*(v.value?v.value:v);
-                        var fl=pl.getSource().getFeatures();
-                        //console.log('fl.length='+fl.length);
-                        for(var i=0;i<fl.length;i++){
-        //                    console.log('compare '+(1*fl[i].id_)+' - '+v);
-                            if((1*fl[i].id_)==v){
-        //                        console.log('me.changePMMMMMrovince='+t);
-                                pl.onChange({feature:fl[i]});
+                    } else if (v) {
+                        let provinceLayer = map.getLayerById('provinces');
+                        let v = 1 * (v.value ? v.value : v);
+                        let fl = provinceLayer.getSource().getFeatures();
+                        for (let i = 0; i < fl.length; i++) {
+                            if ((1 * fl[i].id_) == v) {
+                                provinceLayer.onChange({ feature: fl[i] });
                                 break;
                             }
                         }
                     }
-                }else{
-                    me.lastScope=v;
+                } else {
+                    lastScope = v;
                 }
             }
         }
-    },
-	/*created(){
-		alert('layrControl.created'+this.$parent);
-		
-	},*/
-    //render() {
-	created(){
-        var me = this;
-        me.$parent.$on('build', (e) => {
-		
-            var fspan = document.createElement('i'),map=e.map;
-            me.selection = new ol.Collection();
-            var selection=me.selection;
-            fspan.setAttribute('class', 'fa fa-expand');
-            map.addControl(new ol.control.FullScreen({ label: fspan, tipLabel: 'Fullscreen' }));
-            var pv=new ol.source.Vector({
-                url: (axios.defaults.baseURL?axios.defaults.baseURL:'')+'/fs/geo/02.geojson',
-                format: new ol.format.GeoJSON()
+        const build = (map) => {
+            mapRef.value = map;
+            let selection = new Collection();
+            selectionRef.value = selection;
+            let faExpand = document.createElement('i');
+            faExpand.setAttribute('class', 'fa fa-expand');
+            map.addControl(new FullScreen({ label: faExpand, tipLabel: 'Fullscreen' }));
+            let provinceSource = new VectorSource({
+                url: baseURL + '/fs/geo/02.geojson',
+                format: new GeoJSON()
             });
-            var pl=me.pl=new ol.layer.Vector({
-                source: pv,
-                style(f){
-                    return new ol.style.Style({
-                        fill: new ol.style.Fill({
-                         color: 'rgba(255, 0, 0, 0.0)'
+            let provinceLayer = plRef.value = new VectorLayer({
+                source: provinceSource,
+                style(feature) {
+                    return new Style({
+                        fill: new Fill({
+                            color: 'rgba(255, 0, 0, 0.0)'
                         }),
-                        stroke: new ol.style.Stroke({
+                        stroke: new Stroke({
                             color: '#4073CE',
                             width: 1
                         }),
-                        text:new ol.style.Text({
-                            text: f.values_.name?f.values_.name.toUpperCase():'',
-                            fill: new ol.style.Fill({color: '#4073CE'}),
-                            stroke: new ol.style.Stroke({color: '#4073CE', width: 0.5})
+                        text: new Text({
+                            text: feature.values_.name ? feature.values_.name.toUpperCase() : '',
+                            fill: new Fill({ color: '#4073CE' }),
+                            stroke: new Stroke({ color: '#4073CE', width: 0.5 })
                         })
                     })
                 },
                 id: 'provinces'
             });
-//            me.changeProvince = function (t) {
-//                var v=1*(t.value?t.value:t);
-//                var fl=pl.getSource().getFeatures();
-//                for(var i=0;i<fl.length;i++){
-//                    if((1*fl[i].id_)==v){
-//                        pl.onChange({feature:fl[i]});
-//                        break;
-//                    }
-//                }
-//            }
-            var listener=pv.on('change', ()=> {
-                var prov=me.scope;
-                if(prov>9999){
-                    prov=Math.floor(prov/100);
+            provinceLayer.onChange = (event) => {
+                let feature = event.feature;
+                if (lastScope != feature.getId()) {
+                    selection.clear();
+                    selection.push(feature);
+                    if (event.preventDefault) event.preventDefault();
+                    lastScope = feature.getId();
+                    feature2 = feature;
+                    //console.log(f.getId()+"--unmove="+me.unmove);
+                    if (unmove) {
+                        console.log('layercontrol.moveend');
+                        moveend();
+                    } else {
+                        map.getView().fit(feature.getGeometry().getExtent(), { duration: 200,callback:()=>{
+
+                        }});
+                    }
+                    //Debe considerarse cuando no hay ningun cambio y no llama a moveend
                 }
-                var fl=pv.getFeatures();
-                for(var i=0;i<fl.length;i++){
-                    if((1*fl[i].id_)===1*prov){
+            };
+            //            me.changeProvince = function (t) {
+            //                let v=1*(t.value?t.value:t);
+            //                let fl=pl.getSource().getFeatures();
+            //                for(let i=0;i<fl.length;i++){
+            //                    if((1*fl[i].id_)==v){
+            //                        pl.onChange({feature:fl[i]});
+            //                        break;
+            //                    }
+            //                }
+            //            }
+            let listener = provinceSource.on('change', () => {
+                let prov = scope;
+                if (prov > 9999) {
+                    prov = Math.floor(prov / 100);
+                }
+                let fl = provinceSource.getFeatures();
+                for (let i = 0; i < fl.length; i++) {
+                    if ((1 * fl[i].id_) === 1 * prov) {
                         //console.log('change prov '+prov);
-                        pl.onChange({feature:fl[i]});
+                        provinceLayer.onChange({ feature: fl[i] });
                         break;
                     }
                 }
                 unByKey(listener);
             });
-            var dl=new ol.layer.Vector({
+            let districtLayer = new VectorLayer({
                 preload: Infinity,
-                source:new ol.source.Vector(),
+                source: new VectorSource(),
                 id: 'districts',
-                style(f){
-                    return new ol.style.Style({
-                        fill: new ol.style.Fill({
+                style(f) {
+                    return new Style({
+                        fill: new Fill({
                             color: 'rgba(16, 110, 138, 0.0)'
                         }),
-                        stroke: new ol.style.Stroke({
+                        stroke: new Stroke({
                             color: '#194300',
                             width: 1
                         }),
-                        text:new ol.style.Text({
-                            text: f.values_.name?f.values_.name.toUpperCase():'',
-                            fill: new ol.style.Fill({color: '#194300'}),
-                            stroke: new ol.style.Stroke({color: '#194300', width: 0.5})
+                        text: new Text({
+                            text: f.values_.name ? f.values_.name.toUpperCase() : '',
+                            fill: new Fill({ color: '#194300' }),
+                            stroke: new Stroke({ color: '#194300', width: 0.5 })
                         })
                     })
                 }
             });
-            var moveend=(/*evt*/)=>{
-                if(me.feature2){
-                    
+            let moveend = (/*evt*/) => {
+                if (feature2) {
+
                     //Se debe cargar si el feature es de una provincia
-                    if(me.feature2.id_<10000){
-                        dl.setSource(new ol.source.Vector({
-                            url: (axios.defaults.baseURL?axios.defaults.baseURL:'')+'/fs/geo/' + me.feature2.id_ + '.geojson',
-                            format: new ol.format.GeoJSON()
+                    if (feature2.id_ < 10000) {
+                        districtLayer.setSource(new VectorSource({
+                            url: baseURL + '/fs/geo/' + feature2.id_ + '.geojson',
+                            format: new GeoJSON()
                         }));
-                        var listenerKey = dl.getSource().on('change',(/*e*/)=>{
-                            if(me.scope>0){
-                                var fl=dl.getSource().getFeatures();
-                                var v=me.scope;
-                                for(var i=0;i<fl.length;i++){
-                                    if((1*fl[i].id_)==v){
-                                        me.scope=0;
-                                        dl.onChange({feature:fl[i]});
+                        let listenerKey = districtLayer.getSource().on('change', (/*e*/) => {
+                            if (scope > 0) {
+                                let fl = districtLayer.getSource().getFeatures();
+                                let v = scope;
+                                for (let i = 0; i < fl.length; i++) {
+                                    if ((1 * fl[i].id_) == v) {
+                                        scope = 0;
+                                        districtLayer.onChange({ feature: fl[i] });
                                         break;
                                     }
                                 }
@@ -181,53 +200,37 @@ export default {
                     }
                     //console.log('me.feature__='+me.feature2.id_);
                     //console.log('emit scopee '+me.feature2.id_);
-                    me.$emit('scope',{feature:me.feature2,target:me});
-                    me.feature2=null;
+                    emit('scope', { feature: feature2, target: {} });
+                    feature2 = null;
                     //console.log('layer moveend termina');
                 }
             };
             map.on('moveend', moveend);
-            pl.onChange=(event)=>{
-                var f=event.feature;
-                if(me.lastScope!=f.getId()){
-                    selection.clear();
-                    selection.push(f);
-                    if(event.preventDefault)event.preventDefault();
-                    me.lastScope=f.getId();
-                    me.feature2=f;
-                    //console.log(f.getId()+"--unmove="+me.unmove);
-                    if(me.unmove){
-                        //console.log('moveend');
-                        moveend();
-                    }else
-                        map.getView().fit(f.getGeometry().getExtent(), {duration: 300});
-                    //Debe considerarse cuando no hay ningun cambio y no llama a moveend
-                }
+
+            provinceLayer.onSelect = (f) => {
+                me.$emit('select', f);
             };
-            pl.onSelect=(f)=>{
-                me.$emit('select',f);
-            };
-            map.addLayer(pl);
-            map.addLayer(new ol.layer.Vector({
+            map.addLayer(provinceLayer);
+            map.addLayer(new VectorLayer({
                 id: 'district',
-                source: new ol.source.Vector(),
-                style: new ol.style.Style({
-                    fill: new ol.style.Fill({
+                source: new VectorSource(),
+                style: new Style({
+                    fill: new Fill({
                         color: 'rgba(255, 150, 150, 0.0)'
                     }),
-                    stroke: new ol.style.Stroke({
+                    stroke: new Stroke({
                         color: '#4073CE',
                         width: 1
                     })
                 })
             }));
-            var hoverStyle=new ol.style.Style({
-                fill: new ol.style.Fill({
+            let hoverStyle = new Style({
+                fill: new Fill({
                     color: 'rgba(16, 110, 138, 5.0)'
                 })
             });
-            var emptyStyle=new ol.style.Style({
-                fill: new ol.style.Fill({
+            let emptyStyle = new Style({
+                fill: new Fill({
                     color: 'rgba(255, 150, 150, 0.0)'
                 })
             });
@@ -252,31 +255,33 @@ export default {
                     return hoverStyle;
                 }
             }));*/
-            dl.onChange=(event) => {
-                var f=event.feature;
-                if(me.lastScope!=f.getId()){
+            districtLayer.onChange = (event) => {
+                let f = event.feature;
+                if (lastScope != f.getId()) {
                     //console.log(f);
-                    if(selection.getLength()==2)selection.pop();
+                    if (selection.getLength() == 2) selection.pop();
                     selection.push(f);
                     //Para evitar que el mismo mapa se mueva solo y poder manejar la animacion
-                    if(event.preventDefault)event.preventDefault();
-                    me.lastScope=f.getId();
-                    me.feature2=f;
-                    if(me.unmove)
+                    if (event.preventDefault) event.preventDefault();
+                    lastScope = f.getId();
+                    feature2 = f;
+                    if (unmove)
                         moveend();
                     else
-                        map.getView().fit(f.getGeometry().getExtent(), {duration: 300});
+                        map.getView().fit(f.getGeometry().getExtent(), { duration: 300 });
                 }
             };
-            dl.onSelect=(f)=>{
-                me.$emit('select',f);
+            districtLayer.onSelect = (f) => {
+                emit('select', f);
             };
-            map.addLayer(dl);
-            me.map=map;
-            me.$emit('render',me);
+            map.addLayer(districtLayer);
+
+            emit('render', { map });
+        }
+        collector.push((map) => {
+            build(map)
         });
-        return null;
+        return {}
     }
 };
 </script>
-

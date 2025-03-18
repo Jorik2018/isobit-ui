@@ -17,6 +17,7 @@ export default [
         file: 'dist/library.js'
       }
     ],
+    external:['pinia'],
     plugins: [
       vue(),
       peerDepsExternal(),

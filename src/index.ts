@@ -1,14 +1,18 @@
 import components from './components'
-import { clean, _, pad, resize, configureAxios, app, setApp, initDB, MsgBox, date, db, getStoredList } from './commons'
+import { clean, _, pad, log,resize, app, setApp, initDB, MsgBox, date, db, getStoredList, id, setupApp, getConfigApp, buildPopupMenu } from './commons'
 import './cdn/theme.css'
-import axios from 'axios'
-export { resize, app, initDB, date, db,_ ,pad, getStoredList};
+const VForm = components.VForm;
+import {Drag} from './Drag'
 
+export { resize, app, initDB, date, db, _, pad, getStoredList,Drag, VForm, MsgBox, useAppStore, id, setupApp };
+
+import { getCurrentInstance, onMounted, onUnmounted, reactive, provide, computed, ref, watch } from "vue";
+import { useRouter } from 'vue-router';
+import { useAppStore } from './useAppStore';
 export const IsobitUI = {
 	install(vApp: any) {
 		setApp(vApp);
 		vApp.BUILT_ON = import.meta.env.VITE_APP_BUILT_ON;
-		configureAxios(axios)
 		for (const prop in components) {
 			if (components.hasOwnProperty(prop)) {
 				const component = (components as any)[prop]
@@ -23,291 +27,243 @@ setTimeout(resize, 400);
 window.addEventListener('resize', () => {
 	setTimeout(resize, 400);
 });
+export const removeError = (e) => {
+	let previousElementSibling = e.previousElementSibling;
+	if (previousElementSibling && previousElementSibling.classList && previousElementSibling.classList.contains('v-error')) {
+		previousElementSibling.parentNode.removeChild(previousElementSibling);
+	}
+}
 
+const getCurrentPosition = () => {
+	return new Promise(function (res, rej) {
+		if (_.location) {
+			var id = 'result' + _.id();
+			_[id] = function (r) {
+				delete _[id];
+				if (r.coords) {
+					res(r);
+				} else
+					rej(r);
+			};
+			_.location(id);
+		} else if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(res, rej);
+		}
+	})
+}
 export const ui = (cfg) => {
+
 	const defs = {
+
 		computed: {
-			connected: {
-				get() {
-					return this.online&&this.x_connected_!==false;
-				},
-				set(v) {
-					let me = this;
-					let session = me.session;
-					this.x_connected_ = v;
-					console.log('this.x_connected_ = ' + this.x_connected_);
-					//session.connected=v;
-					this.$set(session, 'connected', v);
-					me.session = session;
-				},
-			},
-			session: {
-				get() {
-					if (!_._session) {
-						var s = localStorage.getItem('session');
-						if (s)
-							s = JSON.parse(s);
-						else s = {};
-						_._session = s;
-					}
-					return _._session;
-				},
-				set(session) {
-					if (!session)
-						localStorage.removeItem('session');
-					else {
-						if (Array.isArray(session.perms)) {
-							session.perms = session.perms.reduce((a, v) => { a[v] = true; return a; }, {});
-						}
-						localStorage.setItem('session', JSON.stringify(session));
-					}
-					_._session = session;
-				}
-			},
-			online() {
-				return this.app2&&this.app2.networkStatus?.connected;
-			},
-			cleanedFilters() {
-				return clean(this.filters);
-			},
-			app() {
-				return _.app;
-			},
 			user() {
 				return _.app.session;
 			},
-
 			perms() {
 				return this.session.perms || this.session.allcaps || {};
-			},
-			rowSelectedCount() {
-				var me = this;
-				//console.log(me.$children);
-				return 1;
-				/*if (!me.$children[0]) return 0;
-				var t = me.$children[0].$children[0];
-				return t ? t.selected.length : 0;*/
-			},
-			baseURL() { return axios.defaults.baseURL; }
+			}
 		},
 		data() {
 			let me = this;
 			return {
-				app2:null,
-				filters: {},
+				app2: null,
 				ui: me,
 				_session: null, x_connected_: null,
-				//rowSelectedCount: 0,
 				row: {},
 				networkStatus: { connected: null }
 			}
 		},
-		created(){
-			let me=this;
-			if(!_.app2){
-				
-				_.app2=me;
-				console.log('app created',_.app2);
-			}
-			me.app2=_.app2;
-
-		},
 		methods: {
-			pad,
-			bindLinks (el, callback) {
-				const me = this;
-				//el = el ? el : me.$el;
-				if (el.querySelectorAll) {
-					//var a=el.querySelectorAll('a:not(._),ion-item:not(._)'); 
-					const a = el.querySelectorAll('a:not(._),ion-item:not(._)');
-					var f0 = (e) =>{ e.preventDefault(); };
-					var f = (e) => {
-						e.preventDefault();
-						if (callback) callback();
-						me.open(e);
-					};
-					for (let i = 0; i < a.length; i++) {
-						if (a[i].href||a[i].attributes.href) {
-							a[i].onclick = f;
-						} else
-							a[i].onclick = f0;
-						a[i].classList ? a[i].classList.add('_') : a[i].className = '_';
-					}
-				}
-			},
-			resize() {
-				//Vue.resize();
-			},
-			vv(v) {
-				var me = this;
-				var sf = function (status) {
-					if (status.connected) {
-						var session = localStorage.getItem('session');
-						if (session) {
-							try {
-								session = JSON.parse(session);
-							} catch (e) {
-								//console.log(e);
-								session = {};
-							}
-							session.connected = v;
-							localStorage.setItem('session', JSON.stringify(session));
-						}
-					} else {
-						me.toast('El dispositivo no tiene acceso a internet!');
-						me.connected = status.connected;
-					}
-				};
-				Network.getStatus().then(sf);
-			},
-			getSelected(e) {
-				var me = this;
-				var t = e && e.$vnode ? e : me.$children[0].$children[0];
-				var s = [];
-				for (var i = 0; i < t.selected.length; i++) {
-					s.push(t.data[t.selected[i]]);
-				}
-				return s;
-			},
-			getRowSelectedCount() {
-				var me = this;
-				var t = me.$children[0].$children[0];
-				return t ? t.selected.length : 0;
-			},
-			rewrite(url) { return url; },
-			edit(e) {
-				var me = this;
-				var f = me.$children[0];
-				var action = f.action;
-				var t = [].filter.call(e.component.$parent.$children, (e) => {
-					return e.$el.classList.contains('v-datatable');
-				})[0];
-				if (!action) {
-					action = window.location.pathname;
-				}
-				if (t && t.src) action = t.src;
-				if (e.action) action = e.action;
-				if (!t) {
-					t = e.$vnode ? e : (e.target && e.target.$vnode) ? e : me.$children[0].$children[0];
-					if (t.src)
-						action = t.src;
-				}
-
-				if (action) action = me.rewrite(action.replace("/api", "").replace("/0/0", ""));
-				var selected = me.getSelected(t)[0];
-				var id = selected[t.rowKey];
-				if (selected.tmpId) id = -selected.tmpId;
-				//console.log(selected);
-				if (me.getSelectedId) id = me.getSelectedId(selected);
-				if (_.app) {
-					me.open(action + '/' + id + '/edit');
-				} else {
-					axios.get((_.currentPath = (action + '/' + id + '/edit').replace(/([^:]\/)\/+/g, "$1")) + '?modal')
-						.then(me.open).catch(me.error);
-				}
-			},
 			get(part) {
-				var me = this;
-				var p = me.$el;
+				let me = this;
+				let p = me.$el;
 				//Se debe buscar si abajo esta el form
-				var f = p.querySelector("form");
-				var action = f.action;
+				let f = p.querySelector("form");
+				let action = f.action;
 				//console.log(me.apiLink(action) + '/' + part);
 				window.location.href = me.apiLink(action) + '/' + part;
 			},
-			error(e) {
+			async sync(e) {
+				let me = this;
+				let p = me.$el;
+				let f = p.querySelector("form");
+				let action = f.getAttribute('action');
+				//console.log('Action='+action);
+				if (!action) {
+					action = me.$el.parentNode.getAttribute('path');
+					//debe en ciertos casoss sobreescribirse ponr unas rglas definidas y una tabla extra
+					let tc = action.split('/');
+					if (tc[tc.length - 1] == 'edit')
+						tc = tc.splice(0, tc.length - 2);
+					else
+						tc = tc.splice(0, tc.length - 1);
+					action = me.apiLink(tc.join('/'));
+				}
+				let t = me.$children[0].$children[0];
+				action = t.src;
+				//debe recorrerse toda los registros seleccionados
+				//ponerlos gris
+				let dats = await me.getStoredList(t.store);
+				let sel = t.selected;
+				let sel2 = [];
+				let sel3 = [];
+				for (let i = 0; i < sel.length; i++) {
+					//se recupra
+					let item = t.data[sel[i]];
+					if (item.tmpId && !item.synchronized) {
+						for (let j = 0; j < dats.length; j++) {
+							if (dats[j].tmpId == item.tmpId) {
+								let o = JSON.clone(dats[j]);
+								delete o.synchronized;
+								sel3.push(o);
+								sel2.push(j);
+							}
+						}
+					}
+				}
+				//se envia solo los selccionados
+				if (sel2.length > 0) {
+					axios.post(action + '/bulk' + (e.sufix ? e.sufix : ''), sel3).then(function (r) {
+						let d = r.data;
+						//console.log(d);
+						for (let k = 0; k < d.length; k++) {
+							if (d[k].errors) { MsgBox(JSON.stringify(d[k].errors)); break; }
+							if (d[k].error) { MsgBox(d[k].error); break; }
+							for (let j = 0; j < dats.length; j++) {
+								//cada registro recibido de bulk ss compara con los locales
+								if (d[k].ext && d[k].ext.tmpId == dats[j].tmpId
+									|| d[k].tmpId == dats[j].tmpId) {
+									log('ui.ok');
+									if (d[k].ext && dats.ext) {
+										dats[j].ext.error = d[k].ext.error;
+									}
+									if (d[k].id) dats[j].id = d[k].id;
+									//aqui deberia revisarsee los registro anidados
+									dats[j].synchronized = 1;
+									emit('sync', d[k], dats[j]);
+								}
+							}
+						}
+						me.setStoredList(t.store, dats);
+						//dat.id=r.data.id;
+						//t.$emit('synchronized',{data:dat,result:r.data,index:kk,count:tr});
+						//dat.synchronized=1;
+						//dats[kk]=dat;
+						//sendf(dats,k0+1,te+1);
+						me.refresh();
+					}).catch(function (r) {
+						if (r.response) {
+							MsgBox(r.response.data);
+						} else {
+							console.log(r);
+						}
+					});
+				}
+			}
+		}
+	}
+	if (!cfg) cfg = { data: { o: {} } };
+	const { setup, ...other } = cfg;
+	const customSetup = setup;
+	cfg = {
+		mixins: [defs, other],
+		setup(props: any, ctx: any) {
+
+			const app = useAppStore();
+
+			app.config(getConfigApp());
+
+			const me = props;
+
+			let router = useRouter();
+
+			const ci = getCurrentInstance();
+
+			const views: any[] = reactive([]);
+
+			const tableCollect = {
+				remove(view: any[]) {
+					views.splice(views.indexOf(view), 1);
+				},
+				push(view: any) {
+					views.push(view);
+				}
+			};
+
+			const _error = (e) => {
 				//console.log(e);
 				alert(e);
 				//this.open({data:''+e});
-			},
-			destroy(e) {
-				var me = this;
-				var f = me.$children[0];
-				var action = f.action;
-				var t = [].filter.call(e.component.$parent.$children, (e) => {
-					return e.$el.classList.contains('v-datatable');
-				})[0];
-				if (!t)
-					t = e.$vnode ? e : me.$children[0].$children[0];
+			}
 
-				if (!action)
-					action = window.location.pathname;
-				var cb = e.$vnode ? e.load : null;
-
-				var key = t.$attrs.rowkey;
-				if (!key) key = t.rowKey;
-				var dat = t.data[t.selected[0]];
-				var data = t.data;
-				if (dat.tmpId) {
-					me.MsgBox('Esta seguro que desea eliminar los registros temporales seleccionados ?', function (r) {
-						if (r == 0) {
-							var c = 0, db = _.db;
-							var objectStore = db.transaction([t.store], "readwrite").objectStore(t.store);
-							var ele = [];
-							for (var k = t.selected.length - 1; k >= 0; k--) {
-								dat = t.data[t.selected[k]];
-								ele.push(dat);
-								if (dat.tmpId) objectStore.delete(dat.tmpId);
-								c++;
-								t.data.splice(t.selected[k], 1);
-							}
-							if (c) {
-								if (me.app && me.app.toast) me.app.toast(c + ' registros eliminados');
-								else
-									me.MsgBox(c + ' registros eliminados');
-							}
-							t.rowSelect(null, -1);
-							t.selected = [];
-							me.$emit('destroyed', ele, t.store);
-							if (cb) cb();
-
-						}
-					}, ['SI', 'NO']);
-				} else {
-					if (!key)
-						return alert('Table don`t have defined attribute \'rowkey\'');
-					var c = 0, id = dat[key];
-					me.MsgBox('Esta seguro que desea eliminar el registro seleccionado?', function (r) {
-						if (r == 0) {
-							var src = t.src.replace('/0/0', '');
-							var ele = [];
-							//console.log(t.selected);
-							var k = (t.selected.length - 1)
-							axios.delete(src + '/' + id, { params: t.filters }).then(() => {
-								//console.log(t.selected);
-								for (; k >= 0; k--) {
-									//console.log('k=' + k);
-									//console.log(t.data);
-									//	console.log('t.selected[k]=' + t.selected[k]);
-									dat = t.data[t.selected[k]];
-									ele.push(dat);
-									//console.log(ele);
-									t.data.splice(t.selected[k], 1);
+			const getStoredList = async (store/*, params*/) => {
+				const component = ci.proxy;
+				const db = _.db;
+				let loadedStores;
+				try {
+					loadedStores = JSON.parse(sessionStorage.getItem('loadedStores'));
+				} catch (_e) { loadedStores == null }
+				if (loadedStores == null) loadedStores = {};
+				//console.log(loadedStores);
+				if (!loadedStores[store] && component.connected) {
+					let e = _.stores.filter(e => e[0] == store)[0];
+					//console.log(e);
+					if (!e[2]) throw `ERROR: Url for store '${e[0]}' is empty!`;
+					let data = await app.axios.get(e[2]);
+					data = data.data || data;
+					await new Promise((resolve, reject) => {
+						let transaction = db.transaction([e[0]], "readwrite");
+						let objectStore = transaction.objectStore(e[0]);
+						const objectStoreRequest = objectStore.clear();
+						objectStoreRequest.onsuccess = () => {
+							data.forEach((item) => {
+								objectStore.add(item).onerror = (e) => {
+									console.error(`⚠️ Store '${e[0]}' error addd data!`, e);
 								}
-								if (me.app && me.app.toast)
-									me.app.toast(ele.length + ' registros eliminados');
-								else
-									me.MsgBox(ele.length + ' registros eliminados');
-
-								t.rowSelect(null, -1);
-								t.selected = [];
-								//if(cb)cb();
-							}).catch(me.error);
-							//t.rowSelect(null,-1);
-						}
-					}, ['SI', 'NO']);
+							});
+						};
+						objectStoreRequest.onerror = () => {
+							console.error(`⚠️ Store '${e[0]}' error data!`, e);
+						};
+						transaction.oncomplete = () => {
+							loadedStores[store] = 1;
+							sessionStorage.setItem('loadedStores', JSON.stringify(loadedStores));
+							resolve();
+						};
+						transaction.onerror = (e) => {
+							console.error(`ERROR: ⚠️ Error en la transacción for store '${e[0]}'!`, e);
+							reject();
+						};
+					});
 				}
-			},
-			apiLink(str) {
-				return str.replace(_.contextPath, _.contextPath + '/api');
-			},
-			open(response, path, o) {
+				let result = await new Promise((resolve, rejected) => {
+					if (db) {
+						const transaction = db.transaction(store), objectStore = transaction.objectStore(store);
+						const getAllRequest = objectStore.getAll();
+						getAllRequest.onsuccess = () => {
+							resolve(getAllRequest.result);
+						}
+					} else {
+						console.log('1=========>db=', window._.db);
+						rejected('=======>db is null esta faltando');
+					}
+					//t.onerror = event => reject(event.target.error);
+				});
+				return result;
+			}
+
+			const refresh = () => {
+				views.find(view => view.type == 'v-table')();
+			}
+
+			const rewrite = (url: string) => {
+				return '/admin' + url;
+			}
+
+			const open = (response: any, path?: any, o?: any) => {
 				if (!(response.$el) && !(response instanceof HTMLElement)) {
-					var e = response;
-					var t = e.target;
-
-					var me = this;
-
+					let e = response;
+					let t = e.target;
 					if (typeof e == 'string') {
 						t = e;
 					} else if (t.tagName == "ION-ITEM" && t.href) {
@@ -320,15 +276,13 @@ export const ui = (cfg) => {
 						if (!t.pathname) t = t.parentNode;
 						t = t.pathname;
 					}
-
-					if (me.$route.path !== t) {
-						//console.log('path=' + t);
-						console.log('me.$route=', me.$router, t);
-						me.$router.push(t);
+					if (router.path !== t) {
+						router.push(t);
 					}
 					return;
 				}
-				var me = this, el;
+				/*
+				let me = this, el;
 				if (response.$el) {
 					response = response.$el;
 					path = {};
@@ -341,6 +295,7 @@ export const ui = (cfg) => {
 					el = response.target;
 					return me.open(el.pathname ? el.pathname : el.href);
 				} else if (response === 'GET') {
+					alert('GET');
 					if (typeof path == 'string') {
 						let cfg = { path: _.currentPath = path + (typeof o == 'string' ? '/' + o : '') };
 						if (typeof o == 'function') {
@@ -355,9 +310,9 @@ export const ui = (cfg) => {
 						el = document.querySelector('[path=\'' + path.path + '\']');
 						//console.log(el);
 						if (el) {
-							var dd = document.querySelector('#layoutUnit-center > .ui-layout-unit-content,#page-content');
+							let dd = document.querySelector('#layoutUnit-center > .ui-layout-unit-content,#page-content');
 							//console.log(dd);
-							for (var i = 0; i < dd.children.length; i++) {
+							for (let i = 0; i < dd.children.length; i++) {
 								//Se ocultan todas las demas paginas
 								if (dd.children[i].style) {
 									if (dd.children[i].className == 'ui-panel' && dd.children[i].style.display != 'none') {
@@ -377,17 +332,18 @@ export const ui = (cfg) => {
 									r.result = path.callback;
 									r = Object.assign(r, path);
 									me.open(response, r);
-								}).catch(me.error);
+								}).catch(_error);
 						}
 					}
-				} else if (!response.data) {
-					return me.open('GET', response, path);
 				} else if (response.data) {
 					path = response;
+				} else {
+
+					return me.open('GET', response, path);
 				}
 				//console.log("open(path="+path+")");
 				//console.log(path);
-				var dialog, nid = Vue.id(), scriptDom = [], for_, ifor = 0;
+				let dialog, nid = Vue.id(), scriptDom = [], for_, ifor = 0;
 				if (response instanceof HTMLElement) {
 					dialog = response;
 					dialog.classList.add("v-dialog");
@@ -395,12 +351,12 @@ export const ui = (cfg) => {
 					dialog = document.createElement("div");
 					dialog.classList.add("v-dialog");
 					dialog.innerHTML = path.data;
-					var s = dialog.getElementsByTagName('script');
+					let s = dialog.getElementsByTagName('script');
 					//console.log('patttt=' + _.currentPath);
 					dialog.setAttribute("path", _.currentPath);
-					var ld = dialog.children;
+					let ld = dialog.children;
 					//console.log(s);
-					for (var k = 0; k < s.length; k++) {
+					for (let k = 0; k < s.length; k++) {
 						scriptDom.push(s[k]);
 					}
 					for (k = 0; k < ld.length; k++) {
@@ -413,8 +369,8 @@ export const ui = (cfg) => {
 
 				}
 
-				var backPanel;
-				var close = () => {
+				let backPanel;
+				const close = () => {
 					dialog.style.display = "none";
 					overlay = dialog.parentNode;
 					if (overlay.classList.contains('v-overlay')) {//para los dialog
@@ -426,14 +382,14 @@ export const ui = (cfg) => {
 						dialog.parentNode.removeChild(dialog);
 						backPanel.style.display = 'block';
 					}
-					Vue.resize();
+					//Vue.resize();
 				};
 				if (for_ && for_.classList.contains('panel')) {
 					//Si elemto tiene declarado el id se debe considerar que es 
 					if (for_.id) {
 						window.currentEl = '#' + for_.id;
 					} else {
-						var clsId = 'cls-id-' + Vue.id();
+						let clsId = 'cls-id-' + Vue.id();
 						for_.classList.add(clsId);
 						window.currentEl = '.' + clsId;
 					}
@@ -452,15 +408,15 @@ export const ui = (cfg) => {
 					dd.appendChild(dialog);
 
 					//console.log(scriptDom);
-					for (var l2 = 0; scriptDom.length > l2; l2++) {
+					for (let l2 = 0; scriptDom.length > l2; l2++) {
 						//console.log(s[l2]);
 						try {
 							eval(scriptDom[l2].innerHTML);
 						} catch (e) { console.error(e) }
 					}
 					dialog.style.display = 'none';
-					var td;
-					var aux = dialog.children[ifor];
+					let td;
+					let aux = dialog.children[ifor];
 					//todo los elementos del dialog son agregados al panel
 					while (dialog.children.length > 0) {
 						if (!td) td = dialog.children[0];
@@ -471,7 +427,7 @@ export const ui = (cfg) => {
 					//console.log(path);
 					dialog.setAttribute("path", path.path);
 				} else {
-					var overlay = document.createElement("div");
+					let overlay = document.createElement("div");
 					//console.log('create overlay');
 					overlay.classList.add("v-overlay");
 					overlay.style.padding = "40px";
@@ -491,30 +447,30 @@ export const ui = (cfg) => {
 					dialog.style.margin = "0 auto";
 					dialog.style.position = "unset";
 					//console.log(dialog);
-					var resize = (e) => {
+					let resize = (e) => {
 						console.log('resize ');
 						dialog.style.left = (window.innerWidth - dialog.offsetWidth) / 2 + 'px';
 						if (window.innerWidth < 600) {//console.log(333333);
 							console.log(dialog);
-							var dc = dialog.querySelector('.v-dialog-content');
+							let dc = dialog.querySelector('.v-dialog-content');
 							//console.log(dc);
-							var h = dialog.querySelector('.v-panel-titlebar');
+							let h = dialog.querySelector('.v-panel-titlebar');
 							//console.log(h.clientHeight);
-							var ih = window.innerHeight - 94 - (h ? h.clientHeight : 0);
+							let ih = window.innerHeight - 94 - (h ? h.clientHeight : 0);
 
 							(dc ? dc : dialog).style.height = ih + "px";
 						}
 					};
 					window.addEventListener('resize', resize);
 					if (path.class === 'v-search') {
-						var d = dialog;
+						let d = dialog;
 						d.className = d.className + ' ' + path.class;
 						d.style.width = "100%";
 						d.style.height = "calc(100% - 2px)";
-						var children = d.querySelector('div');
-						var f = d.querySelector('form');
-						var t = d.querySelector('.v-datatable');
-						var tb = d.querySelector('.v-datatable-scrollable-body');
+						let children = d.querySelector('div');
+						let f = d.querySelector('form');
+						let t = d.querySelector('.v-datatable');
+						let tb = d.querySelector('.v-datatable-scrollable-body');
 						children.style.height = 'calc(100% - 2px)';
 						children.style.overflowY = 'auto';
 						children.children[1].style.padding = '0px';
@@ -524,14 +480,14 @@ export const ui = (cfg) => {
 						t.style.height = 'calc(100% - 52px)';
 						tb.style.height = 'calc(100% - 72px)';
 						tb.style.overflowY = 'auto';
-						var pag = d.querySelector('.v-paginator');
+						let pag = d.querySelector('.v-paginator');
 						pag.style.display = 'inline-block';
 						f.appendChild(pag);
 						tb = document.createElement("button");
 						tb.innerHTML = 'Recuperar';
 						tb.style.padding = '4px 16px';
 						tb.className = "_ ui-widget v-state-default ui-corner-all v-button ui-button-text-only";
-						var vue = _.varMap[children.getAttribute("vueid")];
+						let vue = _.varMap[children.getAttribute("vueid")];
 						tb.onclick = (e) => {
 							e.preventDefault();
 							vue.refresh();
@@ -545,8 +501,8 @@ export const ui = (cfg) => {
 						tb.onclick = (e) => {
 
 							e.preventDefault();
-							var d = [];
-							var t = vue.$children[0].$children[0];
+							let d = [];
+							let t = vue.$children[0].$children[0];
 							for (i = 0; i < t.selected.length; i++) {
 								d.push(t.filteredData[t.selected[i]]);
 							}
@@ -566,22 +522,22 @@ export const ui = (cfg) => {
 					if (o === true)
 						me.refresh();
 				}
-				var _vue_ = dialog.querySelector('[vueid]');
+				let _vue_ = dialog.querySelector('[vueid]');
 				if (_vue_) {
 					path.__vue__ = _vue_.__vue__;
 					_vue_.__vue__.$emit('opened', path);
 				}
 				dialog.setAttribute("callback", nid);
-				var h = dialog.querySelector('.v-panel-titlebar');
+				let h = dialog.querySelector('.v-panel-titlebar');
 				if (h) {
-					var acl = h.querySelector('.ui-js-close');
+					let acl = h.querySelector('.ui-js-close');
 					window.onkeyup = (event) => {
 						if (event.keyCode == 27) {
 							close();
 						}
 					}
 					if (!acl) {
-						var span = document.createElement("i");
+						let span = document.createElement("i");
 						span.style.top = "6px";
 						span.style.right = "6px";
 						h.style.position = "relative";
@@ -602,145 +558,78 @@ export const ui = (cfg) => {
 				Vue.resize();
 				document.documentElement.style.overflow = 'hidden';  // firefox, chrome
 				document.body.scroll = "no"; // ie only
-			},
-			close(ok) {
-				if (ok.$el) ok = ok.$el;
-				var dlg = (ok instanceof HTMLElement) ? ok : null;
-				try {
-					if (!dlg && event.target instanceof HTMLElement)
-						dlg = _.closest(event.target, '.v-dialog');
-				} catch (e) {
-					console.log(e);
-				}
-				if (!dlg) dlg = this.$el.parentElement;
-				var mask = dlg.parentElement;
-				if (!mask && _.app.$router) {
-					_.app.$router.back();
-					return;
-				}
-				dlg.style.display = "none";
-				if ((' ' + mask.className + ' ').indexOf(' v-overlay ') > -1) mask.style.display = "none";
-				else mask = null;
-				Vue.resize();
-				var cb = _.storeFunction[dlg.getAttribute("callback")];
-				if (cb) cb(ok);
-				dlg.parentNode.removeChild(dlg);
-				if (mask) mask.parentNode.removeChild(mask);
-				document.documentElement.style.overflow = 'auto';  // firefox, chrome
-				document.body.scroll = "yes";
-				//si history esta activo
-				//history.back();
-			},
-			create() {
-				const me = this;
-				const exposed = me.$el.__vnode.ctx.exposed;
-				console.log(exposed);
-				var action = exposed.action;
-				if (!action) {
-					action = window.location.pathname;
-				}
-				//action = _.processURL(action);
-				if (action) action = action.replace("/api", "");
-				if (app()) {
-					me.open(action + '/create');
-				} else {
-					instance.get(_.currentPath = (action + '/create').replace(/([^:]\/)\/+/g, "$1") + '?modal')
-						.then(_.open).catch(me.error);
-				}
-			},
-			refresh() {
-				const me = this;
-				//console.log(me.$el.__vnode.dynamicChildren[0].el.__vnode.dynamicChildren[1].children[0].type.setup().al())
-				const node = me.$el.__vnode;
-				console.log(node.children[1].children[0]);
-				const t = node.children[1].children[0].children[0].component.exposed;
-				//const t = node.dynamicChildren[0].el.__vnode.dynamicChildren[1].children[0].component.exposed;
-				t.load();
-			},
-			async sync(e) {
-				var me = this;
-				var p = me.$el;
-				var f = p.querySelector("form");
-				var action = f.getAttribute('action');
-				//console.log('Action='+action);
-				if (!action) {
-					action = me.$el.parentNode.getAttribute('path');
-					//debe en ciertos casoss sobreescribirse ponr unas rglas definidas y una tabla extra
-					var tc = action.split('/');
-					if (tc[tc.length - 1] == 'edit')
-						tc = tc.splice(0, tc.length - 2);
-					else
-						tc = tc.splice(0, tc.length - 1);
-					action = me.apiLink(tc.join('/'));
-				}
-				var t = me.$children[0].$children[0];
-				action = t.src;
-				//debe recorrerse toda los registros seleccionados
-				//ponerlos gris
-				var dats = await me.getStoredList(t.store);
-				var sel = t.selected;
-				var sel2 = [];
-				var sel3 = [];
-				for (var i = 0; i < sel.length; i++) {
-					//se recupra
-					var item = t.data[sel[i]];
-					if (item.tmpId && !item.synchronized) {
-						for (var j = 0; j < dats.length; j++) {
-							if (dats[j].tmpId == item.tmpId) {
-								var o = JSON.clone(dats[j]);
-								delete o.synchronized;
-								sel3.push(o);
-								sel2.push(j);
+				*/
+			}
+
+			const getView = () => {
+				const node = ci?.proxy.$el.__vnode;
+				let view;
+				if (node.ctx.type.name == 'VForm')
+					view = node.ctx;
+				else
+					view = node.children[0].component;
+				return view;
+			}
+
+			const saveAs = (url, o, config) => {
+				if (typeof o == 'string') o = { body: o };
+				let cfg = (typeof config == 'string') ? { fileName: config } : config;
+				if (!cfg) cfg = {};
+
+
+				/*
+				let requestOptions = {
+				  method: 'POST',
+				  body: formdata
+				};
+				
+				fetch("http://{url}", requestOptions)
+				  .then(response => response.text())
+				  .then(result => console.log(result))
+				  .catch(error => console.log('error', error))
+				*/
+				let a = ("" + o) ? axios.post(url, o, {
+					responseType: 'blob'
+				}) :
+					axios({
+						method: "post",
+						url: url,
+						data: o,
+						headers: { "Content-Type": "multipart/form-data" }
+					});
+
+				a.then((response) => {
+					//console.log(response);
+					const url = window.URL.createObjectURL(new Blob([response.data]));
+					const link = document.createElement('a');
+					link.href = url;
+					if (!cfg.fileName) {
+						const disposition = response.headers['content-disposition'];
+						if (disposition && disposition.indexOf('attachment') !== -1) {
+							const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+							const matches = filenameRegex.exec(disposition);
+							if (matches != null && matches[1]) {
+								cfg.fileName = matches[1].replace(/['"]/g, '').trim();
 							}
+						} else {
+							console.warn('content-disposition: attachment; filename = <filename>; header no es accesible o no esta definido correctamente')
 						}
 					}
-				}
-				//se envia solo los selccionados
-				if (sel2.length > 0) {
-					axios.post(action + '/bulk' + (e.sufix ? e.sufix : ''), sel3).then(function (r) {
-						let d = r.data;
-						//console.log(d);
-						for (let k = 0; k < d.length; k++) {
-							if (d[k].errors) { me.MsgBox(JSON.stringify(d[k].errors)); break; }
-							if (d[k].error) { me.MsgBox(d[k].error); break; }
-							for (var j = 0; j < dats.length; j++) {
-								//cada registro recibido de bulk ss compara con los locales
-								if (d[k].ext && d[k].ext.tmpId == dats[j].tmpId
-									|| d[k].tmpId == dats[j].tmpId) {
-									console.log('ok');
-									if (d[k].ext && dats.ext) {
-										dats[j].ext.error = d[k].ext.error;
-									}
-									if (d[k].id) dats[j].id = d[k].id;
-									//aqui deberia revisarsee los registro anidados
-									dats[j].synchronized = 1;
-									me.$emit('sync', d[k], dats[j]);
-								}
-							}
-						}
-						me.setStoredList(t.store, dats);
-						//dat.id=r.data.id;
-						//t.$emit('synchronized',{data:dat,result:r.data,index:kk,count:tr});
-						//dat.synchronized=1;
-						//dats[kk]=dat;
-						//sendf(dats,k0+1,te+1);
-						me.refresh();
-					}).catch(function (r) {
-						if (r.response) {
-							me.MsgBox(r.response.data);
-						} else {
-							console.log(r);
-						}
-					});
-				}
-			},
-			async save() {
-				var me = this;
-				me.$forceUpdate();
-				let p = me.$el;
+					//console.log('cfg.fileName='+cfg.fileName);
+					link.setAttribute('download', cfg.fileName);
+					document.body.appendChild(link);
+					link.click();
+				});
+			}
+
+			const save = () => {
+
+				const component = ci.proxy;
+				component.$forceUpdate();
+				let p = component.$el;
 				//Se debe buscar si abajo esta el form
 				let f = p.querySelector("form");
-				let va = this.validate(f);
+				let va = validate(f);
 				if (va) {
 					let action = f.getAttribute('action');
 					//console.log('Action='+action);
@@ -757,86 +646,89 @@ export const ui = (cfg) => {
 							action = me.apiLink(tc.join('/'));
 						}
 					}
-					//console.log(me);
-					let o0 = me.$data.data ? me.$data.data : me.$data.o;
-					var o = JSON.parse(JSON.stringify(o0));
-					if (me.process) o = me.process(o);
-					
+
+					let o0 = component.data || component.o;
+					let o = JSON.parse(JSON.stringify(o0));
+					if (component.process) o = component.process(o);
 					if (!(typeof o === 'object'
 						&& !Array.isArray(o) && o !== null)) return;
-					if (!action || !me.app2.connected) {
-						let store = me.$children[0].store;
-						if (!store) { me.MsgBox('Store in form is undefined!'); return; }
-						let storedList = await me.getStoredList(store);
-						if (!storedList) storedList = [];
-						if (o.id) {
-							for (var k = 0; k < storedList.length; k++) {
-								if (storedList[k].tmpId == o.tmpId) {
-									delete o.synchronized;
-									storedList[k] = o;
+					console.log('action/componet==', action, component, ctx);
+					if (!action || !app.connected) {
+						const store = views[0].store;
+						if (!store) { MsgBox('Store in form is undefined!'); return; }
+						getStoredList(store).then(storedList => {
+							if (!storedList) storedList = [];
+							if (o.id) {
+								for (let k = 0; k < storedList.length; k++) {
+									if (storedList[k].tmpId == o.tmpId) {
+										delete o.synchronized;
+										storedList[k] = o;
+									}
 								}
 							}
-						}
-						var db = _.db;
-						var transaction = db.transaction([store], "readwrite");
-						var objectStore = transaction.objectStore(store);
-						if (!o.id) {
-							o.tmpId = 1 * new Date();
-							o.id = -o.tmpId;
-							//add new item to start to array							
-							var objectStoreRequest = objectStore.add(o);
-							objectStoreRequest.onsuccess = (e) => {
-								//console.log(e);
-								//console.log('saved to ' + store);
-								storedList.unshift(o);
-								me.$emit('stored', o, storedList, objectStore);
-								if (me.app && me.app.toast) me.app.toast('El registro fue grabado exitosamente!');
-								o0.tmpId = o.tmpId;
-								o0.id = o.id;
-								me.close({ success: true, data: o });
-							};
-							objectStoreRequest.onerror = (e) => {
-								if (me.app && me.app.toast) me.app.toast('Error!');
-								//console.log(e);
-							};
-						} else {
-							delete o.synchronized;
-							var item = objectStore.get(o.tmpId);
-							item.onsuccess = function () {
-								//console.log(item.result);
-								if (item.result) {
-									//console.log('objectStore.put(o)');
-									objectStore.put(o);
-								} else {
-									storedList.forEach((ee) => {
-										if (ee.tmpId == o.tmpId) {
-											objectStore.put(o);
-										}
-									});
-								}
-								me.$emit('stored', o, storedList, objectStore);
-								if (me.$ionic) me.app.toast('El registro fue grabado exitosamente!');
-								me.close({ success: true, data: o });
-							};
-							item.onerror = function () {
-								me.MsgBox('Error getting temporal record ' + o.tmpId);
-							};
-						}
+							let db = _.db;
+							let transaction = db.transaction([store], "readwrite");
+							let objectStore = transaction.objectStore(store);
+							if (!o.id) {
+								o.tmpId = 1 * new Date();
+								o.id = -o.tmpId;
+								//add new item to start to array							
+								let objectStoreRequest = objectStore.add(o);
+								objectStoreRequest.onsuccess = (e) => {
+									//console.log(e);
+									//console.log('saved to ' + store);
+									storedList.unshift(o);
+									me.$emit('stored', o, storedList, objectStore);
+									if (app && app.toast) app.toast('El registro fue grabado exitosamente! storeeeeee not connected');
+									o0.tmpId = o.tmpId;
+									o0.id = o.id;
+									console.log('========>>', component)
+									component.close({ success: true, data: o });
+								};
+								objectStoreRequest.onerror = (e) => {
+									if (app && app.toast) app.toast('Error!');
+									//console.log(e);
+								};
+							} else {
+								delete o.synchronized;
+								let item = objectStore.get(o.tmpId);
+								item.onsuccess = function () {
+									//console.log(item.result);
+									if (item.result) {
+										//console.log('objectStore.put(o)');
+										objectStore.put(o);
+									} else {
+										storedList.forEach((ee) => {
+											if (ee.tmpId == o.tmpId) {
+												objectStore.put(o);
+											}
+										});
+									}
+									me.$emit('stored', o, storedList, objectStore);
+									if (me.$ionic) app.toast('El registro fue grabado exitosamente! onstored');
+									console.log("============2", component);
+									component.close({ success: true, data: o });
+								};
+								item.onerror = function () {
+									MsgBox('Error getting temporal record ' + o.tmpId);
+								};
+							}
+						});
 					} else {
-						axios.post(action, o).then((result) => {
+						app.axios.post(action, o).then((result: any) => {
 
-							var data = result.data;
+							let data = result.data;
 							if (o.tmpId) {
 								alert(12)
-								var store = me.$children[0].store;
-								var objectStore = window._.db.transaction([store], "readwrite").objectStore(store);
-								var item = objectStore.get(o.tmpId);
+								let store = me.$children[0].store;
+								let objectStore = window._.db.transaction([store], "readwrite").objectStore(store);
+								let item = objectStore.get(o.tmpId);
 								if (data.id) { o.id = data.id; o0.id = o.id; }
 
 								item.onsuccess = function () {
 									o0.synchronized = 1;
 									o.synchronized = 1;
-									var re;
+									let re;
 									if (item.result) {
 										re = objectStore.put(o);
 									} else {
@@ -849,30 +741,32 @@ export const ui = (cfg) => {
 									me.$emit('sync', data, o);
 								};
 								item.onerror = function () {
-									me.MsgBox('Error getting temporal record ' + o.tmpId);
+									MsgBox('Error getting temporal record ' + o.tmpId);
 								};
 							}
-							
-							if (me.app&&me.app.toast)
-								me.app.toast('El registro fue grabado exitosamente!', () => {
-									me.close({ success: true, data: data });
+
+							if (app && app.toast)
+								app.toast('El registro fue grabado exitosamente!', () => {
+									component.close({ success: true, data: data });
 								});
 							else {
-								MsgBox('El registro fue grabado exitosamente!', () => {
-									me.close({ success: true, data: data });
+								MsgBox('El registro fue grabado exitosamente! msg', () => {
+									//component
+									alert(2222)
+									close({ success: true, data: data });
 								});
 							}
 						}).catch(function (r) {
 							//console.log(r);
 							if (r.response) {
-								var l, e;
+								let l, e;
 								if ((typeof r.response.data) === 'string') {
-									me.MsgBox(r.response.data);
+									MsgBox(r.response.data);
 								} else {
 									l = r.response.data.propertyViolations;
 									//ec += l.length;
-									for (var i = 0; i < l.length; i++) {
-										var t = l[i];
+									for (let i = 0; i < l.length; i++) {
+										let t = l[i];
 										e = f.querySelector('[name=' + t.path + ']');
 										if (e) {
 											me.showerror(e, t.message);
@@ -887,7 +781,7 @@ export const ui = (cfg) => {
 											me.showerror(e, t.message + ', valor=' + t.value);
 										}
 									}
-									me.MsgBox('Verifique el formulario, aun tiene campos obligatorio completar.');
+									MsgBox('Verifique el formulario, aun tiene campos obligatorio completar.');
 									if (me.$el.parentNode.className == 'v-dialog')
 										me.$el.parentNode.parentNode.scroll({
 											top: 0,
@@ -906,72 +800,43 @@ export const ui = (cfg) => {
 						});
 					}
 				}
-			},
-			saveAs(url, o, config) {
-				if (typeof o == 'string') o = { body: o };
-				var cfg = (typeof config == 'string') ? { fileName: config } : config;
-				if (!cfg) cfg = {};
+			}
 
-
-				/*
-				var requestOptions = {
-				  method: 'POST',
-				  body: formdata
-				};
-				
-				fetch("http://{url}", requestOptions)
-				  .then(response => response.text())
-				  .then(result => console.log(result))
-				  .catch(error => console.log('error', error))
-				*/
-				var a = ("" + o) ? axios.post(url, o, {
-					responseType: 'blob'
-				}) :
-					axios({
-						method: "post",
-						url: url,
-						data: o,
-						headers: { "Content-Type": "multipart/form-data" }
-					});
-
-				a.then((response) => {
-					//console.log(response);
-					const url = window.URL.createObjectURL(new Blob([response.data]));
-					const link = document.createElement('a');
-					link.href = url;
-					if (!cfg.fileName){
-						const disposition = response.headers['content-disposition'];
-						if (disposition && disposition.indexOf('attachment') !== -1) {
-							const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-							const matches = filenameRegex.exec(disposition);
-							if (matches != null && matches[1]) {
-								cfg.fileName = matches[1].replace(/['"]/g, '').trim();
-							}
-						} else {
-							console.warn('content-disposition: attachment; filename = <filename>; header no es accesible o no esta definido correctamente')
-						}
+			const showerror = (e, m) => {
+				if (e.$el) e = e.$el;
+				removeError(e)
+				let previousElementSibling = e.previousElementSibling;
+				while (previousElementSibling && previousElementSibling.nodeType != 1) {
+					previousElementSibling = previousElementSibling.previousElementSibling;
+				}
+				if (!previousElementSibling) {
+					previousElementSibling = e.parentElement.previousElementSibling;
+					while (previousElementSibling && previousElementSibling.nodeType != 1) {
+						previousElementSibling = previousElementSibling.previousElementSibling;
 					}
-					//console.log('cfg.fileName='+cfg.fileName);
-					link.setAttribute('download', cfg.fileName);
-					document.body.appendChild(link);
-					link.click();
-				});
-			},
-			savePost() {
+				}
+				let error = document.createElement("div");
+				error.innerHTML = m ? m : "Este campo es requerido!";
+				//ok = false;
+				error.classList.add("v-error");
+				e.parentNode.insertBefore(error, e);
+			}
 
-			},
-			validate(e2?) {
+			const validate = (e2?) => {
 				const me = this;
-				var ok = true;
+				let ok = true;
 				const fieldsWithErrors = [];
 				const fieldsOk = [];
-				e2 = e2 && e2 != 0 ? e2 : me.$el;
-				var input = e2?.querySelectorAll("input,select,textarea,div[required=required]");
-				var radio = {}, previousElementSibling;
-				for (i = 0; input?.length > i; i++) {
-					var e = input[i];
+				const component = ci.proxy;
+				e2 = e2 && e2 != 0 ? e2 : component.$el;
+				const input = e2?.querySelectorAll("input,select,textarea,div[required=required]");
+
+
+				let radio: any = {}, previousElementSibling;
+				for (let i = 0; input?.length > i; i++) {
+					let e = input[i];
 					if (e.type === 'radio') {
-						var oo = radio[e.name];
+						let oo = radio[e.name];
 						if (!oo)
 							radio[e.name] = (oo = []);
 						oo.push(e);
@@ -980,12 +845,9 @@ export const ui = (cfg) => {
 					if (e.error) {
 						e.error.style.display = 'none';
 					}
-
-
 					if (!(e.disabled || e.getAttribute('disabled')) && (e.required || e.tagName === 'DIV')) {
 						//console.log(document.activeElement==e);
-						if (e.tagName != 'DIV' && (!e.value/*||e.value == 0*/) || (e.tagName === 'DIV'
-							&& !e.attributes.value)) {
+						if (e.tagName != 'DIV' && (!e.value/*||e.value == 0*/) || (e.tagName === 'DIV' && !e.attributes.value)) {
 							previousElementSibling = e.previousElementSibling;
 							while (previousElementSibling && previousElementSibling.nodeType != 1) {
 								previousElementSibling = previousElementSibling.previousElementSibling;
@@ -996,20 +858,19 @@ export const ui = (cfg) => {
 									previousElementSibling = previousElementSibling.previousElementSibling;
 								}
 							}
-							//console.log(e)
 							fieldsWithErrors.push(e);
 						} else {
 							fieldsOk.push(e);
 						}
 					}
 				}
-				console.log('valid radios');
-				for (var r in radio) {
+				for (let r in radio) {
 					if (Object.prototype.hasOwnProperty.call(radio, r)) {
-						var op = radio[r];
-						var checked = false;
-						var required = false;
-						for (var i = 0; i < op.length; i++) {
+						const op = radio[r];
+
+						let checked = false;
+						let required = false;
+						for (let i = 0; i < op.length; i++) {
 							if (op[i].required && !op[i].disabled)
 								required = true;
 							if (op[i].checked)
@@ -1021,44 +882,281 @@ export const ui = (cfg) => {
 							previousElementSibling.parentNode.removeChild(previousElementSibling);
 						}
 						if (required && !checked) {
-							me.showerror(e);
-							/*previousElementSibling = e.previousElementSibling;
-								while(previousElementSibling&&previousElementSibling.nodeType != 1) {
-								previousElementSibling = previousElementSibling.previousElementSibling;
-								}
-								if(!previousElementSibling){
-								previousElementSibling=e.parentElement.previousElementSibling;
-								while(previousElementSibling&&previousElementSibling.nodeType != 1) {
-								previousElementSibling = previousElementSibling.previousElementSibling;
-								}
-								}
-								var error = document.createElement("div"); 
-								error.innerHTML = "Este campo es requerido!";*/
+							//console.log(e);
+							//showerror(e);
+							fieldsWithErrors.push(e);
 							ok = false;
-							//error.classList.add("v-error");
-							//e.parentNode.insertBefore(error, e);
+						} else {
+							fieldsOk.push(e);
 						}
 					}
 				}
-				console.log('ok=' + ok);
+				//console.log(fieldsWithErrors);
 				for (const field of fieldsWithErrors) {
-					if (!field.error) {
-						const error = document.createElement("div");
-						error.innerHTML = "Este campo es requerido!";
-						error.classList.add("v-error");
-						field.error = error;
-						field.parentNode.insertBefore(error, field.nextSibling)
-					} else {
-						field.error.style.display = 'unset';
+					showerror(field);
+				}
+				for (const e of fieldsOk) {
+					let previousElementSibling = e.previousElementSibling;
+					if (previousElementSibling && previousElementSibling.classList && previousElementSibling.classList.contains('v-error')) {
+						previousElementSibling.parentNode.removeChild(previousElementSibling);
 					}
 				}
 				return !fieldsWithErrors.length;
-			},
-		}
-	}
-	if (!cfg) cfg = { data: { o: {} } };
-	const { setup, ...other } = cfg;
-	cfg = { mixins: [defs, other], setup };
-	//if(setup)
+			}
+
+			const create = () => {
+				let action = getView().action;
+				if (!action) {
+					action = window.location.pathname;
+				}
+				if (action) action = action.replace("/api", "");
+				if (app) {
+					open(action + '/create');
+				} /*else {
+					instance.get(_.currentPath = (action + '/create').replace(/([^:]\/)\/+/g, "$1") + '?modal')
+						.then(_.open).catch(_error);
+				}*/
+			}
+
+			const findInSameParent = (el: HTMLElement, qs: string) => {
+				let parent = el.parentElement;
+				while (parent) {
+					const dt = parent.querySelector(qs);
+					if (dt) {
+						return dt;
+					}
+					parent = parent.parentElement;
+				}
+				return null;
+			}
+
+			const edit = (e) => {
+				const view = getView();
+				let action = view.action;
+				const dt = findInSameParent(e.target, '.v-datatable');
+				let t = views.filter(view => view.type == 'v-table').find(view => view.is(dt));
+				if (!action) {
+					action = window.location.pathname;
+				}
+				if (t && t.src) action = t.src;
+				if (e.action) action = e.action;
+				if (action) action = rewrite(action.replace("/api", "").replace("/0/0", ""));
+				const selected = t.selected.value[0];
+				let id = selected[t.rowKey];
+				if (selected.tmpId) id = -selected.tmpId;
+				if (app) {
+					open(action + '/' + id + '/edit');
+				} else {
+					app.axios.get((_.currentPath = (action + '/' + id + '/edit').replace(/([^:]\/)\/+/g, "$1")) + '?modal')
+						.then(me.open).catch(_error);
+				}
+			}
+
+			const getSelected = () => {
+				return views.find(view => view.type == 'v-table').selected.value;
+			}
+
+			const close = (ok) => {
+				console.log(ctx);
+				/*if (ok.$el) ok = ok.$el;
+				let dlg = (ok instanceof HTMLElement) ? ok : null;
+				try {
+					if (!dlg && event.target instanceof HTMLElement)
+						dlg = _.closest(event.target, '.v-dialog');
+				} catch (e) {
+					console.log(e);
+				}
+
+				if (!dlg) dlg = this.$el.parentElement;
+
+				let mask = dlg.parentElement;
+				if (!mask && _.app.$router) {
+					_.app.$router.back();
+					return;
+				}
+				dlg.style.display = "none";
+				if ((' ' + mask.className + ' ').indexOf(' v-overlay ') > -1) mask.style.display = "none";
+				else mask = null;
+				//Vue.resize();
+				let cb = _.storeFunction[dlg.getAttribute("callback")];
+				if (cb) cb(ok);
+				dlg.parentNode.removeChild(dlg);
+				if (mask) mask.parentNode.removeChild(mask);
+				document.documentElement.style.overflow = 'auto';  // firefox, chrome
+				document.body.scroll = "yes";
+				//si history esta activo
+				//history.back();
+				*/
+			}
+
+			const destroy = (e) => {
+				let me = this;
+				const dt = findInSameParent(e.target, '.v-datatable');
+				let t = views.filter(view => view.type == 'v-table').find(view => view.is(dt));
+				let f = views.find(view => view.type != 'v-table');
+				let action = f.action;
+				if (!action)
+					action = window.location.pathname;
+				let cb = e.$vnode ? e.load : null;
+				let key = t.rowKey;
+				let dat = t.selected.value[0];
+				if (dat.tmpId) {
+					MsgBox('Esta seguro que desea eliminar los registros temporales seleccionados ?', function (r) {
+						if (r == 0) {
+							let c = 0, db = _.db;
+							let objectStore = db.transaction([t.store], "readwrite").objectStore(t.store);
+							let ele = [];
+							for (let k = t.selected.length - 1; k >= 0; k--) {
+								dat = t.data[t.selected[k]];
+								ele.push(dat);
+								if (dat.tmpId) objectStore.delete(dat.tmpId);
+								c++;
+								t.data.splice(t.selected[k], 1);
+							}
+							if (c) {
+								if (app && app.toast) app.toast(c + ' registros eliminados');
+								else
+									MsgBox(c + ' registros eliminados');
+							}
+							t.rowSelect(null, -1);
+							t.selected = [];
+							me.$emit('destroyed', ele, t.store);
+							if (cb) cb();
+
+						}
+					}, ['SI', 'NO']);
+				} else {
+					if (!key)
+						return alert('Table don`t have defined attribute \'rowkey\'');
+					let c = 0, id = dat[key];
+					MsgBox('Esta seguro que desea eliminar el registro seleccionado?', (r) => {
+						if (r == 0) {
+							const src = t.src.replace('/0/0', '');
+							const ele = [];
+							let k = (t.selected.value.length - 1)
+							app.axios.delete(src + '/' + id, { params: filters.value }).then(() => {
+								for (; k >= 0; k--) {
+									dat = t.selected.value[k];
+									ele.push(dat);
+									t.remove(dat);
+								}
+								if (app && app.toast)
+									app.toast(ele.length + ' registros eliminados');
+								else
+									MsgBox(ele.length + ' registros eliminados');
+								t.rowSelect(null, -1);
+								t.selected.value = [];
+							}).catch(_error);
+						}
+					}, ['SI', 'NO']);
+				}
+			}
+
+			provide('tableCollect', tableCollect)
+
+			const rowSelectedCount = computed(() => {
+				let v = views.find(view => view.selected?.value.length > 0);
+				return v?.rowSelectedCount || 0;
+			})
+
+			const cleanedFilters = computed(() => {
+				return clean(filters.value);
+			})
+
+			const filters = reactive({});
+
+			const refreshTimeout = ref(null);
+
+			watch(filters, () => {
+				const view = views.find(view => view.type == 'v-table');
+				if (view) {
+					if (refreshTimeout.value) clearTimeout(refreshTimeout.value);
+					refreshTimeout.value = setTimeout(() => {
+						refresh();
+					}, 1200);
+				}
+			})
+
+			let resizeTimeout: any;
+
+			const adjustScrollableWidth = () => {
+				clearTimeout(resizeTimeout);
+				resizeTimeout = setTimeout(() => {
+					const datatable = document.querySelector(".v-datatable");
+					if (datatable?.parentNode) {
+						buildPopupMenu(datatable);
+					}
+				}, 100);
+			}
+
+			const vv = (v) => {
+				Network.getStatus().then((status) => {
+					if (status.connected) {
+						let session = localStorage.getItem('session');
+						if (session) {
+							try {
+								session = JSON.parse(session);
+							} catch (e) {
+								//console.log(e);
+								session = {};
+							}
+							session.connected = v;
+							localStorage.setItem('session', JSON.stringify(session));
+						}
+					} else {
+						me.toast('El dispositivo no tiene acceso a internet!');
+						me.connected = status.connected;
+					}
+				});
+			}
+
+			onMounted(() => {
+				router = useRouter();
+				//app.config({router,axios});
+				ctx.emit('sync', { u: 9 })
+				adjustScrollableWidth();
+				window.addEventListener("resize", adjustScrollableWidth);
+			});
+
+			onUnmounted(() => {
+				window.removeEventListener("resize", adjustScrollableWidth);
+			});
+
+			const baseURL = computed(() => {
+				return app.axios.defaults.baseURL;
+			})
+
+			const session = computed(() => {
+				return app.session;
+			})
+
+			const listeners = [];
+
+			const $on = (name: string, fn: any) => {
+				listeners.push({ name, fn });
+			}
+
+			let q = customSetup ? customSetup({ ...props, $on, router, getStoredList }, ctx) : {};
+			ctx.expose({ router })
+			let res = {
+				app,cleanedFilters,
+				router,
+				baseURL,
+				filters,
+				session,
+				date, pad, getStoredList, refresh, getSelected, saveAs,
+				validate, save, open, close, create, edit, destroy, rowSelectedCount
+				//, ...other?.methods
+				, ...q
+			};
+			/*if (other.methods?.refresh) {
+				delete res.refresh;
+			}
+			if (other.methods?.save) {
+				delete res.save;
+			}*/
+			return res;
+		},
+	};
 	return cfg;
 }

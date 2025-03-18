@@ -19,9 +19,6 @@
   },
   "author": "",
   "license": "ISC",
-  "peerDependencies": {
-    "vue": "^3.2.21"
-  },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
@@ -30,11 +27,19 @@
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-vue": "^6.0.0",
     "typescript": "^5.4.3",
-    "vue-dts-gen": "^0.3.0"
+    "vue": "^3.2.37",
+    "vue-dts-gen": "^0.3.0",
+    "vue-router": "^4.0.16"
   },
   "dependencies": {
+    "@fortawesome/free-regular-svg-icons": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/vue-fontawesome": "^3.0.8",
     "axios": "^1.6.8",
-    "ol": "^9.1.0",
     "tslib": "^2.6.2"
+  },
+  "peerDependencies": {
+    "ol": "^9.1.0",
+    "pinia": "^2.3.1"
   }
 }

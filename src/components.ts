@@ -25,13 +25,17 @@ import VTable from './v-table.vue'
 import VTabview from './v-tabview.vue'
 import VTextarea from './v-textarea.vue'
 import VUploader from './v-uploader.vue'
+import VItem from './v-item.vue'
+import VCalendarFilter from './v-calendar-range.vue'
 
 export default { 
     InputTextarea, 
+    VItem,
     InputText,
     VAutocomplete,
     VButton,
     VCalendar,
+    VCalendarFilter,
     VCheckboxGroup,
     VCheckbox,
     VDataview,

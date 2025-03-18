@@ -1,6 +1,7 @@
 <script setup>
 import { h, getCurrentInstance, onMounted, onUpdated, watch, ref } from 'vue';
 import VRadio from './v-radio.vue';
+import { removeError } from './index';
 
 const props = defineProps({
     required: String,
@@ -8,7 +9,7 @@ const props = defineProps({
     modelValue: String,
     items: {
         type: Array,
-        required: true
+        //required: true
     },
     type: {
         type: String,
@@ -51,6 +52,8 @@ const updateInputs = () => {
     if (!name) {
         name = generateUniqueName();
     }
+    const required = proxy.$props.required === '' || proxy.$props.required;
+    let groupChecked = false;
     for (let i = 0; i < rl.length; i++) {
         rl[i].name = name;
         if (!processedElements.has(rl[i])) {
@@ -58,6 +61,16 @@ const updateInputs = () => {
             processedElements.add(rl[i]);
         }
         rl[i].checked = rl[i].value === value.value;
+        if (rl[i].checked) groupChecked = true;
+        rl[i].required = required;
+        if (required) {
+            if (value.value) rl[i].nextElementSibling.classList.remove('required');
+            else rl[i].nextElementSibling.classList.add('required');
+        }
+    }
+    if (groupChecked) {
+        //console.log(rl[0].parentNode.parentNode);
+        removeError(rl[0].parentNode.parentNode)
     }
 };
 
@@ -93,13 +106,14 @@ const render = () => {
     if (props.items) {
         children.push(...props.items.map(item => {
             return h(VRadio, {
+                className: props.required && !props.modelValue ? 'required' : null,
                 ...item,
                 modelValue: value.value,
                 'onUpdate:modelValue': onChange
             });
         }));
     }
-    return h('div', [
+    return h('div', {class:'v-radio-group'}, [
         props.label && h('label', props.label),
         ...children
     ]);

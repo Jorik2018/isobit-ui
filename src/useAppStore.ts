@@ -1,0 +1,88 @@
+import { defineStore } from 'pinia';
+import { ref, watch, computed } from 'vue';
+import { configureAxios, getPiniaInstance, getConfigApp } from './commons';
+
+export const useAppStore = defineStore('connection', () => {
+
+    const pinia = getPiniaInstance();
+
+    const _config = getConfigApp();
+
+    if (!pinia) throw new Error('Pinia no ha sido inicializado. Llama a setupPinia() en tu app.');
+
+    const connected = ref<boolean>(false);
+
+    const unauthorized = ref<boolean>(false);
+
+    const router = ref(_config.router);
+
+    const axios = ref(_config.axios);
+
+    const session = ref<Record<string, any> | null>(null);
+
+    const networkStatus = ref<Record<string, any> | null>(null);
+
+    connected.value = localStorage.getItem('connected') !== 'false';
+
+    /*connected: {
+        get() {
+            return this.online && this.x_connected_ !== false;
+        },
+        set(v) {
+            let me = this;
+            let session = me.session;
+            this.x_connected_ = v;
+            //session.connected=v;
+            this.$set(session, 'connected', v);
+            me.session = session;
+            console.log(me);
+        },
+    }*/
+
+    const s = localStorage.getItem('session');
+
+    session.value = s ? JSON.parse(s) : null;
+
+    watch(connected, (newValue:any) => {
+        localStorage.setItem('connected', String(newValue));
+    });
+
+    watch(session, (newValue:any) => {
+        localStorage.setItem('session', JSON.stringify(newValue));
+    });
+
+    const online = computed(() => networkStatus.value?.connected);
+
+    const networkStatusChange = (status: any) => {
+        networkStatus.value = status;
+    };
+
+    const logout = () => {
+        connected.value = false;
+        session.value = null;
+        localStorage.removeItem('connected');
+        localStorage.removeItem('session');
+        router.value.push('/login');
+    };
+
+    const authenticated = computed(() => !!session.value?.token);
+
+    const config = ({ axios: axiosInstance, router: routerInstance }: any) => {
+        if (routerInstance) {
+            //console.log('setRouter==', router)
+            router.value = routerInstance;
+        }
+        if (axiosInstance) {
+            //console.log('setAxios==', axios)
+            axios.value = axiosInstance;
+            configureAxios(axiosInstance);
+        }
+    };
+
+    const connect = (value: Record<string, any>) => {
+        session.value = value;
+        router.value.push("/admin");
+    };
+
+    return { connected, session, logout, unauthorized, connect, authenticated, config, axios, router, online, networkStatusChange };
+});

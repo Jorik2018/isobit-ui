@@ -1,14 +1,20 @@
 <script>
-import { h } from 'vue'
+import { h, inject } from 'vue'
 export default {
   name: 'VForm',
   props: ["header", "store", "action"],
   setup(props, cxt) {
+    const { store } = props;
     const { slots, expose } = cxt;
-    const abc=()=>{alert(8)};
-    expose({abc, ...props})
+    const abc = () => { alert(8) };
+    const viewCollect = inject('tableCollect');
+    viewCollect.push({
+      store
+    });
+    expose({ abc, ...props })
     return () => {
       const children = [];
+
       if (props.header) {
         children.push(
           h('div', { class: 'v-widget-header v-panel-titlebar' }, [

@@ -1,20 +1,43 @@
 export const _ = {
-	stores:[],
-	_id:0,
+	stores: [],
+	_id: 0,
 	axios_get: null,
-	storeFunction:{},
-	id:()=>{
-		return _._id++;
-	}
+	storeFunction: {}
 }
 
-const upper = (s:string) => {
+export const log = (arg,...args) => {
+	if(arg)console.log(arg,...args);
+}
+import { getActivePinia, setActivePinia, createPinia } from 'pinia';
+
+let configApp: any = {};
+
+export function setupApp({ pinia, axios, router }: any) {
+	configApp.pinia = pinia || createPinia();
+	if (axios) configApp.axios = axios;
+	if (router) configApp.router = router;
+	setActivePinia(configApp.pinia);
+}
+
+export function getConfigApp() {
+	return configApp;
+}
+
+export function getPiniaInstance() {
+	return getActivePinia() || configApp.pinia;
+}
+
+export const id = () => {
+	return _._id++;
+}
+
+const upper = (s: string) => {
 	return s ? s.toUpperCase() : s;
 };
 
-const capitalize = (o:string) => {
+const capitalize = (o: string) => {
 	if (o) {
-		o = o.replace('_', ' ').replace(/\b[a-z](?=[a-z]{2})/gi, function (letter:string) {
+		o = o.replace('_', ' ').replace(/\b[a-z](?=[a-z]{2})/gi, function (letter: string) {
 			return letter.toUpperCase();
 		})
 	}
@@ -32,13 +55,37 @@ const _number = function (s/*, type*/) {//s usa   d|date('time')
 	}
 	return s;
 };
-export const date = (s:Date|string, type:string|number) => {//s usa   d|date('time')
+export const date = (s: Date | string, type: string | number) => {//s usa   d|date('time')
 	if (s) {
 		let d;
 		if (s instanceof Date) {
 			d = s;
 		} else if (typeof s === 'string') {
-			let t = s.split('T');
+			/*let t = s.includes('T') ? s.split('T') : s.split(' '); // Maneja 'T' o espacio como separador
+			let d = t[0].split('-');
+		
+			if (t.length > 1) {
+				let time = t[1].split(':');
+				d= new Date(
+					parseInt(d[0]), 
+					parseInt(d[1]) - 1, 
+					parseInt(d[2]), 
+					parseInt(time[0]), 
+					parseInt(time[1]), 
+					time.length > 2 ? parseInt(time[2]) : 0
+				);
+			} else if (d.length > 2) {
+				d= new Date(parseInt(d[0]), parseInt(d[1]) - 1, parseInt(d[2]));
+			} else {
+				let time = s.split(':');
+				if (time.length > 2) {
+					d= new Date(1981, 0, 6, parseInt(time[0]), parseInt(time[1]), parseInt(time[2]));
+				} else {
+					d= new Date(s);
+				}
+			}*/
+			
+			let t = s.includes('T') ? s.split('T') : s.split(' '); 
 			d = t[0].split('-');
 			if (t.length > 1) {
 				t = t[1].split(':');
@@ -83,14 +130,16 @@ export const date = (s:Date|string, type:string|number) => {//s usa   d|date('ti
 	}
 	return s;
 };
+//indice del elemento dentro de su padre
 export const whichChild = (e) => {
 	let i = 0;
 	while ((e = e.previousElementSibling) != null)
 		++i;
 	return i;
 };
-const mask = (ms, cfg) => {
+export const mask = (ms, cfg) => {
 	if (!document.body) return;
+	//console.log('call mask');
 	let w = window;
 	let img;
 	let center = document.createElement("div");
@@ -136,13 +185,14 @@ const mask = (ms, cfg) => {
 	if (cfg && cfg.backgroundColor) s.backgroundColor = cfg.backgroundColor;
 	p.appendChild(bg);
 	p.appendChild(center);
+	p.className='v-mask'
 	if (img)
 		center.appendChild(img);
 	document.body.appendChild(p);
 	return p;
 };
 
-const unmask = (m) => {
+export const unmask = (m) => {
 	if (m) {
 		m.style.display = "none";
 		if (m.parentNode)
@@ -150,11 +200,11 @@ const unmask = (m) => {
 	}
 };
 
-const isObject = (item:any) => {
+const isObject = (item: any) => {
 	return (item && typeof item === 'object' && !Array.isArray(item));
 }
 
-export const mergeDeep: any = function() {
+export const mergeDeep: any = function () {
 	let target = arguments[0];
 	let sources = [];
 	for (let i = 1; i < arguments.length; i++)sources.push(arguments[i]);
@@ -171,7 +221,7 @@ export const mergeDeep: any = function() {
 				console.log(source[key]);
 				console.log(typeof source[key]);*/
 				if (!target[key]) {
-					nv = {}; nv[key] = {}; Object.assign(target, nv); 
+					nv = {}; nv[key] = {}; Object.assign(target, nv);
 				}
 				mergeDeep(target[key], source[key]);
 			} else {
@@ -189,10 +239,10 @@ export const mergeDeep: any = function() {
 	//return mergeDeep(target, ...sources);
 }
 
-const buildPopupMenu = (parent) => {
+export const buildPopupMenu = (parent) => {
 	let pid = parent.getAttribute("v--popup");
 	if (!pid) {
-		parent.setAttribute("v--popup", pid = _.id());
+		parent.setAttribute("v--popup", pid = id());
 		let popup = _.storeFunction[pid];
 		let bu = parent.querySelectorAll('.v-datatable-header .v-button');
 		if (bu && bu.length && !popup && window.innerWidth <= 700) {
@@ -229,7 +279,7 @@ const buildPopupMenu = (parent) => {
 						//Debe tenerlo directamente no por herencia
 						if ((bu[i].style.display != 'none')) {
 							let ite = document.createElement('li');
-							if (!bu[i].id) bu[i].id = 'c-' + _.id();
+							if (!bu[i].id) bu[i].id = 'c-' + id();
 							ite.setAttribute('commandId', bu[i].id);
 							if (bu[i].tagName == 'BUTTON') {
 								if (bu[i].disabled) continue;
@@ -261,6 +311,7 @@ const buildPopupMenu = (parent) => {
 }
 
 export const resize = () => {
+	if (1 == 1) return;
 	//dialog.style.left = (window.innerWidth - dialog.offsetWidth) / 2 + 'px';
 	let h = window.innerHeight;
 	//console.log(h);
@@ -270,15 +321,15 @@ export const resize = () => {
 	ph = ph[0];
 	const pc = document.querySelectorAll("#app > .ui-panel > .v-dialog-content > form > .v-datatable");
 
-	
-	
+
+
 	if (pc && pc[0]) {
 		buildPopupMenu(pc[0]);
 		//console.log('cccccccccccc');
 		//console.log(ph.dataset);
 		//console.log(ph.offsetHeight);
 		let p, i;
-if(1==1)return;
+		if (1 == 1) return;
 		if (pc[0].nodeName == "ION-CONTENT") {
 			p = pc[0].children[0];
 			h = h - ph.offsetHeight - 0;
@@ -392,7 +443,7 @@ if(1==1)return;
 				}
 			}
 			//console.log(ww[0].childNodes);
-		}else{
+		} else {
 			console.log(12);
 		}
 	}
@@ -424,7 +475,7 @@ export const MsgBox = (m, cb, b) => {
 
 		dialog.parentNode.removeChild(dialog);
 		overlay.parentNode.removeChild(overlay);
-		if (cb){
+		if (cb) {
 			cb(this.getAttribute("index"));
 		}
 	};
@@ -467,6 +518,8 @@ if (!acl) {
 }
 
 export const configureAxios = (a) => {
+	if(a.configured)return;
+	a.configured=1;
 	_.axios_get = a.get;
 	let maskElement;
 	a.interceptors.request.use(function (config) {
@@ -478,7 +531,7 @@ export const configureAxios = (a) => {
 		return config;
 	}, function (e) {
 		maskElement = unmask(maskElement);
-		MsgBox('request ' + _.id() + ' ' + e.message)
+		MsgBox('request ' + id() + ' ' + e.message)
 		return Promise.reject(e);
 	});
 	a.interceptors.response.use(function (response) {
@@ -511,10 +564,10 @@ export const configureAxios = (a) => {
 			} else {
 				//console.log('mssg');
 				console.log(e)
-				if(e.request)
-				MsgBox('<b>' + e.request.responseURL + '</b><br/><br/>' + msg);
-			else
-			MsgBox(msg);
+				if (e.request)
+					MsgBox('<b>' + e.request.responseURL + '</b><br/><br/>' + msg);
+				else
+					MsgBox(msg);
 			}
 			//console.log(msg);
 			//console.log(r);
@@ -533,39 +586,51 @@ export const pad = (num, size) => {
 	}
 };
 
-export const clean = (obj) => {
-    for (let propName in obj) {
-        if (obj[propName] === '' || obj[propName] === null
-            || typeof obj[propName] === 'function'
-            || obj[propName] === undefined) {
-            delete obj[propName];
-        }
-    }
-    return obj;
-}
+export const clean = (obj:any) => {
+	// Create a shallow copy of the object to avoid mutating the original object
+	const newObj = { ...obj };
+  
+	// Iterate over the properties of the copied object
+	for (let propName in newObj) {
+	  // Check for properties that are empty string, null, function, or undefined
+	  if (
+		newObj[propName] === '' ||
+		newObj[propName] === null ||
+		typeof newObj[propName] === 'function' ||
+		newObj[propName] === undefined
+	  ) {
+		// Delete properties that meet the criteria
+		delete newObj[propName];
+	  }
+	}
+	
+	// Return the new object with unwanted properties removed
+	return newObj;
+  };
+  
 
 export const sum = (c) => {
-    return this.reduce((a, b) => {
-      b = (c ? b[c] : b);
-      return a + (b ? Number(b) : 0);
-    }, 0);
+	return this.reduce((a, b) => {
+		b = (c ? b[c] : b);
+		return a + (b ? Number(b) : 0);
+	}, 0);
 }
 
 function createGetters() {
 	return {
 		get networkStatus() {
-		return _.app?.networkStatus || {connected: true};
+			return _.app?.networkStatus || { connected: true };
 		},
 		get db() {
-		return _.app?.db;
+			return _.app?.db;
 		},
 		app() {
-			console.log('get.app='+_.app)
-		return _.app;
+			//console.log('get.app='+_.app)
+			return _.app;
 		},
 		setApp(v) {
 			_.app = v;
-			console.log('setApp='+_.app)
+			//console.log('setApp='+_.app)
 		},
 	};
 }
@@ -592,7 +657,7 @@ export const initDB = (version, stores) => {
 	} else {
 		if (db) {
 			_.stores = stores;
-			return new Promise((resolve,reject) => {
+			return new Promise((resolve, reject) => {
 				let request = db.open("db", version);
 				request.onupgradeneeded = (event) => {
 					let db = event.target.result;
@@ -616,47 +681,60 @@ export const initDB = (version, stores) => {
 	return db;
 }
 
+
 export const getStoredList = async (store, params) => {
+	const _db = db();
 	let loadedStores;
 	try {
 		loadedStores = JSON.parse(sessionStorage.getItem('loadedStores'));
-	} catch (e) { }
+	} catch (_e) { loadedStores == null }
 	if (loadedStores == null) loadedStores = {};
 	//console.log(loadedStores);
-	const _db = db();
 	if (!loadedStores[store] && networkStatus.connected) {
 		let e = _.stores.filter(e => e[0] == store)[0];
 		//console.log(e);
-		if(!e) throw "store '"+store+"' undefined";
-		if(!e[2]) throw "store url for '"+store+"' is empty";
-		let data = e[2]?await _.axios_get(e[2]):[];
-		const objectStore = _db.transaction([e[0]], "readwrite").objectStore(e[0]);
-		await objectStore.clear();
-		data = data.data||data;
-		for (let i in data) {
-			try {
-				await objectStore.add(data[i]);
-			} catch (exception) {
-				//console.log(data[i]);
-				//console.log(e[0]);
-				throw exception;
-			}
-		}
-		loadedStores[store] = 1;
-		sessionStorage.setItem('loadedStores', JSON.stringify(loadedStores));
+		if (!e[2]) throw `ERROR: Url for store '${e[0]}' is empty!`;
+		let data = e[2] ? await _.axios_get(e[2]) : [];
+		data = data.data || data;
+		await new Promise((resolve, reject) => {
+			let transaction = _db.transaction([e[0]], "readwrite");
+			let objectStore = transaction.objectStore(e[0]);
+			const objectStoreRequest = objectStore.clear();
+			objectStoreRequest.onsuccess = () => {
+				console.log("data:", data);
+				data.forEach((item) => {
+					objectStore.add(item).onerror = (e) => {
+						console.error(`⚠️ Store '${e[0]}' error addd data!`, e);
+					}
+				});
+			};
+			objectStoreRequest.onerror = () => {
+				console.error(`⚠️ Store '${e[0]}' error data!`, e);
+			};
+			transaction.oncomplete = () => {
+				loadedStores[store] = 1;
+				sessionStorage.setItem('loadedStores', JSON.stringify(loadedStores));
+				resolve();
+			};
+			transaction.onerror = (e) => {
+				console.error(`ERROR: ⚠️ Error en la transacción for store '${e[0]}'!`, e);
+				reject();
+			};
+		});
 	}
-	let p = new Promise((resolve,rejected) => {
-		if(_db){
-			let t = _db.transaction(store), objectStore = t.objectStore(store);//,d=[];
-			let r = objectStore.getAll();
-			r.onsuccess = function () {
-				resolve(r.result);
+	let result = await new Promise((resolve, rejected) => {
+		if (_db) {
+			const transaction = _db.transaction(store), objectStore = transaction.objectStore(store);
+			const getAllRequest = objectStore.getAll();
+			getAllRequest.onsuccess = () => {
+				resolve(getAllRequest.result);
 			}
-		}else rejected('db is null');
+		} else {
+			console.log('1=========>db=', window._.db);
+			rejected('=======>db is null esta faltando');
+		}
 		//t.onerror = event => reject(event.target.error);
 	});
-	let result = await p;
-	//console.log(result);
 	return result;
 };
 
@@ -670,47 +748,47 @@ const getters = createGetters();
 export const { networkStatus, setApp } = getters;
 
 export class HTML2Canvas {
-    private props: any;
-    private ctx: CanvasRenderingContext2D;
-    private lineHeight: number;
-  
-    constructor(props: any) {
-        this.props = props;
-        this.ctx = props.ctx;
-        this.lineHeight = props.lineHeight ? props.lineHeight : 20;
-    }
-  
-    private heightText(s: string, w: number): number {
-        const { ctx, lineHeight } = this;
-        let s2 = '';
-        let t = lineHeight;
-        s.split('').forEach((e) => {
-            s2 += e;
-            if (ctx.measureText(s2).width >= (w - 15)) {
-                s2 = '';
-                t += lineHeight;
-            }
-        });
-        t += 7;
-        return t;
-    }
-  
-    public drawText(s: string, x: number, y: number, w: number, h: number, a: string): number {
-        const { ctx, lineHeight } = this;
-        let s2 = '';
-        let t = lineHeight + y;
-        ctx.fillStyle = "#000000";
-        s.split('').forEach((e) => {
-            s2 += e;
-            if (ctx.measureText(s2).width >= (w - 15)) {
-                ctx.fillText(s2, x, t);
-                s2 = '';
-                t += lineHeight;
-            }
-        });
-        ctx.fillText(s2, x + (a == 'right' ? (w - ctx.measureText(s2).width) : 0), t);
-        ctx.beginPath();
-        t += 7;
-        return t;
-    }
-  }
+	private props: any;
+	private ctx: CanvasRenderingContext2D;
+	private lineHeight: number;
+
+	constructor(props: any) {
+		this.props = props;
+		this.ctx = props.ctx;
+		this.lineHeight = props.lineHeight ? props.lineHeight : 20;
+	}
+
+	private heightText(s: string, w: number): number {
+		const { ctx, lineHeight } = this;
+		let s2 = '';
+		let t = lineHeight;
+		s.split('').forEach((e) => {
+			s2 += e;
+			if (ctx.measureText(s2).width >= (w - 15)) {
+				s2 = '';
+				t += lineHeight;
+			}
+		});
+		t += 7;
+		return t;
+	}
+
+	public drawText(s: string, x: number, y: number, w: number, h: number, a: string): number {
+		const { ctx, lineHeight } = this;
+		let s2 = '';
+		let t = lineHeight + y;
+		ctx.fillStyle = "#000000";
+		s.split('').forEach((e) => {
+			s2 += e;
+			if (ctx.measureText(s2).width >= (w - 15)) {
+				ctx.fillText(s2, x, t);
+				s2 = '';
+				t += lineHeight;
+			}
+		});
+		ctx.fillText(s2, x + (a == 'right' ? (w - ctx.measureText(s2).width) : 0), t);
+		ctx.beginPath();
+		t += 7;
+		return t;
+	}
+}
