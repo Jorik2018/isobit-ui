@@ -224,7 +224,7 @@ export default {
             _map.on('moveend', () => {
                 if (movingCompleted.value) {
                     movingCompleted.value(m);
-                    movingCompleted = null;
+                    movingCompleted.value = null;
                 }
                 //console.log(evt);
                 let newZoom = _map.getView().getZoom();
