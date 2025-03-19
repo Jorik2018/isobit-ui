@@ -22,7 +22,7 @@ export default {
             dl: null
         }
     },
-    setup({ baseURL = 'http://web.regionancash.gob.pe' }, { emit }) {
+    setup({ baseURL = 'https://web.regionancash.gob.pe' }, { emit }) {
         const selectionRef = ref()
         const collector = inject('collector');
         const plRef = ref()

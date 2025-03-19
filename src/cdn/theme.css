@@ -3429,6 +3429,9 @@ select:not([disabled]){
 	select{
 		background-image: url("data:image/svg+xml;utf8,<svg width='32' height='24' xmlns='http://www.w3.org/2000/svg' fill='black'><g><path d='m6.00001,7.50001l5.87499,9.24997l5.87499,-9.24997l-11.74999,0l0.00001,0z' stroke='null'/><path d='m0,0l24,0l0,24l-24,0l0,-24z' fill='none' /></g></svg>"), linear-gradient(to bottom, #eee, #cdcdcd);;
 	}
+	.v-menu li:hover {
+		background-color: rgb(241, 240, 240);
+	  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -3497,5 +3500,38 @@ select:not([disabled]){
 		background-repeat: no-repeat;
 		background-image: url("data:image/svg+xml;utf8,<svg width='32' height='24' xmlns='http://www.w3.org/2000/svg' fill='white'><g><path d='m6.00001,7.50001l5.87499,9.24997l5.87499,-9.24997l-11.74999,0l0.00001,0z' stroke='null'/><path d='m0,0l24,0l0,24l-24,0l0,-24z' fill='none' /></g></svg>"), linear-gradient(to bottom, #3a3737, #271e1e);
 	}
+	.v-menu li:hover {
+		background-color: #313131;
+	  }
 	
 }
+
+.v-menu {
+  margin: 0px;
+}
+
+.v-menu,
+.v-menu ul {
+  list-style: none;
+}
+
+.v-menu,
+.v-menu ul {
+  padding: 0px;
+}
+
+.v-menu li {
+  padding: 14px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid rgb(224, 224, 224);
+}
+
+.v-menu>ul>li {
+  padding-left: 40px;
+}
+
+.v-menu li>i,
+.v-menu li>svg {
+  margin-right: 10px;
+}
+

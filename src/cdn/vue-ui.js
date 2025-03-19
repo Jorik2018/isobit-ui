@@ -7,9 +7,9 @@ import * as olProj from 'ol/proj';
 import Map from 'ol/Map'
 import View from 'ol/View'
 import Collection from 'ol/Collection'
-import {Fill, Stroke, Style, Circle, RegularShape} from 'ol/style'
-import {Tile,Vector as VectorLayer} from 'ol/layer'
-import {OSM,Vector} from 'ol/source'
+import { Fill, Stroke, Style, Circle, RegularShape } from 'ol/style'
+import { Tile, Vector as VectorLayer } from 'ol/layer'
+import { OSM, Vector } from 'ol/source'
 import Point from 'ol/geom/Point'
 import Control from 'ol/control/Control'
 import FullScreen from 'ol/control/FullScreen'
@@ -17,29 +17,30 @@ import Overlay from 'ol/Overlay'
 import Feature from 'ol/Feature'
 import GeoJSON from 'ol/format/GeoJSON'
 import Translate from 'ol/interaction/Translate'
-import Text from  'ol/style/Text'
+import Text from 'ol/style/Text'
 
-var ol={
-	Overlay:Overlay,
-	Feature:Feature,
-	proj:olProj,
-	interaction:{Translate:Translate},
-	format:{GeoJSON:GeoJSON},
-	geom:{Point:Point},
-	control:{Control:Control,FullScreen:FullScreen},
-	Map:Map,
-	View:View,
-	Collection:Collection,
-	source:{OSM:OSM,Vector:Vector},
-	layer:{Tile:Tile,Vector:VectorLayer},
-	style:{Style:Style,Stroke:Stroke,Text:Text,Fill:Fill,Circle:Circle,RegularShape:RegularShape}
+var ol = {
+    Overlay: Overlay,
+    Feature: Feature,
+    proj: olProj,
+    interaction: { Translate: Translate },
+    format: { GeoJSON: GeoJSON },
+    geom: { Point: Point },
+    control: { Control: Control, FullScreen: FullScreen },
+    Map: Map,
+    View: View,
+    Collection: Collection,
+    source: { OSM: OSM, Vector: Vector },
+    layer: { Tile: Tile, Vector: VectorLayer },
+    style: { Style: Style, Stroke: Stroke, Text: Text, Fill: Fill, Circle: Circle, RegularShape: RegularShape }
 }
-function n(v){
-    v=v?(v==''?null:Number(''+v)):0
+function n(v) {
+    v = v ? (v == '' ? null : Number('' + v)) : 0
     return v;
 }
 
-Vue.component('v-feature', {props: ['type'], abstract: true, 
+Vue.component('v-feature', {
+    props: ['type'], abstract: true,
     render: function () {
         var me = this;
         me.$parent.$on('build', function (m) {
@@ -54,39 +55,40 @@ Vue.component('v-feature', {props: ['type'], abstract: true,
                     })
                 });
                 var translateIteraction = new ol.interaction.Translate({
-                        features: new ol.Collection([f])
+                    features: new ol.Collection([f])
                 });
                 translateIteraction.on('translateend', function (e) {
-                        var c=ol.proj.toLonLat(e.coordinate);
-                        me.$emit('moved',{coords: {latitude: c[0], longitude: c[1]}});
+                    var c = ol.proj.toLonLat(e.coordinate);
+                    me.$emit('moved', { coords: { latitude: c[0], longitude: c[1] } });
                 });
                 m.addInteraction(translateIteraction);
                 m.addLayer(layer);
-				var c=ol.proj.toLonLat(f.getGeometry().getCoordinates());
-				me.$emit('moved',{coords: {latitude: c[0], longitude: c[1]}});
+                var c = ol.proj.toLonLat(f.getGeometry().getCoordinates());
+                me.$emit('moved', { coords: { latitude: c[0], longitude: c[1] } });
             }
         });
-		return null
+        return null
     }
 });
-Vue.component('v-layer', {props: ['src', 'maxZoom', 'minZoom','filters','name'], abstract: true,
-    data: function () {
+Vue.component('v-layer', {
+    props: ['src', 'maxZoom', 'minZoom', 'filters', 'name'], abstract: true,
+    data() {
         return {
-            loaded: null,map:null,layer:null
+            loaded: null, map: null, layer: null
         }
     },
     methods: {
-        reset(){
-            this.loaded=false;
+        reset() {
+            this.loaded = false;
             this.show(this.map);
         },
-        show:function(m) {
+        show: function (m) {
             var me = this;
             var layer = me.layer;
-            if (!me.loaded){
-                var params={zoom: parseInt(m.getView().getZoom(), 10)};
-                if(me.filters)params=Vue.mergeDeep(params,me.filters);
-                axios.get(me.src, {params:params}).then(function (r) {
+            if (!me.loaded) {
+                var params = { zoom: parseInt(m.getView().getZoom(), 10) };
+                if (me.filters) params = Vue.mergeDeep(params, me.filters);
+                axios.get(me.src, { params: params }).then(function (r) {
                     var data = (r.data.data ? r.data.data : r.data);
                     var features = [];
                     var max = 1;
@@ -95,49 +97,49 @@ Vue.component('v-layer', {props: ['src', 'maxZoom', 'minZoom','filters','name'],
                         if (d[2] > max)
                             max = d[2];
                     }
-                    me.$emit('load',{target:me,features:features,data:data,map:m});
-                    if(!layer){
+                    me.$emit('load', { target: me, features: features, data: data, map: m });
+                    if (!layer) {
                         var layerConfig = {
                             source: new ol.source.Vector({
                                 features: features
                             }),
-                            id:me.name
+                            id: me.name
                         };
                         if (me.maxZoom)
                             layerConfig.maxZoom = me.maxZoom;
                         if (me.minZoom)
                             layerConfig.minZoom = me.minZoom;
                         layer = new ol.layer.Vector(layerConfig);
-                        layer.onSelect=function(f){
-                            me.$emit('select',f);
+                        layer.onSelect = function (f) {
+                            me.$emit('select', f);
                         };
-                        m.addLayer(me.layer=layer);
+                        m.addLayer(me.layer = layer);
                         layer.on('change:visible', function () {
                             alert(1);
                             console.log(this);
                         });
-                    }else{
+                    } else {
                         layer.setSource(new ol.source.Vector({
                             features: features
                         }));
-                    }                    
+                    }
                     me.loaded = true;
-                    me.layer=layer;
+                    me.layer = layer;
                 }).catch(me.error);
             }
         }
     },
-    render :function() {
+    render: function () {
         var me = this;
         me.$parent.$on('build', function (m) {
             var currZoom = false;
-            me.map=m;
+            me.map = m;
             var v = '';
             var fm = function () {
                 var newZoom = parseInt(m.getView().getZoom(), 10);
                 var minZoom = me.minZoom ? me.minZoom : 0;
                 var maxZoom = me.maxZoom ? me.maxZoom : 10000;
-                me.newZoom=null;
+                me.newZoom = null;
                 if (currZoom != newZoom) {
                     var vv = minZoom <= newZoom && newZoom <= maxZoom;
                     if (vv !== v) {
@@ -146,14 +148,15 @@ Vue.component('v-layer', {props: ['src', 'maxZoom', 'minZoom','filters','name'],
                         v = vv;
                     }
                     currZoom = newZoom;
-                    me.newZoom=newZoom;
+                    me.newZoom = newZoom;
                 }
-                me.$emit('moveend',me);
+                me.$emit('moveend', me);
             };
             m.on('moveend', fm);
         });
-		return null;
-    }});
+        return null;
+    }
+});
 Vue.component('v-chart', {
     props: {
         value: {
@@ -162,7 +165,7 @@ Vue.component('v-chart', {
         data: Object,
         type: String,
         source: String,
-        dataFunc:Function
+        dataFunc: Function
     },
 
     template: '<div style="border:1px solid gray"><canvas></canvas></div>',
@@ -172,19 +175,19 @@ Vue.component('v-chart', {
     },
     mounted: function () {
         var m = this;
-		if(typeof Chart !== 'undefined'){
-			m.Chart=Chart;m.build();
-		}else
-			_.loadScript('/cdn/Chart.min.js', function () {
-				m.Chart=Chart;
-				m.build();
-			});
+        if (typeof Chart !== 'undefined') {
+            m.Chart = Chart; m.build();
+        } else
+            _.loadScript('/cdn/Chart.min.js', function () {
+                m.Chart = Chart;
+                m.build();
+            });
     },
     data: function () {
-        return {dat: {},Chart:null}
+        return { dat: {}, Chart: null }
     },
     methods: {
-        build:function() {
+        build: function () {
             var me = this;
             var canvas = this.$el.querySelector("canvas");
             if (this.chart) {
@@ -193,61 +196,61 @@ Vue.component('v-chart', {
             var _dat = me.dat;
             _dat.label = [];
             _dat.data = [];
-//            axios.get(this.src, {params: null})
-//                    .then(function (r) {
-//                        var _dat = r.data.data ? r.data.data : r.data;
-//                        for (i = 0; i < _dat.length; i++) {
-//                            _data.label.push(_dat[i][0]);
-//                            _data.data.push(_dat[i][1]);
-//                        }
-//                        me.chart.update();
-//
-//                        //me.$forceUpdate();
-//                        //me.$parent.loaded(nou);
-//                        //me.$emit('loaded', me);
-//                        //Si lo encuentra despues de cargar los items debe marcarlo
-//                        //if(me.$parent.$attrs.value)
-//                        //me.$parent.onChange(me.$parent.$attrs.value);
-//                    })
-//                    .catch(function (r) {
-//                        console.log(r);
-//                        r = r.response;
-//                        var e = me.$parent.$el;
-//                        var error = document.createElement("div");
-////                        error.innerHTML = r.config.method + ' ' + r.config.url + ' ' + r.status + ' (' + r.statusText + ')';
-//                        error.classList.add("v-error");
-//                        e.parentNode.insertBefore(error, e);
-//                    });
+            //            axios.get(this.src, {params: null})
+            //                    .then(function (r) {
+            //                        var _dat = r.data.data ? r.data.data : r.data;
+            //                        for (i = 0; i < _dat.length; i++) {
+            //                            _data.label.push(_dat[i][0]);
+            //                            _data.data.push(_dat[i][1]);
+            //                        }
+            //                        me.chart.update();
+            //
+            //                        //me.$forceUpdate();
+            //                        //me.$parent.loaded(nou);
+            //                        //me.$emit('loaded', me);
+            //                        //Si lo encuentra despues de cargar los items debe marcarlo
+            //                        //if(me.$parent.$attrs.value)
+            //                        //me.$parent.onChange(me.$parent.$attrs.value);
+            //                    })
+            //                    .catch(function (r) {
+            //                        console.log(r);
+            //                        r = r.response;
+            //                        var e = me.$parent.$el;
+            //                        var error = document.createElement("div");
+            ////                        error.innerHTML = r.config.method + ' ' + r.config.url + ' ' + r.status + ' (' + r.statusText + ')';
+            //                        error.classList.add("v-error");
+            //                        e.parentNode.insertBefore(error, e);
+            //                    });
 
-//            if(me.data&&this.data.height){
-//                canvas.height = this.data.height+'px';
-//                canvas.parentNode.style.height = this.data.height+'px';
-//            }
-//            var din=this.data.dataIndexName;
-//            var met=this.data.metaData;
-//            if(din){
-//                for(var i=0;i<din.length;i++){
-//                    for(var j=0;j<met.length;j++){
-//                        if(met[j].name==din[0])this.data.dataIndex=j;
-//                    } 
-//                }
-//            }
+            //            if(me.data&&this.data.height){
+            //                canvas.height = this.data.height+'px';
+            //                canvas.parentNode.style.height = this.data.height+'px';
+            //            }
+            //            var din=this.data.dataIndexName;
+            //            var met=this.data.metaData;
+            //            if(din){
+            //                for(var i=0;i<din.length;i++){
+            //                    for(var j=0;j<met.length;j++){
+            //                        if(met[j].name==din[0])this.data.dataIndex=j;
+            //                    } 
+            //                }
+            //            }
 
             window.chartColors = ['rgb(255, 99, 132)', 'rgb(255, 159, 64)', 'rgb(255, 205, 86)',
                 'rgb(75, 192, 192)', 'rgb(54, 162, 235)', 'rgb(153, 102, 255)', 'rgb(201, 203, 207)'];
 
-//            var dataset=[];
-//            
-//            for(var i=0;i<this.data.data.length;i++){
-//                dataset.push(this.data.data[i][this.data.dataIndex]);
-//            }
-//            for(var i=0;i<this.data.data.length;i++){
-//                label.push(this.data.data[i][this.data.labelIndex]);
-//            }
-//            while(window.chartColors.length<label.length)window.chartColors.push('rgb('+(255*Math.random())+', '+(255*Math.random())+', '+(255*Math.random())+')');
+            //            var dataset=[];
+            //            
+            //            for(var i=0;i<this.data.data.length;i++){
+            //                dataset.push(this.data.data[i][this.data.dataIndex]);
+            //            }
+            //            for(var i=0;i<this.data.data.length;i++){
+            //                label.push(this.data.data[i][this.data.labelIndex]);
+            //            }
+            //            while(window.chartColors.length<label.length)window.chartColors.push('rgb('+(255*Math.random())+', '+(255*Math.random())+', '+(255*Math.random())+')');
             this.chart = new this.Chart(canvas, Vue.mergeDeep({
                 type: this.type,
-                data:{
+                data: {
                     datasets: [],
                     labels: []
                 },
@@ -259,7 +262,7 @@ Vue.component('v-chart', {
                         position: /*this.data.legendPosition?this.data.legendPosition:*/'top'
                     }
                 }
-            },me.dataFunc?me.dataFunc():{}));
+            }, me.dataFunc ? me.dataFunc() : {}));
         }
     }
 });
@@ -270,7 +273,7 @@ Vue.component('v-editor', {
     mounted2: function () {
         var m = this;
         _.loadScript('/cdn/tinymce/tinymce.min.js', function () {
-			m.tinymce=tinymce;
+            m.tinymce = tinymce;
             m.build();
         });
     },
@@ -279,11 +282,11 @@ Vue.component('v-editor', {
         m.build();
     },
     data: function () {
-        return {editor: null,tinymce:null}
+        return { editor: null, tinymce: null }
     },
     methods: {
-        build:function() {
-			var tinymce=this.tinymce;
+        build: function () {
+            var tinymce = this.tinymce;
             var id = _.id();
             this.$el.children[0].id = 'editor-' + id;
             this.editor = tinymce.init({
@@ -303,16 +306,16 @@ Vue.component('v-editor', {
                 forced_root_block: '',
                 init_instance_callback2: function (editor) {
                     //var m = $(editor.editorContainer);
-//                    m.on('rsz', function (e, o) {
-//                        var m = $(e.currentTarget);
-//                        var he = o?o.height:null;
-//                        if(!he){he=m.parent().height()-2;}
-//                        else{he -= 20;}
-//                        he -= m.find('.mce-top-part').outerHeight();
-//                        he -= m.find('.mce-statusbar').outerHeight();
-//                        m.find('.mce-edit-area').height(he);
-//                        m.find('iframe').css('display','inline').height(he);
-//                    });
+                    //                    m.on('rsz', function (e, o) {
+                    //                        var m = $(e.currentTarget);
+                    //                        var he = o?o.height:null;
+                    //                        if(!he){he=m.parent().height()-2;}
+                    //                        else{he -= 20;}
+                    //                        he -= m.find('.mce-top-part').outerHeight();
+                    //                        he -= m.find('.mce-statusbar').outerHeight();
+                    //                        m.find('.mce-edit-area').height(he);
+                    //                        m.find('iframe').css('display','inline').height(he);
+                    //                    });
                     var f = function (/*e*/) {
                         _.xsec = 3;
                     };
@@ -327,32 +330,32 @@ Vue.component('v-editor', {
                             }
                         }
                     }, 1000);
-//                    var u = m.closest('.x-layout-unit');
-//                    m.trigger("rsz", {height: u.height()});
-//                    m.addClass('x-resize');
+                    //                    var u = m.closest('.x-layout-unit');
+                    //                    m.trigger("rsz", {height: u.height()});
+                    //                    m.addClass('x-resize');
                 }
             });
-//            console.log('this.editor');
-//            console.log(this.editor);
-//            var script = $('#mce-script').last();
-//            $(function () {
-//                d = script.closest('form').data('preSubmit');
-//                if (!d) {
-//                    d = [];
-//                    script.closest('form').data('preSubmit', d);
-//                }
-//                mce = script.parent().find();
-//                d.push(function () {
-//                    return _.try(function () {
-//                        t = script.prev('textarea');
-//                        console.log('============');
-//                        console.log(t);
-//                        console.log(t[0]);
-//                        v=tinymce.get(t[0].id)/*activeEditor*/.getContent();
-//                        t.val(v==''?'':v);
-//                    });
-//                });
-//            })
+            //            console.log('this.editor');
+            //            console.log(this.editor);
+            //            var script = $('#mce-script').last();
+            //            $(function () {
+            //                d = script.closest('form').data('preSubmit');
+            //                if (!d) {
+            //                    d = [];
+            //                    script.closest('form').data('preSubmit', d);
+            //                }
+            //                mce = script.parent().find();
+            //                d.push(function () {
+            //                    return _.try(function () {
+            //                        t = script.prev('textarea');
+            //                        console.log('============');
+            //                        console.log(t);
+            //                        console.log(t[0]);
+            //                        v=tinymce.get(t[0].id)/*activeEditor*/.getContent();
+            //                        t.val(v==''?'':v);
+            //                    });
+            //                });
+            //            })
         }
     }
 });
@@ -360,67 +363,67 @@ Vue.component('v-column', {
     template: '<td><slot></slot</td>'
 });
 Vue.component('v-filter-calendar', {
-    template:'<div><v-button icon="fa-calendar" v-on:click.prevent="open"/>'+
-            '<v-panel style="text-align:left;position:absolute;display:none" v-bind:header="\'Configurar Filtro []\'"><div style="padding:20px"><div class="v-form"><label>Desde:</label><v-calendar v-model="from"/><label>Hasta:</label><v-calendar v-model="to"/></div>'+
-            '<center style="padding-top:20px"><v-button icon="fa-check" value="Aceptar"/><v-button icon="fa-ban" v-on:click.prevent="close" value="Cerrar"/></center></div>'+
-            '</v-panel></div>',
-    data:function(){return {el:null,mask:null}},
-    methods:{
-        open(){
-            var el=this.el?this.el:(this.el=this.$el.children[1]);
-            this.mask=_.mask(el, {backgroundColor: 'rgba(0,0,0,0.95)'});
-            el.style.display='block';
+    template: '<div><v-button icon="fa-calendar" v-on:click.prevent="open"/>' +
+        '<v-panel style="text-align:left;position:absolute;display:none" v-bind:header="\'Configurar Filtro []\'"><div style="padding:20px"><div class="v-form"><label>Desde:</label><v-calendar v-model="from"/><label>Hasta:</label><v-calendar v-model="to"/></div>' +
+        '<center style="padding-top:20px"><v-button icon="fa-check" value="Aceptar"/><v-button icon="fa-ban" v-on:click.prevent="close" value="Cerrar"/></center></div>' +
+        '</v-panel></div>',
+    data: function () { return { el: null, mask: null } },
+    methods: {
+        open() {
+            var el = this.el ? this.el : (this.el = this.$el.children[1]);
+            this.mask = _.mask(el, { backgroundColor: 'rgba(0,0,0,0.95)' });
+            el.style.display = 'block';
         },
-        close(){
+        close() {
             _.unmask(this.mask);
         }
     }
 });
 Vue.component('v-accordion', {
-	mounted(){
-	},
-	methods:{
-		toggle(e){
-			this.$emit('change',e);
-		}
-	},
-	template: '<div class="v-accordion"><slot></slot></div>'
+    mounted() {
+    },
+    methods: {
+        toggle(e) {
+            this.$emit('change', e);
+        }
+    },
+    template: '<div class="v-accordion"><slot></slot></div>'
 });
 Vue.component('v-tab', {
-	props:['title','expanded'],
-	data: function () {
-		return {
-			count: 0,expanded_:0
-		}
-	},
-	update(){
-		this.$el.querySelector('svg').dataset.icon="chevron-down";
-	},
-	mounted(){
-		var me=this;
-		me.expanded_=me.expanded;
-		setTimeout(function(){
-			me.$el.querySelector('svg').dataset.icon="chevron-down";
-		}, 100)
-	},
-	methods:{
-		toggle(){
-			this.expanded_=!this.expanded_;
-			this.$el.querySelector('svg').dataset.icon=this.expanded_?"chevron-up":"chevron-down";
-			//avisa al padre q este hijo se expandera
-			if(this.$parent&&this.$parent.toggle){
-				this.$parent.toggle(this);
-				
-			}
-		}
-	},
-	template: '<div><div v-on:click="toggle" v-bind:class="{expanded:expanded_}" style="cursor:pointer;position: relative;padding: 10px 0px;">{{title}}<span style="position:absolute;right:0px" ><i data-icon="chevron-down" class="fa"></i></span></div>'+
-	'<transition name="fade"><div class="v-tab-content" v-if="expanded_"><slot></slot></div></transition></div>'
+    props: ['title', 'expanded'],
+    data: function () {
+        return {
+            count: 0, expanded_: 0
+        }
+    },
+    update() {
+        this.$el.querySelector('svg').dataset.icon = "chevron-down";
+    },
+    mounted() {
+        var me = this;
+        me.expanded_ = me.expanded;
+        setTimeout(function () {
+            me.$el.querySelector('svg').dataset.icon = "chevron-down";
+        }, 100)
+    },
+    methods: {
+        toggle() {
+            this.expanded_ = !this.expanded_;
+            this.$el.querySelector('svg').dataset.icon = this.expanded_ ? "chevron-up" : "chevron-down";
+            //avisa al padre q este hijo se expandera
+            if (this.$parent && this.$parent.toggle) {
+                this.$parent.toggle(this);
+
+            }
+        }
+    },
+    template: '<div><div v-on:click="toggle" v-bind:class="{expanded:expanded_}" style="cursor:pointer;position: relative;padding: 10px 0px;">{{title}}<span style="position:absolute;right:0px" ><i data-icon="chevron-down" class="fa"></i></span></div>' +
+        '<transition name="fade"><div class="v-tab-content" v-if="expanded_"><slot></slot></div></transition></div>'
 });
 Vue.directive('can', {
-  // Cuando el elemento enlazado se inserta en el DOM...
-  inserted: function (el) {
-    // Enfoca el elemento
-    el.focus()
-  }
+    // Cuando el elemento enlazado se inserta en el DOM...
+    inserted: function (el) {
+        // Enfoca el elemento
+        el.focus()
+    }
 })
