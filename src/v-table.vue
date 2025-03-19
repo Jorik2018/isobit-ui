@@ -11,7 +11,8 @@ export default {
     setup(props, cxt) {
         const { autoload, src, rowKey, store, groups } = props;
         const app = useAppStore();
-        const tableCollect = inject('tableCollect');
+        const viewCollector = inject('viewCollector');
+        const formCollector = inject('formCollector');
         const selectable0 = ref(1)
         const scrollable0 = ref(0);
         const tableRef = ref(null);
@@ -238,6 +239,7 @@ export default {
         })
         load.rowSelectedCount = rowSelectedCount;
         load.src = src;
+        load.getForm=formCollector.get;
         load.rowKey = rowKey;
         load.rowSelect = rowSelect;
         const j_is = (el) => {
@@ -255,7 +257,7 @@ export default {
         load.selected = selected;
 
         load.type = 'v-table';
-        tableCollect.push(load);
+        viewCollector.push(load);
         const listener = (event) => {
             if (event.keyCode === 13) {
                 event.preventDefault();
@@ -282,7 +284,7 @@ export default {
             }, 100);
         });
         onUnmounted(() => {
-            tableCollect.remove(load);
+            viewCollector.remove(load);
         });
         expose({ load, rowSelectedCount, j_is })
         return () => {

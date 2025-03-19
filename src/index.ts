@@ -181,7 +181,7 @@ export const ui = (cfg) => {
 
 			const views: any[] = reactive([]);
 
-			const tableCollect = {
+			const viewCollector = {
 				remove(view: any[]) {
 					views.splice(views.indexOf(view), 1);
 				},
@@ -561,16 +561,6 @@ export const ui = (cfg) => {
 				*/
 			}
 
-			const getView = () => {
-				const node = ci?.proxy.$el.__vnode;
-				let view;
-				if (node.ctx.type.name == 'VForm')
-					view = node.ctx;
-				else
-					view = node.children[0].component;
-				return view;
-			}
-
 			const saveAs = (url, o, config) => {
 				if (typeof o == 'string') o = { body: o };
 				let cfg = (typeof config == 'string') ? { fileName: config } : config;
@@ -904,8 +894,10 @@ export const ui = (cfg) => {
 				return !fieldsWithErrors.length;
 			}
 
-			const create = () => {
-				let action = getView().action;
+			const create = (e) => {
+				const dt = findInSameParent(e.target, '.v-datatable');
+				let view = views.filter(view => view.type == 'v-table').find(view => view.is(dt));
+				let action = view.getForm().action;
 				if (!action) {
 					action = window.location.pathname;
 				}
@@ -931,18 +923,17 @@ export const ui = (cfg) => {
 			}
 
 			const edit = (e) => {
-				const view = getView();
-				let action = view.action;
 				const dt = findInSameParent(e.target, '.v-datatable');
-				let t = views.filter(view => view.type == 'v-table').find(view => view.is(dt));
+				let view = views.filter(view => view.type == 'v-table').find(view => view.is(dt));
+				let action = view.getForm().action;
 				if (!action) {
 					action = window.location.pathname;
 				}
-				if (t && t.src) action = t.src;
+				if (view && view.src) action = view.src;
 				if (e.action) action = e.action;
 				if (action) action = rewrite(action.replace("/api", "").replace("/0/0", ""));
-				const selected = t.selected.value[0];
-				let id = selected[t.rowKey];
+				const selected = view.selected.value[0];
+				let id = selected[view.rowKey];
 				if (selected.tmpId) id = -selected.tmpId;
 				if (app) {
 					open(action + '/' + id + '/edit');
@@ -1052,7 +1043,7 @@ export const ui = (cfg) => {
 				}
 			}
 
-			provide('tableCollect', tableCollect)
+			provide('viewCollector', viewCollector)
 
 			const rowSelectedCount = computed(() => {
 				let v = views.find(view => view.selected?.value.length > 0);
