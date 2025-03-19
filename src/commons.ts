@@ -151,6 +151,7 @@ export const mask = (ms, cfg) => {
 	if (ms !== false) {
 		if (ms instanceof Element) {
 			center = ms;//.append(ms);
+			center.style.zIndex='3';
 		} else {
 			if (ms) {
 				let d = document.createElement('div');
@@ -466,6 +467,9 @@ export const MsgBox = (m, cb, b) => {
 	buttons.className = "v-msgbox-buttons";
 	dialog.classList.add("v-dialog");
 	dialog.classList.add("v-msgbox");
+	if(m instanceof Element){
+		msgContent=m;
+	}else
 	msgContent.innerHTML = m;
 	dialog.setAttribute("path", _.currentPath);
 	//dialog.setAttribute("callback", nid);

@@ -1,10 +1,10 @@
 import components from './components'
-import { clean, _, pad, log,resize, app, setApp, initDB, MsgBox, date, db, getStoredList, id, setupApp, getConfigApp, buildPopupMenu } from './commons'
+import { clean, _, pad, log,resize, app, setApp, initDB, MsgBox, date, db, getStoredList, id, setupApp,unmask,mask, getConfigApp, buildPopupMenu } from './commons'
 import './cdn/theme.css'
 const VForm = components.VForm;
 import {Drag} from './Drag'
 
-export { resize, app, initDB, date, db, _, pad, getStoredList,Drag, VForm, MsgBox, useAppStore, id, setupApp };
+export { resize, app, initDB, date, db, _, pad, getStoredList,Drag, VForm, MsgBox, useAppStore, id, setupApp,unmask,mask };
 
 import { getCurrentInstance, onMounted, onUnmounted, reactive, provide, computed, ref, watch } from "vue";
 import { useRouter } from 'vue-router';
