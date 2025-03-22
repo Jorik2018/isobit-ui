@@ -170,7 +170,7 @@ export const ui = (cfg) => {
 		setup(props: any, ctx: any) {
 
 			const app = useAppStore();
-
+			setApp(app)
 			app.config(getConfigApp());
 
 			const me = props;
@@ -192,7 +192,7 @@ export const ui = (cfg) => {
 
 			const _error = (e) => {
 				//console.log(e);
-				alert(e);
+				//alert(e);
 				//this.open({data:''+e});
 			}
 

@@ -41,13 +41,33 @@ export const useAppStore = defineStore('connection', () => {
 
     const s = localStorage.getItem('session');
 
-    session.value = s ? JSON.parse(s) : null;
 
-    watch(connected, (newValue:any) => {
+    session.value = s ? JSON.parse(s) : null;
+    const refresh = (callback) => {
+        setTimeout(() => {
+            axios.value.noInterceptor = 1;
+            axios.value.post('/jwt-auth/v1/token', {}, { withCredentials: true })
+                .then(({ data }) => {
+                    const { token, user_nicename, perms } = data;
+                    session.value = { token, people: { display_name: user_nicename }, perms };
+                    callback(refresh)
+                }).catch((e) => {
+                    alert(JSON.stringify(e.data))
+                });
+        }, 1000 * 1 * 60);
+    }
+    if (session.value && session.value.token) {
+        refresh(refresh);
+    }
+    watch(connected, (newValue: any) => {
         localStorage.setItem('connected', String(newValue));
     });
 
-    watch(session, (newValue:any) => {
+    watch(session, (newValue: any) => {
+        if (newValue.token)
+            axios.value.defaults.headers.common = {
+                Authorization: `Bearer ` + newValue.token,
+            };
         localStorage.setItem('session', JSON.stringify(newValue));
     });
 
@@ -83,6 +103,8 @@ export const useAppStore = defineStore('connection', () => {
         session.value = value;
         router.value.push("/admin");
     };
+
+
 
     return { connected, session, logout, unauthorized, connect, authenticated, config, axios, router, online, networkStatusChange };
 });

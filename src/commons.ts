@@ -5,8 +5,8 @@ export const _ = {
 	storeFunction: {}
 }
 
-export const log = (arg,...args) => {
-	if(arg)console.log(arg,...args);
+export const log = (arg, ...args) => {
+	if (arg) console.log(arg, ...args);
 }
 import { getActivePinia, setActivePinia, createPinia } from 'pinia';
 
@@ -84,8 +84,8 @@ export const date = (s: Date | string, type: string | number) => {//s usa   d|da
 					d= new Date(s);
 				}
 			}*/
-			
-			let t = s.includes('T') ? s.split('T') : s.split(' '); 
+
+			let t = s.includes('T') ? s.split('T') : s.split(' ');
 			d = t[0].split('-');
 			if (t.length > 1) {
 				t = t[1].split(':');
@@ -136,61 +136,6 @@ export const whichChild = (e) => {
 	while ((e = e.previousElementSibling) != null)
 		++i;
 	return i;
-};
-export const mask = (ms, cfg) => {
-	if (!document.body) return;
-	//console.log('call mask');
-	let w = window;
-	let img;
-	let center = document.createElement("div");
-	center.className = 'abc';
-	center.style = 'top:50%;transform:translate(-50%,-50%);position:absolute;width:100%;z-index:2; display: flex;justify-content: center;';
-	let s = center.style;
-	s.left = '50%';
-	s.textAlign = 'center';
-	if (ms !== false) {
-		if (ms instanceof Element) {
-			center = ms;//.append(ms);
-			center.style.zIndex='3';
-		} else {
-			if (ms) {
-				let d = document.createElement('div');
-				d.innerHTML = ms;
-				center.append(d);
-				center.style = "padding:4px;margin-bottom:5px;color:white;font-size:24px;text-align:center"
-			}
-			img = document.createElement('div');
-			s = img.style;
-			img.className = 'loading';
-		}
-	}
-	let p = document.createElement('div');
-
-	s = p.style;
-	s.height = '100%'; w.innerHeight;
-	s.top = '0px';
-	s.position = 'absolute';
-	s.left = '0'
-	s.zIndex = 10000;
-	s.width = '100%';
-	let bg = document.createElement('div');
-
-	s = bg.style;
-	s.height = '100%';
-	s.width = '100%';
-	s.top = '0';
-	s.position = 'absolute';
-	s.left = '0';
-	s.backgroundColor = 'rgba(0,0,0,0.5)';
-	if (cfg && cfg.opacity) s.opacity = cfg.opacity;
-	if (cfg && cfg.backgroundColor) s.backgroundColor = cfg.backgroundColor;
-	p.appendChild(bg);
-	p.appendChild(center);
-	p.className='v-mask'
-	if (img)
-		center.appendChild(img);
-	document.body.appendChild(p);
-	return p;
 };
 
 export const unmask = (m) => {
@@ -450,6 +395,52 @@ export const resize = () => {
 	}
 };
 
+export const mask = (ms, cfg) => {
+	if (!document.body) return;
+	//console.log('call mask');
+	let w = window;
+	let img;
+	let center = document.createElement("div");
+	center.style = 'top:50%;transform:translate(-50%,-50%);position:absolute;width:100%;z-index:2; display: flex;justify-content: center;';
+	let s = center.style;
+	s.left = '50%';
+	s.textAlign = 'center';
+	if (ms !== false) {
+		if (ms instanceof Element) {
+			center = ms;//.append(ms);
+		} else {
+			if (ms) {
+				let d = document.createElement('div');
+				d.innerHTML = ms;
+				center.append(d);
+				center.style = "padding:4px;margin-bottom:5px;color:white;font-size:24px;text-align:center"
+			}
+			img = document.createElement('div');
+			s = img.style;
+			img.className = 'loading';
+		}
+	}
+	let p = document.createElement('div');
+
+	s = p.style;
+	s.height = '100%'; w.innerHeight;
+	s.top = '0px';
+	s.position = 'absolute';
+	s.left = '0'
+	s.zIndex = '10000';
+	s.width = '100%';
+	let bg = document.createElement('div');
+	bg.className = 'v-overlay'
+	p.appendChild(bg);
+	center.style.zIndex = '1001';
+	p.appendChild(center);
+	p.className = 'v-mask'
+	if (img)
+		center.appendChild(img);
+	document.body.appendChild(p);
+	return p;
+};
+
 export const MsgBox = (m, cb, b) => {
 	if (!b) b = ['OK'];
 	//si el elemento debe cargarse en un dialog
@@ -467,10 +458,10 @@ export const MsgBox = (m, cb, b) => {
 	buttons.className = "v-msgbox-buttons";
 	dialog.classList.add("v-dialog");
 	dialog.classList.add("v-msgbox");
-	if(m instanceof Element){
-		msgContent=m;
-	}else
-	msgContent.innerHTML = m;
+	if (m instanceof Element) {
+		msgContent = m;
+	} else
+		msgContent.innerHTML = m;
 	dialog.setAttribute("path", _.currentPath);
 	//dialog.setAttribute("callback", nid);
 	let closeListener = function () {
@@ -500,33 +491,31 @@ export const MsgBox = (m, cb, b) => {
 	overlay.style.visibility = "unset";
 	overlay.style.opacity = "unset";
 	overlay.style.overflow = "auto";
-	dialog.style.margin = "0 auto";
+	dialog.style.margin = "0px auto 50%";
 	dialog.style.position = "unset";
 	let nid = 'v_' + 0;// _.id();
 
-	/*let acl=h.querySelector('.ui-js-close');
-if (!acl) {
-	let span = document.createElement("span");
-	span.style.top = "5px";
-	span.style.right = "5px";
-	h.style.position = "relative";
-	span.style.position = "absolute";
-	span.className = "ui-icon ui-icon-closethick";
-	acl = document.createElement("a");
-	acl.className = "ui-js-close ui-dialog-titlebar-icon ui-dialog-titlebar-close ui-corner-all";
-	acl.appendChild(span);
-	h.appendChild(acl);
-	acl.addEventListener("click", closeListener);
-}*/
-	resize();
+	let acl = dialog.querySelector('.v-js-close');
+	if (!acl) {
+		let span = document.createElement("span");
+		dialog.style.position = "relative";
+		span.style.position = "absolute";
+		span.className = "fa fa-close";
+		acl = document.createElement("a");
+		acl.className = "v-js-close ui-dialog-titlebar-icon ui-dialog-titlebar-close ui-corner-all";
+		acl.appendChild(span);
+		dialog.appendChild(acl);
+		acl.addEventListener("click", closeListener);
+	}
 }
 
 export const configureAxios = (a) => {
-	if(a.configured)return;
-	a.configured=1;
+	if (a.configured) return;
+	a.configured = 1;
 	_.axios_get = a.get;
 	let maskElement;
 	a.interceptors.request.use(function (config) {
+		if (a.noInterceptor) return config;
 		_.eeee = config;
 		if (config.mask) {
 			config.mask();
@@ -542,6 +531,12 @@ export const configureAxios = (a) => {
 		maskElement = unmask(maskElement);
 		return response;
 	}, function (e) {
+		console.log('interceptors.response.use.error')
+		if (a.noInterceptor) {
+			delete a.noInterceptor;
+			maskElement = unmask(maskElement);
+			return Promise.reject(e);
+		}
 		//console.log(e)
 		if (a.error && a.error(e) == false) {
 			maskElement = unmask(maskElement);
@@ -556,18 +551,28 @@ export const configureAxios = (a) => {
 			}
 			maskElement = unmask(maskElement);
 			if (r && r.status == 401) {
-				if (_.app) {
-					_.app.toast('Session terminada');
-					_.app.logout();
+
+				const _app = app();
+				if (_app) {
+					//se cancela el interceptor
+					_app.axios.noInterceptor = 1;
+					_app.axios.post('/jwt-auth/v1/token/validate', {}).catch((e) => {
+						if (!e.response.data.success) {
+							MsgBox('Session terminada!', () => {
+								_app.logout();
+							})
+						}
+					});
 					return;
 				}
 			}
+			//console.log('axios.error:',e);
 			if (e.config?.error) {
 				//console.log('error');
 				e.config.error(e, msg);
 			} else {
 				//console.log('mssg');
-				console.log(e)
+				//console.log(e)
 				if (e.request)
 					MsgBox('<b>' + e.request.responseURL + '</b><br/><br/>' + msg);
 				else
@@ -590,28 +595,28 @@ export const pad = (num, size) => {
 	}
 };
 
-export const clean = (obj:any) => {
+export const clean = (obj: any) => {
 	// Create a shallow copy of the object to avoid mutating the original object
 	const newObj = { ...obj };
-  
+
 	// Iterate over the properties of the copied object
 	for (let propName in newObj) {
-	  // Check for properties that are empty string, null, function, or undefined
-	  if (
-		newObj[propName] === '' ||
-		newObj[propName] === null ||
-		typeof newObj[propName] === 'function' ||
-		newObj[propName] === undefined
-	  ) {
-		// Delete properties that meet the criteria
-		delete newObj[propName];
-	  }
+		// Check for properties that are empty string, null, function, or undefined
+		if (
+			newObj[propName] === '' ||
+			newObj[propName] === null ||
+			typeof newObj[propName] === 'function' ||
+			newObj[propName] === undefined
+		) {
+			// Delete properties that meet the criteria
+			delete newObj[propName];
+		}
 	}
-	
+
 	// Return the new object with unwanted properties removed
 	return newObj;
-  };
-  
+};
+
 
 export const sum = (c) => {
 	return this.reduce((a, b) => {
