@@ -554,16 +554,17 @@ export const configureAxios = (a) => {
 
 				const _app = app();
 				if (_app) {
-					//se cancela el interceptor
-					_app.axios.noInterceptor = 1;
-					_app.axios.post('/jwt-auth/v1/token/validate', {}).catch((e) => {
-						if (!e.response.data.success) {
-							MsgBox('Session terminada!', () => {
-								_app.logout();
-							})
-						}
-					});
-					return;
+					if (localStorage.getItem('session')) {
+						_app.axios.noInterceptor = 1;
+						_app.axios.post('/jwt-auth/v1/token/validate', {}).catch((e) => {
+							if (!e.response.data.success) {
+								MsgBox('Session terminada!', () => {
+									_app.logout();
+								})
+							}
+						});
+						return;
+					}
 				}
 			}
 			//console.log('axios.error:',e);
