@@ -64,7 +64,8 @@ export const useAppStore = defineStore('connection', () => {
                         session.value = { token, people: { display_name: user_nicename }, perms };
                         callback(refresh)
                     }).catch((e) => {
-                        alert(JSON.stringify(e.data))
+                        console.log(e);
+                        //alert(JSON.stringify(e.data))
                     });
             }
         }, 1000 * 1 * 60);

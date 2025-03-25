@@ -77,7 +77,7 @@ export default {
         }
       }
       if (found) {
-    log(name,'change=found=',found)
+        log(name, 'change=found=', found)
         selectedValue = found;
       } else if (items.length) {
         select.selectedIndex = 0;
@@ -100,6 +100,20 @@ export default {
       })
     };
 
+    const isPrimitive = (val) => {
+
+      if (val === null) {
+        console.log(true);
+        return;
+      }
+
+      if (typeof val == "object" || typeof val == "function") {
+        console.log(false)
+      } else {
+        console.log(true)
+      }
+    }
+
     const updateSelect = (v) => {
       let value = v || props.modelValue;
       if (selectRef.value) {
@@ -108,11 +122,14 @@ export default {
         if (!value || value === "") {
           select.selectedIndex = 0;
         }
+        const value2 = value && isPrimitive(value) ? ('' + value) : value;
         //se recorre los items en el select
         for (let k = 0; k < select.length; k++) {
-          if (select[k].value == value) {
-            log(name,'select[k].value == value',select[k].value, value)
-            //select.selectedIndex = k;
+          //aquiobjeto_es_igual_a_objeto_yq_q_el_objeto_se_convierte_en_string_al_comparar_con_un_string
+
+          if (select[k].value === value2) {
+            log(name, 'select[k].value == value', select[k].value, "===", value, 'v=', v)
+            select.selectedIndex = k;
           }
         }
         const children = loaders;
@@ -120,12 +137,12 @@ export default {
           if (!children[j].getValueByIndex) continue;
           let oldSelectedValue = children[j].getValueByIndex(oldSelectedIndex - 1);
           //se recupera el anterior valor para si detectar si el valor cambio
-          
+
           children[j].getIndexByValue(value, (index, found) => {
             if (index > -1) {
               let object = children[j].getObjectByIndex(index);
               let a = Number(oldSelectedValue);
-              
+
               if (!isNaN(a)) {
                 a = a == Number(value);
               } else if (oldSelectedValue) {
@@ -139,13 +156,13 @@ export default {
               } else {
                 a = !value;
               }
-              
+
               if (prevValue.value != props.modelValue) {
-                log(name,'select.value',value,'object=',object)
+                log(name, 'select.value', value, 'object=', object)
                 if (props.modelValue) prevValue.value = props.modelValue;
                 if (!a) {
-                  
-        log(name, 'select.updateSelect=' + value + ' ' + JSON.stringify(options.value.length));
+
+                  log(name, 'select.updateSelect=' + value + ' ' + JSON.stringify(options.value.length));
 
                   select.selectedIndex = index + 1;
                   emit("update:modelValue", value, {
