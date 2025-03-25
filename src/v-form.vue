@@ -1,19 +1,23 @@
 <script>
-import { h, inject, provide } from 'vue'
+import { h, inject, provide,ref} from 'vue'
 export default {
   name: 'VForm',
   props: ["header", "store", "action"],
   setup(props, cxt) {
     const { store } = props;
     const { slots, expose } = cxt;
+    const formRef = ref(null);
     const viewCollector = inject('viewCollector');
     const formCollector = {
-      get:()=>({...props})
+      get: () => ({ ...props })
     };
     provide('formCollector', formCollector)
 
     viewCollector.push({
-      store
+      store,
+      type: 'v-form',
+      $el:formRef,
+      $forceUpdate:()=>{}
     });
     expose({ ...props })
     return () => {
@@ -27,7 +31,7 @@ export default {
         );
       }
       children.push(
-        h('div', { class: 'v-dialog-content v-widget-content' }, [
+        h('div', { ref: formRef, class: 'v-dialog-content v-widget-content' }, [
           h('form', { action: props.action }, slots.default())
         ])
       );

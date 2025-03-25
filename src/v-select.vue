@@ -77,6 +77,7 @@ export default {
         }
       }
       if (found) {
+    log(name,'change=found=',found)
         selectedValue = found;
       } else if (items.length) {
         select.selectedIndex = 0;
@@ -110,7 +111,8 @@ export default {
         //se recorre los items en el select
         for (let k = 0; k < select.length; k++) {
           if (select[k].value == value) {
-            select.selectedIndex = k;
+            log(name,'select[k].value == value',select[k].value, value)
+            //select.selectedIndex = k;
           }
         }
         const children = loaders;
@@ -118,10 +120,12 @@ export default {
           if (!children[j].getValueByIndex) continue;
           let oldSelectedValue = children[j].getValueByIndex(oldSelectedIndex - 1);
           //se recupera el anterior valor para si detectar si el valor cambio
+          
           children[j].getIndexByValue(value, (index, found) => {
             if (index > -1) {
               let object = children[j].getObjectByIndex(index);
               let a = Number(oldSelectedValue);
+              
               if (!isNaN(a)) {
                 a = a == Number(value);
               } else if (oldSelectedValue) {
@@ -135,11 +139,14 @@ export default {
               } else {
                 a = !value;
               }
+              
               if (prevValue.value != props.modelValue) {
+                log(name,'select.value',value,'object=',object)
                 if (props.modelValue) prevValue.value = props.modelValue;
                 if (!a) {
                   
         log(name, 'select.updateSelect=' + value + ' ' + JSON.stringify(options.value.length));
+
                   select.selectedIndex = index + 1;
                   emit("update:modelValue", value, {
                     value: value,

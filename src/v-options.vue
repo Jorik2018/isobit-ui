@@ -66,6 +66,7 @@ export default ({
     let vf = valueField;
     let df = displayField;
     if (!df) {
+      //si display es vacio se usara mostrara el valueFiel
       df = vf;
     }
     const load = async (params = null, nou = null, clearQueue = false) => {
@@ -149,10 +150,11 @@ export default ({
         </option>*/
 
       return filterList.value.map((item) => {
+        const display=df?item[df]:item;
         if (!vf) {
-          return h('option', { value: item }, item);
+          return h('option', { value: item }, display);
         } else {
-          return h('option', { value: getValueField(item) }, item[df]);
+          return h('option', { value: getValueField(item) }, display);
         }
       })
     }

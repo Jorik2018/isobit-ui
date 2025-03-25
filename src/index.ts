@@ -613,18 +613,20 @@ export const ui = (cfg) => {
 			}
 
 			const save = () => {
-
+				let view = views.filter(view => view.type == 'v-form')[0]
+				console.log(view)
 				const component = ci.proxy;
-				component.$forceUpdate();
-				let p = component.$el;
+				view.$forceUpdate();
+				let p = view.$el;
 				//Se debe buscar si abajo esta el form
+				console.log('form=',p,view.$el)
 				let f = p.querySelector("form");
 				let va = validate(f);
 				if (va) {
 					let action = f.getAttribute('action');
 					//console.log('Action='+action);
 					if (!action) {
-						action = me.$el.parentNode.getAttribute('path');
+						/*action = me.$el.parentNode.getAttribute('path');
 						if (action) {
 							//debe en ciertos casoss sobreescribirse ponr unas rglas definidas y una tabla extra
 							let tc = action.split('/');
@@ -634,7 +636,7 @@ export const ui = (cfg) => {
 								tc = tc.splice(0, tc.length - 1);
 							}
 							action = me.apiLink(tc.join('/'));
-						}
+						}*/
 					}
 
 					let o0 = component.data || component.o;
@@ -643,7 +645,9 @@ export const ui = (cfg) => {
 					if (!(typeof o === 'object'
 						&& !Array.isArray(o) && o !== null)) return;
 					console.log('action/componet==', action, component, ctx);
+					//si no hay action ni esta connectado se guardara  localmente
 					if (!action || !app.connected) {
+						console.log('se guarda localmente');
 						const store = views[0].store;
 						if (!store) { MsgBox('Store in form is undefined!'); return; }
 						getStoredList(store).then(storedList => {
@@ -1127,7 +1131,7 @@ export const ui = (cfg) => {
 				listeners.push({ name, fn });
 			}
 
-			let q = customSetup ? customSetup({ ...props, $on, router, getStoredList }, ctx) : {};
+			let q = customSetup ? customSetup({ ...props, $on, router, getStoredList, app }, ctx) : {};
 			ctx.expose({ router })
 			let res = {
 				app,cleanedFilters,
