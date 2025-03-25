@@ -673,7 +673,8 @@ export const initDB = (version, stores) => {
 					let db = event.target.result;
 					stores.forEach((e) => {
 						if (!db.objectStoreNames.contains(e[0])) {
-							db.createObjectStore(e[0], e[1]);
+							
+							db.createObjectStore(e[0], {keyPath:e[1].keyPath||'$id'});
 						}
 					});
 				};
@@ -712,7 +713,10 @@ export const getStoredList = async (store, params) => {
 			const objectStoreRequest = objectStore.clear();
 			objectStoreRequest.onsuccess = () => {
 				console.log("data:", data);
-				data.forEach((item) => {
+
+				data.forEach((item,i) => {
+					if(!e[1].keyPath)item.$id=i;
+					console.log(item)
 					objectStore.add(item).onerror = (e) => {
 						console.error(`⚠️ Store '${e[0]}' error addd data!`, e);
 					}
