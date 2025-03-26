@@ -48,13 +48,10 @@ export default {
     const collect = (items) => {
       options.value = items;
       nextTick(() => {
-        log(name, 'collect.nextTick=' + items.length)
+        //log(name, 'collect.nextTick=' + items.length)
         updateSelect(props.modelValue || prevValue.value)
       })
     }
-    watch(disabled, (newValue, oldValue) => {
-      activate(newValue, oldValue);
-    })
 
     const onChange = (event) => {
       event.stopPropagation();
@@ -100,20 +97,6 @@ export default {
       })
     };
 
-    const isPrimitive = (val) => {
-
-      if (val === null) {
-        console.log(true);
-        return;
-      }
-
-      if (typeof val == "object" || typeof val == "function") {
-        console.log(false)
-      } else {
-        console.log(true)
-      }
-    }
-
     const updateSelect = (v) => {
       let value = v || props.modelValue;
       if (selectRef.value) {
@@ -122,19 +105,23 @@ export default {
         if (!value || value === "") {
           select.selectedIndex = 0;
         }
-        const value2 = value && isPrimitive(value) ? ('' + value) : value;
+        //if(value)value = value.id||value.code||value;
+        log(name, 'value===', value)
+        const valueId = value ? ('' + (value.id || value.code || value)) : value;
         //se recorre los items en el select
         for (let k = 0; k < select.length; k++) {
           //aquiobjeto_es_igual_a_objeto_yq_q_el_objeto_se_convierte_en_string_al_comparar_con_un_string
 
-          if (select[k].value === value2) {
-            log(name, 'select[k].value == value', select[k].value, "===", value, 'v=', v)
+          if (select[k].value === valueId) {
+            //log(name, 'select[k].value == value', select[k].value, "===", value, 'v=', v)
+
             select.selectedIndex = k;
           }
         }
         const children = loaders;
         for (let j = 0; j < children.length; j++) {
           if (!children[j].getValueByIndex) continue;
+          //el problema es cuando 
           let oldSelectedValue = children[j].getValueByIndex(oldSelectedIndex - 1);
           //se recupera el anterior valor para si detectar si el valor cambio
 
@@ -184,6 +171,11 @@ export default {
               if (props.modelValue) prevValue.value = props.modelValue;
               log(name, 'select.updateselect.not fout', index)
               emit("update:modelValue", null, null);
+              nextTick(() => {
+                emit("input", null, {
+                  value: null
+                });
+              });
               select.selectedIndex = 0;
             }
 
@@ -213,16 +205,23 @@ export default {
       else if (i && !t) i = i.id ? i.id : i.code ? i.code : i;
       return i;
     };
+
+
     watch(() => props.modelValue, (newValue, oldValue) => {
       if (newValue != oldValue) {
         updateSelect()
       }
     });
 
+    watch(() => props.disabled, (newValue, oldValue) => {
+      activate(newValue, oldValue);
+    })
+
     const activate = (newVal, oldVal) => {
       newVal = !!newVal;
       oldVal = !!oldVal;
       let ll = lastLoad.value;
+      log(name, 'activate.newVal=', newVal, 'oldVal=', oldVal)
       if (!newVal && (!newVal) === oldVal && ll.length) {
         //this.$el.disabled = false;
         load(ll[0], ll[1]);
@@ -230,14 +229,19 @@ export default {
     }
 
     const load = (params, b) => {
-      log(name, 'select.load.params=', params);
+      
       if (!props.disabled) {//} && !readonly) {
         lastLoad.value = [];
         loaders.forEach((loader) => {
           loader(params, b);
         });
       } else {
+        log(name, 'select.load.params=', params);
+        //tiene q aplicarse el filtro al data existente
         lastLoad.value = [params, b];
+        loaders.forEach((loader) => {
+          loader(params, b);
+        });
       }
     };
 

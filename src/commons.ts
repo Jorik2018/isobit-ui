@@ -673,8 +673,8 @@ export const initDB = (version, stores) => {
 					let db = event.target.result;
 					stores.forEach((e) => {
 						if (!db.objectStoreNames.contains(e[0])) {
-							
-							db.createObjectStore(e[0], {keyPath:e[1].keyPath||'$id'});
+							const { keyPath } = e[1];
+							db.createObjectStore(e[0], { keyPath, autoIncrement: !keyPath });
 						}
 					});
 				};
@@ -703,20 +703,17 @@ export const getStoredList = async (store, params) => {
 	//console.log(loadedStores);
 	if (!loadedStores[store] && networkStatus.connected) {
 		let e = _.stores.filter(e => e[0] == store)[0];
+		const {src}=e[1];
 		//console.log(e);
-		if (!e[2]) throw `ERROR: Url for store '${e[0]}' is empty!`;
-		let data = e[2] ? await _.axios_get(e[2]) : [];
+		if (!src) throw `ERROR: Url for store '${e[0]}' is empty!`;
+		let data = src ? await _.axios_get(src) : [];
 		data = data.data || data;
 		await new Promise((resolve, reject) => {
 			let transaction = _db.transaction([e[0]], "readwrite");
 			let objectStore = transaction.objectStore(e[0]);
 			const objectStoreRequest = objectStore.clear();
 			objectStoreRequest.onsuccess = () => {
-				console.log("data:", data);
-
-				data.forEach((item,i) => {
-					if(!e[1].keyPath)item.$id=i;
-					console.log(item)
+				data.forEach((item) => {
 					objectStore.add(item).onerror = (e) => {
 						console.error(`⚠️ Store '${e[0]}' error addd data!`, e);
 					}

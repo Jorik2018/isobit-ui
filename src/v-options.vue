@@ -152,7 +152,7 @@ export default ({
       return filterList.value.map((item) => {
         const display=df?item[df]:item;
         if (!vf) {
-          return h('option', { value: item }, display);
+          return h('option', { value: item.id||item.code||JSON.stringify(item) }, display);
         } else {
           return h('option', { value: getValueField(item) }, display);
         }
