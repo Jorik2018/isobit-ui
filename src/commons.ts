@@ -650,7 +650,7 @@ export const app = () => _.app;
 export const db = () => _.db;
 
 export const initDB = (version, stores) => {
-	let idb = window.indexedDB ||
+	let db = window.indexedDB ||
 		window.mozIndexedDB ||
 		window.webkitIndexedDB ||
 		window.msIndexedDB;
@@ -660,16 +660,16 @@ export const initDB = (version, stores) => {
 		window.msIDBTransaction;
 	_.IDBKeyRange =
 		window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
-	if (!idb) {
+	if (!db) {
 		window.alert(
 			"Your browser doesn't support a stable version of IndexedDB."
 		);
 	} else {
-		if (idb) {
+		if (db) {
 			_.stores = stores;
 			return new Promise((resolve, reject) => {
 
-				idb.databases().then((dbs) => {
+				db.databases().then((dbs) => {
 					const dbInfo = dbs.find(db => db.name === 'db');
 					const versionActual = dbInfo ? (dbInfo.version || 0) : 0;
 
@@ -677,10 +677,10 @@ export const initDB = (version, stores) => {
 						console.log(`Eliminando base de datos (versión actual: ${versionActual}, nueva versión: ${version})`);
 
 						// Eliminar la base de datos si la versión nueva es mayor
-						const deleteRequest = idb.deleteDatabase('db');
+						const deleteRequest = db.deleteDatabase('db');
 						deleteRequest.onsuccess = () => {
 
-							let request = idb.open("db", version);
+							let request = db.open("db", version);
 							request.onupgradeneeded = (event:any) => {
 								let db = event.target.result;
 
@@ -700,7 +700,7 @@ export const initDB = (version, stores) => {
 							};
 						}
 					}else{
-						let request = idb.open("db", version);
+						let request = db.open("db", version);
 							request.onupgradeneeded = (event:any) => {
 								let db = event.target.result;
 								stores.forEach((e) => {
