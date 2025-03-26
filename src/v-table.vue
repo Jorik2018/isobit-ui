@@ -148,7 +148,13 @@ export default {
         const getRowClass = (row) => {
             const cls = [];
             if (props.selectable && isSelected(row)) cls.push('v-selected');
-            if (props.rowStyleClassFunc) cls.push(props.rowStyleClassFunc(row));
+            if (props.rowClass){
+                if(typeof props.rowClass == "string"){
+                    cls.push(props.rowClass);
+                }else if(props.rowClass){
+                    cls.push(props.rowClass(row));
+                }
+            } 
             return cls;
         }
         const to = (n, v) => { loadP(n, v) }
@@ -459,7 +465,7 @@ export default {
         emptyMessage: { default: 'No existen registros' },
         groups: { default: '' },
         rowKey: { default: 'id' },
-        rowStyleClass: String,
+        rowStyleClass: null,
         pagination: null,
         selectable: { default: true },
         scrollable: null,
@@ -509,14 +515,6 @@ export default {
             return str ? (str.charAt(0).toUpperCase() + str.slice(1)) : str;
         },
     },
-    watch: {
-        kc(nv) {
-            var me = this;
-            setTimeout(function () {
-                emit('updated', me);
-            }, 100);
-        }
-    },
     methods: {
         hasSlot(s) {
             return !!this.$slots[s];
@@ -524,25 +522,6 @@ export default {
         sortBy(/*key*/) {
             //this.sortKey = key
             //this.sortOrders[key] = this.sortOrders[key] * -1
-        },
-        async getStoredList(store) {
-            let p = new Promise((resolve) => {
-                //console.log(db)
-                var t = db.transaction(store), objectStore = t.objectStore(store);//,d=[];
-                var r = objectStore.getAll();
-                r.onsuccess = function () {
-                    resolve(r.result);
-                }
-                //t.onerror = event => reject(event.target.error);
-            });
-            try {
-                let result = await p;
-                //console.log(result);
-                return result;
-            } catch (e) {
-                alert(store);
-                throw e;
-            }
         },
         filter() {
             alert(12);
