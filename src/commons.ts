@@ -650,7 +650,7 @@ export const app = () => _.app;
 export const db = () => _.db;
 
 export const initDB = (version, stores) => {
-	let db = window.indexedDB ||
+	let idb = window.indexedDB ||
 		window.mozIndexedDB ||
 		window.webkitIndexedDB ||
 		window.msIndexedDB;
@@ -660,31 +660,70 @@ export const initDB = (version, stores) => {
 		window.msIDBTransaction;
 	_.IDBKeyRange =
 		window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
-	if (!db) {
+	if (!idb) {
 		window.alert(
 			"Your browser doesn't support a stable version of IndexedDB."
 		);
 	} else {
-		if (db) {
+		if (idb) {
 			_.stores = stores;
 			return new Promise((resolve, reject) => {
-				let request = db.open("db", version);
-				request.onupgradeneeded = (event) => {
-					let db = event.target.result;
-					stores.forEach((e) => {
-						if (!db.objectStoreNames.contains(e[0])) {
-							const { keyPath } = e[1];
-							db.createObjectStore(e[0], { keyPath, autoIncrement: !keyPath });
+
+				idb.databases().then((dbs) => {
+					const dbInfo = dbs.find(db => db.name === 'db');
+					const versionActual = dbInfo ? (dbInfo.version || 0) : 0;
+
+					if (versionActual < version) {
+						console.log(`Eliminando base de datos (versión actual: ${versionActual}, nueva versión: ${version})`);
+
+						// Eliminar la base de datos si la versión nueva es mayor
+						const deleteRequest = idb.deleteDatabase('db');
+						deleteRequest.onsuccess = () => {
+
+							let request = idb.open("db", version);
+							request.onupgradeneeded = (event:any) => {
+								let db = event.target.result;
+
+								stores.forEach((e) => {
+									if (!db.objectStoreNames.contains(e[0])) {
+										const { keyPath } = e[1];
+										db.createObjectStore(e[0], { keyPath, autoIncrement: !keyPath });
+									}
+								});
+							};
+							request.onerror = (e) => {
+								reject(e);
+							};
+							request.onsuccess = () => {
+								_.db = request.result;
+								resolve(_.db);
+							};
 						}
-					});
-				};
-				request.onerror = (e) => {
-					reject(e);
-				};
-				request.onsuccess = () => {
-					_.db = request.result;
-					resolve(_.db);
-				};
+					}else{
+						let request = idb.open("db", version);
+							request.onupgradeneeded = (event:any) => {
+								let db = event.target.result;
+								stores.forEach((e) => {
+									if (!db.objectStoreNames.contains(e[0])) {
+										const { keyPath } = e[1];
+										db.createObjectStore(e[0], { keyPath, autoIncrement: !keyPath });
+									}
+								});
+							};
+							request.onerror = (e) => {
+								reject(e);
+							};
+							request.onsuccess = () => {
+								_.db = request.result;
+								resolve(_.db);
+							};
+					}
+				})
+
+
+
+
+
 			});
 
 		}
@@ -703,7 +742,7 @@ export const getStoredList = async (store, params) => {
 	//console.log(loadedStores);
 	if (!loadedStores[store] && networkStatus.connected) {
 		let e = _.stores.filter(e => e[0] == store)[0];
-		const {src}=e[1];
+		const { src } = e[1];
 		//console.log(e);
 		if (!src) throw `ERROR: Url for store '${e[0]}' is empty!`;
 		let data = src ? await _.axios_get(src) : [];
