@@ -49,44 +49,48 @@ export const useAppStore = defineStore('connection', () => {
             console.log(me);
         },
     }*/
-
-    const s = localStorage.getItem('session');
-
-
-    session.value = s ? JSON.parse(s) : null;
-    const refresh = (callback) => {
+    const refresh = (callback: Function) => {
         setTimeout(() => {
-            axios.value.noInterceptor = 1;
-            if (localStorage.getItem('session')) {
-                axios.value.post('/jwt-auth/v1/token', {}, { withCredentials: true })
+            if (session.value) {
+                axios.value.noInterceptor = 1;
+                axios.value.post(axios.value.VITE_LOGIN_PATH + '/refresh', {}
+                    //, { withCredentials: true }
+                )
                     .then(({ data }) => {
                         const { token, user_nicename, perms } = data;
                         session.value = { token, people: { display_name: user_nicename }, perms };
                         callback(refresh)
                     }).catch((e) => {
-                        console.log(e);
+                        console.error(e);
                         //alert(JSON.stringify(e.data))
                     });
             }
-        }, 1000 * 1 * 60);
+        }, 1000 * 1 * 600);
     }
-    if (session.value && session.value.token) {
-        refresh(refresh);
-    }
-    watch(connected, (newValue: any) => {
-        localStorage.setItem('connected', String(newValue));
-    });
+
+    let startRefresh: any;
 
     watch(session, (newValue: any) => {
-
         if (newValue && newValue.token) {
             axios.value.defaults.headers.common = {
                 Authorization: `Bearer ` + newValue.token,
             };
             localStorage.setItem('session', JSON.stringify(newValue));
+            if (!startRefresh) {
+                startRefresh = refresh;
+                refresh(refresh);
+            }
         } else {
             localStorage.removeItem('session');
+            startRefresh = null;
         }
+    });
+
+    const s = localStorage.getItem('session');
+    session.value = s ? JSON.parse(s) : null;
+
+    watch(connected, (newValue: any) => {
+        localStorage.setItem('connected', String(newValue));
     });
 
     const online = computed(() => networkStatus.value?.connected);

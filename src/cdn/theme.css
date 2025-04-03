@@ -2131,6 +2131,7 @@ legend, .v-fieldset > legend {
 .v-popup-2 > li{
 	padding: 15px;
 	border-bottom: 1px solid gray;
+	cursor: pointer;
 }
 .v-popup-2 > li > svg{
 	padding-right: 15px;
@@ -3451,6 +3452,9 @@ select:not([disabled]){
 	.v-menu li:hover {
 		background-color: rgb(241, 240, 240);
 	  }
+	  .v-popup-2 > li:hover{
+		background-color: #f0f0f0;
+	}
 }
 
 @media (prefers-color-scheme: dark) {
@@ -3488,12 +3492,11 @@ select:not([disabled]){
 	.v-button:not([disabled]):hover,select:not([disabled]):hover {
 		background: linear-gradient(to bottom, #3a3737, #271e1e);
 	}
-	.v-popup-2>li{
+	.v-popup-2 > li{
 		background-color: black;
 		border: 1px solid gray;
-		cursor: pointer;
 	}
-	.v-popup-2>li:hover{
+	.v-popup-2 > li:hover{
 		background-color: #222222;
 	}
 	.marked{

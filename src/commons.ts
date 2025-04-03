@@ -514,7 +514,7 @@ export const configureAxios = (a) => {
 	a.configured = 1;
 	_.axios_get = a.get;
 	let maskElement;
-	a.interceptors.request.use(function (config) {
+	a.interceptors.request.use((config: any) => {
 		if (a.noInterceptor) return config;
 		_.eeee = config;
 		if (config.mask) {
@@ -522,15 +522,16 @@ export const configureAxios = (a) => {
 		} else if (!maskElement)
 			maskElement = mask();
 		return config;
-	}, function (e) {
+	}, (e: any) => {
 		maskElement = unmask(maskElement);
 		MsgBox('request ' + id() + ' ' + e.message)
 		return Promise.reject(e);
 	});
-	a.interceptors.response.use(function (response) {
+	a.interceptors.response.use((response: any) => {
 		maskElement = unmask(maskElement);
+		delete a.noInterceptor;
 		return response;
-	}, function (e) {
+	}, (e: any) => {
 		console.log('interceptors.response.use.error')
 		if (a.noInterceptor) {
 			delete a.noInterceptor;
@@ -541,22 +542,40 @@ export const configureAxios = (a) => {
 		if (a.error && a.error(e) == false) {
 			maskElement = unmask(maskElement);
 		} else {
-			let r = e.response, msg = (r && r.data && r.data.msg) ? r.data.msg : e.message;
-			if (r) {
-				if (r.data && r.data.message) msg = r.data.message;
-				if ((typeof r.data) === 'string') msg = r.data;
+			let response = e.response;
+			let msg;
+			if (response) {
+				if ((typeof response.data) === 'string') {
+					msg = response.data;
+				} else if (response.data) {
+					if (response.data.data) {
+						msg = response.data.data.message;
+					}
+					if (!msg) {
+						msg = response.data.msg || response.data.message;
+					}
+				}
 				if (!msg) {
-					msg = r.status + ': ' + r.statusText;
+					msg = response.status + ': ' + response.statusText;
 				}
 			}
+			if (!msg) {
+				msg = e.message;
+			}
 			maskElement = unmask(maskElement);
-			if (r && r.status == 401) {
+			if (response && (response.status == 401 || response.status == 403)) {
 
 				const _app = app();
 				if (_app) {
 					if (localStorage.getItem('session')) {
+
 						_app.axios.noInterceptor = 1;
-						_app.axios.post('/jwt-auth/v1/token/validate', {}).catch((e) => {
+						_app.axios.post(_app.axios.VITE_LOGIN_PATH + '/validate', {
+							"JWT": "YOUR_JWT_HERE"
+						}
+							//, { withCredentials: true }
+						).catch((e) => {
+							console.log('e.response=', e);
 							if (!e.response.data.success) {
 								MsgBox('Session terminada!', () => {
 									_app.logout();
@@ -587,7 +606,7 @@ export const configureAxios = (a) => {
 	});
 }
 
-export const pad = (num, size) => {
+export const pad = (num, size: number) => {
 	if (num != null) {
 		let s = (1 * num) + "";
 		while (s.length < size)
@@ -681,7 +700,7 @@ export const initDB = (version, stores) => {
 						deleteRequest.onsuccess = () => {
 
 							let request = db.open("db", version);
-							request.onupgradeneeded = (event:any) => {
+							request.onupgradeneeded = (event: any) => {
 								let db = event.target.result;
 
 								stores.forEach((e) => {
@@ -699,24 +718,24 @@ export const initDB = (version, stores) => {
 								resolve(_.db);
 							};
 						}
-					}else{
+					} else {
 						let request = db.open("db", version);
-							request.onupgradeneeded = (event:any) => {
-								let db = event.target.result;
-								stores.forEach((e) => {
-									if (!db.objectStoreNames.contains(e[0])) {
-										const { keyPath } = e[1];
-										db.createObjectStore(e[0], { keyPath, autoIncrement: !keyPath });
-									}
-								});
-							};
-							request.onerror = (e) => {
-								reject(e);
-							};
-							request.onsuccess = () => {
-								_.db = request.result;
-								resolve(_.db);
-							};
+						request.onupgradeneeded = (event: any) => {
+							let db = event.target.result;
+							stores.forEach((e) => {
+								if (!db.objectStoreNames.contains(e[0])) {
+									const { keyPath } = e[1];
+									db.createObjectStore(e[0], { keyPath, autoIncrement: !keyPath });
+								}
+							});
+						};
+						request.onerror = (e) => {
+							reject(e);
+						};
+						request.onsuccess = () => {
+							_.db = request.result;
+							resolve(_.db);
+						};
 					}
 				})
 
