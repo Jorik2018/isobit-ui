@@ -441,7 +441,7 @@ export const mask = (ms, cfg) => {
 	return p;
 };
 
-export const MsgBox = (m, cb, b) => {
+export const MsgBox = (m, cb?, b?) => {
 	if (!b) b = ['OK'];
 	//si el elemento debe cargarse en un dialog
 	if (!document.body) return;

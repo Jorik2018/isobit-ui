@@ -5,7 +5,7 @@
     </div>
 </template>
 <script>
-import { ref, watch,nextTick } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import { pad } from "./commons";
 export default {
     name: 'VCalendar',
@@ -22,7 +22,7 @@ export default {
         const input = ref(null);
         const _emit = (o) => {
             emit('update:modelValue', o);
-            nextTick(()=>{
+            nextTick(() => {
                 emit('changed', o);
             })
         }
@@ -58,7 +58,7 @@ export default {
         }
         const toDate = (v) => {
             if (v) {
-               
+
                 let d;
                 if (type === 'time') {
                     d = v.split(':');
@@ -77,10 +77,13 @@ export default {
                     } else {
                         t = v.split('-');
                         let y = parseInt(t[0]);
+
                         if (y < 100) {
+                            //aqui retorna '0000-00-00' 
                             return v;
                         }
                         t = new Date(y, parseInt(t[1]) - 1, parseInt(t[2]));
+
                         return t;
                     }
                 }
@@ -95,7 +98,9 @@ export default {
             let d = toDate(modelValue);
             let fd;
             if (d) {
-                if (type === 'time') {
+                if (typeof d == 'string') {
+                    fd = d;
+                } else if (type === 'time') {
                     fd = pad(d.getHours(), 2) + ":" + pad(d.getMinutes(), 2);
                 } else if (type === 'datetime-local') {
                     fd = pad(d.getFullYear(), 4) + "-" + pad((d.getMonth() + 1), 2) + "-" + pad(d.getDate(), 2) + 'T' + pad(d.getHours(), 2) + ":" + pad((d.getMinutes()), 2);

@@ -147,10 +147,8 @@ export default {
         }
         const getRowClass = (row) => {
             const cls = [];
-            console.log('================>',props);
             if (props.selectable && isSelected(row)) cls.push('v-selected');
             if (props.rowStyleClass){
-                console.log('================>',props);
                 if(typeof props.rowStyleClass == "string"){
                     cls.push(props.rowStyleClass);
                 }else if(props.rowStyleClass){

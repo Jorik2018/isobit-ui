@@ -1,10 +1,10 @@
 import components from './components'
-import { clean, _, pad, log,resize, app, setApp, initDB, MsgBox, date, db, getStoredList, id, setupApp,unmask,mask, getConfigApp, buildPopupMenu } from './commons'
+import { clean, _, pad, log, resize, app, setApp, initDB, MsgBox, date, db, getStoredList, id, setupApp, unmask, mask, getConfigApp, buildPopupMenu } from './commons'
 import './cdn/theme.css'
 const VForm = components.VForm;
-import {Drag} from './Drag'
+import { Drag } from './Drag'
 
-export { resize, app, initDB, date, db, _, pad, getStoredList,Drag, VForm, MsgBox, useAppStore, id, setupApp,unmask,mask };
+export { resize, app, initDB, date, db, _, pad, getStoredList, Drag, VForm, MsgBox, useAppStore, id, setupApp, unmask, mask };
 
 import { getCurrentInstance, onMounted, onUnmounted, reactive, provide, computed, ref, watch } from "vue";
 import { useRouter } from 'vue-router';
@@ -34,23 +34,6 @@ export const removeError = (e) => {
 	}
 }
 
-const getCurrentPosition = () => {
-	return new Promise(function (res, rej) {
-		if (_.location) {
-			var id = 'result' + _.id();
-			_[id] = function (r) {
-				delete _[id];
-				if (r.coords) {
-					res(r);
-				} else
-					rej(r);
-			};
-			_.location(id);
-		} else if (navigator.geolocation) {
-			navigator.geolocation.getCurrentPosition(res, rej);
-		}
-	})
-}
 export const ui = (cfg) => {
 
 	const defs = {
@@ -618,8 +601,7 @@ export const ui = (cfg) => {
 				const component = ci.proxy;
 				view.$forceUpdate();
 				let p = view.$el;
-				//Se debe buscar si abajo esta el form
-				console.log('form=',p,view.$el)
+				//Se debe buscar si abajo esta el for
 				let f = p.querySelector("form");
 				let va = validate(f);
 				if (va) {
@@ -746,7 +728,6 @@ export const ui = (cfg) => {
 							else {
 								MsgBox('El registro fue grabado exitosamente! msg', () => {
 									//component
-									alert(2222)
 									close({ success: true, data: data });
 								});
 							}
@@ -787,8 +768,13 @@ export const ui = (cfg) => {
 					}
 				} else {
 					MsgBox('Verifique el formulario, aun tiene campos obligatorios sin completar.');
-					if (me.$el.parentNode.className == 'v-dialog') {
-						me.$el.parentNode.parentNode.scroll({
+					if (p.parentNode.className == 'v-dialog') {
+						p.parentNode.parentNode.scroll({
+							top: 0,
+							behavior: 'smooth'
+						});
+					}else{¿
+						p.querySelector('form > .v-form')!.scroll({
 							top: 0,
 							behavior: 'smooth'
 						});
@@ -796,7 +782,7 @@ export const ui = (cfg) => {
 				}
 			}
 
-			const showerror = (e, m) => {
+			const showerror = (e:any, m?:string) => {
 				if (e.$el) e = e.$el;
 				removeError(e)
 				let previousElementSibling = e.previousElementSibling;
@@ -817,8 +803,6 @@ export const ui = (cfg) => {
 			}
 
 			const validate = (e2?) => {
-				const me = this;
-				let ok = true;
 				const fieldsWithErrors = [];
 				const fieldsOk = [];
 				const component = ci.proxy;
@@ -870,7 +854,7 @@ export const ui = (cfg) => {
 							if (op[i].checked)
 								checked = true;
 						}
-						e = op[0].parentNode.parentNode;
+						const e = op[0].parentNode.parentNode;
 						previousElementSibling = e.previousElementSibling;
 						if (previousElementSibling && previousElementSibling.classList && previousElementSibling.classList.contains('v-error')) {
 							previousElementSibling.parentNode.removeChild(previousElementSibling);
@@ -879,7 +863,6 @@ export const ui = (cfg) => {
 							//console.log(e);
 							//showerror(e);
 							fieldsWithErrors.push(e);
-							ok = false;
 						} else {
 							fieldsOk.push(e);
 						}
@@ -1134,7 +1117,7 @@ export const ui = (cfg) => {
 			let q = customSetup ? customSetup({ ...props, $on, router, getStoredList, app }, ctx) : {};
 			ctx.expose({ router })
 			let res = {
-				app,cleanedFilters,
+				app, cleanedFilters,
 				router,
 				baseURL,
 				filters,
