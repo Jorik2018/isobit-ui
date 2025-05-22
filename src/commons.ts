@@ -751,7 +751,7 @@ export const initDB = (version, stores) => {
 }
 
 
-export const getStoredList = async (store, params) => {
+export const getStoredList = async (storeName, params) => {
 	const _db = db();
 	let loadedStores;
 	try {
@@ -759,9 +759,13 @@ export const getStoredList = async (store, params) => {
 	} catch (_e) { loadedStores == null }
 	if (loadedStores == null) loadedStores = {};
 	//console.log(loadedStores);
-	if (!loadedStores[store] && networkStatus.connected) {
-		let e = _.stores.filter(e => e[0] == store)[0];
+	if (!loadedStores[storeName] && networkStatus.connected) {
+
+		const store=_.stores.filter(e => e[0] == storeName);
+		if(store.length) throw `ERROR: store '${storeName}' no exists!`;
+		let e = store[0];
 		const { src } = e[1];
+
 		//console.log(e);
 		if (!src) throw `ERROR: Url for store '${e[0]}' is empty!`;
 		let data = src ? await _.axios_get(src) : [];
@@ -781,7 +785,7 @@ export const getStoredList = async (store, params) => {
 				console.error(`⚠️ Store '${e[0]}' error data!`, e);
 			};
 			transaction.oncomplete = () => {
-				loadedStores[store] = 1;
+				loadedStores[storeName] = 1;
 				sessionStorage.setItem('loadedStores', JSON.stringify(loadedStores));
 				resolve();
 			};
@@ -793,7 +797,7 @@ export const getStoredList = async (store, params) => {
 	}
 	let result = await new Promise((resolve, rejected) => {
 		if (_db) {
-			const transaction = _db.transaction(store), objectStore = transaction.objectStore(store);
+			const transaction = _db.transaction(storeName), objectStore = transaction.objectStore(storeName);
 			const getAllRequest = objectStore.getAll();
 			getAllRequest.onsuccess = () => {
 				resolve(getAllRequest.result);
