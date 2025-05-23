@@ -762,7 +762,7 @@ export const getStoredList = async (storeName, params) => {
 	if (!loadedStores[storeName] && networkStatus.connected) {
 
 		const store=_.stores.filter(e => e[0] == storeName);
-		if(store.length) throw `ERROR: store '${storeName}' no exists!`;
+		if(!store.length) throw `ERROR: store '${storeName}' no exists!`;
 		let e = store[0];
 		const { src } = e[1];
 

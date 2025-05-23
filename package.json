@@ -1,6 +1,6 @@
 {
   "name": "isobit-ui",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "",
   "type": "module",
   "main": "dist/library.js",
