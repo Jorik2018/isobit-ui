@@ -3509,6 +3509,12 @@ select:not([disabled]){
 		background: transparent;
 		padding-right: 36px;
 	}
+	option{
+		background: #000000;
+	}
+		option:hover{
+		background: #0065c0;
+	}
 	select:not([disabled]){
 
 		background-repeat: no-repeat;
