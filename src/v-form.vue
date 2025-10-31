@@ -1,27 +1,54 @@
-<template>
-  <div class="ui-panel">
-    <div v-if="header" class="v-widget-header v-panel-titlebar">
-      <span class="v-panel-title">{{ header }}</span>
-    </div>
-    <div class="v-dialog-content v-widget-content">
-      <form v-bind:action="action"><slot></slot></form>
-    </div>
-  </div>
-</template>
 <script>
+import { h, inject, provide,ref} from 'vue'
 export default {
+  name: 'VForm',
   props: ["header", "store", "action"],
+  setup(props, cxt) {
+    const { store } = props;
+    const { slots, expose } = cxt;
+    const formRef = ref(null);
+    const viewCollector = inject('viewCollector');
+    const formCollector = {
+      get: () => ({ ...props })
+    };
+    provide('formCollector', formCollector)
+
+    viewCollector.push({
+      store,
+      type: 'v-form',
+      $el:formRef,
+      $forceUpdate:()=>{}
+    });
+    expose({ ...props })
+    return () => {
+      const children = [];
+
+      if (props.header) {
+        children.push(
+          h('div', { class: 'v-widget-header v-panel-titlebar' }, [
+            h('span', { class: 'v-panel-title' }, props.header)
+          ])
+        );
+      }
+      children.push(
+        h('div', { ref: formRef, class: 'v-dialog-content v-widget-content' }, [
+          h('form', { action: props.action }, slots.default())
+        ])
+      );
+      return h('div', { class: 'ui-panel' }, children);
+    }
+  },
   watch: {
     header(v) {
       this.setTitle(v);
     },
   },
-  data(){return {timer:null}},
+  data() { return { timer: null } },
   methods: {
     setTitle(v) {
-      var me = this,app=me.$parent.app;
+      var me = this, app = me.$parent.app;
       if (app) {
-        setTimeout(()=>{app.title = v;}, 100);
+        setTimeout(() => { app.title = v; }, 100);
       }
     },
     getAbsoluteHeight(el) {
@@ -30,76 +57,7 @@ export default {
         parseFloat(styles["marginTop"]) + parseFloat(styles["marginBottom"]);
 
       return Math.ceil(el.offsetHeight + margin);
-    },
-    resize(e) {
-      console.log('v-form.resize');
-      var me = this,
-        el = me.$el,
-        h = e.height;
-      
-      el.style.height = h + "px";
-      //si tiene header
-      if(me.timer)
-      clearTimeout(me.timer);
-      
-
-// Set a new timer to run the function 'handleResize' after a specific delay (e.g., 500 milliseconds)
- me.timer = setTimeout(() => {
- if(!el.parentElement)return;
-
-
-      if (el.children[1]) {
-        console.log(el.children[0].textContent);
-        console.log(el.children[0]);
-        console.log(el.children[0].offsetHeight);
-        //se obtiene el alto del headr
-        h = h - el.children[0].offsetHeight;
-
-        el.children[1].style.height = h + "px";
-        el.children[1].style.overflowY = "auto";
-
-        //obtien el form
-        el = el.children[1].children[0];
-        el.style.height = h + "px";
-if(el.children){
-el.parentNode.style.overflowY='hidden';
-el.parentNode.style.overflow='hidden';
-}
-        var el2; //,style2;
-
-        [].forEach.call(el.children, (ee, i) => {
-          if (
-            (i == el.children.length - 1 && ee.tagName == "CENTER") ||
-            (!ee.classList.contains("v-scrollable") &&
-              !ee.classList.contains("v-form") &&
-              !ee.classList.contains("v-resize"))
-          ) {
-            h -= me.getAbsoluteHeight(ee);
-          } else if (!el2) {
-            el2 = ee;
-          }
-        });
-        el = el2;
-        //          console.log(el);
-        //Se espera el sea una tabla
-      } else {
-        el = el.children[0];
-        el.style.height = h + "px";
-      }
-      if(el){
-        el.style.overflowY = "auto";
-        el.style.height = h + "px";
-        var event = new Event("parentResize", { bubbles: true });
-        event.height = h;
-        //console.log(el.children[0]);
-        
-        el.children[0].dispatchEvent(event);
-        event.$target=me;
-        me.$emit("resize",event);
-      }
-
-    }, 500); 
-    },
+    }
   },
   mounted() {
     var me = this,
@@ -111,15 +69,6 @@ el.parentNode.style.overflow='hidden';
       return false;
     });
     me.setTitle(me.header);
-    me.$el.addEventListener("parentResize", (e) => {
-      if (e.target == me.$el){
-        me.resize(e);
-      }
-    });
-    
-  },
-  beforeUnmount(){
-    console.log('unmounted');
   },
   updated() {
     var me = this;
@@ -185,59 +134,6 @@ el.parentNode.style.overflow='hidden';
       if (t[i].classList) t[i].classList.add("_");
       else t[i].className = "_";
     }
-    var f = function (ev) {
-      var e = this;
-      var previousElementSibling = e.previousElementSibling;
-      if (
-        previousElementSibling &&
-        previousElementSibling.classList &&
-        previousElementSibling.classList.contains("v-error")
-      ) {
-        previousElementSibling.parentNode.removeChild(previousElementSibling);
-      }
-      if (
-        !(e.disabled || e.getAttribute("disabled")) &&
-        (e.required || e.tagName === "DIV")
-      ) {
-        if (
-          (e.tagName != "DIV" && !e.value) /*||e.value == 0*/ ||
-          (e.tagName === "DIV" && !e.attributes.value)
-        ) {
-          previousElementSibling = e.previousElementSibling;
-          while (
-            previousElementSibling &&
-            previousElementSibling.nodeType != 1
-          ) {
-            previousElementSibling =
-              previousElementSibling.previousElementSibling;
-          }
-          if (!previousElementSibling) {
-            previousElementSibling = e.parentElement.previousElementSibling;
-            while (
-              previousElementSibling &&
-              previousElementSibling.nodeType != 1
-            ) {
-              previousElementSibling =
-                previousElementSibling.previousElementSibling;
-            }
-          }
-          var error = document.createElement("div");
-          error.innerHTML = "Este campo es requerido!";
-          error.classList.add("v-error");
-          e.parentNode.insertBefore(error, e);
-        }
-      }
-    };
-    me.$el
-      .querySelectorAll(
-        "select,input[type=date]:not(.__),input[type=text]:not(.__),textarea:not(.__)"
-      )
-      .forEach((e) => {
-        e.addEventListener("focusout", f);
-        if (e.classList) e.classList.add("__");
-        else e.className = "__";
-      });
-    //resize();
   },
 };
 </script>

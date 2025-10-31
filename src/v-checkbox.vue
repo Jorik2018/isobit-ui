@@ -1,66 +1,64 @@
 <template>
-	<label style="font-weight: normal !important;display:block" class="v-checkbox"><span v-html="getLabel()"></span>
-		<input type="checkbox" v-bind:checked="value&&vmodel==value||vmodel" v-on:change="change" v-bind:value="value" /> 
-		<span class="checkmark"></span>
-	</label>
+    <label style="font-weight: normal !important; display: block;" class="v-checkbox" @click.stop="">
+        <span v-html="getLabel"></span>
+        <input ref="input" type="checkbox" :checked="isChecked" @change="change" :value="value" />
+        <span class="checkmark"></span>
+    </label>
 </template>
-<script>
-export default {
-    model: {
-        prop: 'vmodel',
-        event2: 'change'
-    },
-    props: {
-        value:null,
-        vmodel:null,
-        valueFalse:null,
-        label:null,
-        readonly:null
-    },
-    data(){return {input:null,hadValue:0};},
-    mounted() {
-        var me = this;
-        /*if(me.$parent.$el.classList.contains('v-datatable')){
-            if(me.$options.propsData.readonly+''== 'undefined'){
-                me.readonly=true;
-                console.log(me.$el.parentNode.tagName);
-            }
-        }*/
-        var c=me.$el.querySelector('input');
-		if(me.$parent&&me.$parent.nam)
-			c.name = me.$parent.nam;
-        me.input = c;
-        if(!me.$parent.onChange)c.checked=me.value&&me.value==me.vmodel||(''+me.vmodel)==='true'||(''+me.vmodel)==='1';
-        me.$parent.$emit("mounted",me);
-        if(me.$parent.update2)
-        me.$parent.update2();
-    },
-    updated(){
-        var me=this,c=me.input;
-        c.checked=me.value&&me.value==me.vmodel||(''+me.vmodel)==='true'||(''+me.vmodel)==='1';
-    },
-    methods:{
-        change(){
-            var me=this;
-            if(!me.readonly){
-                var r = me.$el.querySelector('input');
-                if(me.$parent.onChange)me.$parent.onChange(me.value, r.checked);
-                var v=r.checked?(me.value?me.value:r.checked):((me.valueFalse!==null&&me.valueFalse!==undefined)?me.valueFalse:r.checked);
-                if(v)me.hadValue=1;
-                //if(!v&&me.hadValue){
-                  //  v=(me.valueFalse!==null&&me.valueFalse!==undefined);
-                //}
-                console.log('nv='+v);
-                me.$emit('input', v);
-            }
-        },
-        getLabel(){
-            var v=this.value;
-            if(this.label)return this.label;
-            return (v&&(typeof v)=='string'?v:'');
-        },
-        onClick(e){if (this.readonly)e.preventDefault();return false;}
-    }
-};
-</script>
 
+<script>
+import { defineComponent, ref, computed, watch, onMounted } from 'vue';
+
+export default defineComponent({
+    name: 'VCheckbox',
+    props: {
+        value: null,  // Valor que representa `true`
+        modelValue: null, // Valor del `v-model`
+        valueFalse: null, // Valor que representa `false`
+        label: String,
+        readonly: Boolean,
+    },
+    emits: ['update:modelValue'],
+    setup(props, { emit }) {
+        const input = ref(null);
+        const hadValue = ref(0);
+
+        // Computed para determinar si el checkbox debe estar seleccionado
+        const isChecked = computed(() => {
+            return props.value ? props.value === props.modelValue : ['true', '1', true].includes(props.modelValue);
+        });
+
+        // Se asegura de que el input refleje el estado correcto cuando cambia `modelValue`
+        watch(() => props.modelValue, (newVal) => {
+            if (input.value) {
+                input.value.checked = isChecked.value;
+            }
+        });
+
+        // Manejo del cambio del checkbox
+        const change = () => {
+            if (!props.readonly) {
+                const checked = input.value.checked;
+                const newValue = checked ? (props.value || checked) : (props.valueFalse ?? checked);
+                if (newValue) hadValue.value = 1;
+                emit('update:modelValue', newValue);
+            }
+        };
+
+        // Asegurar que el estado inicial sea correcto cuando el componente se monta
+        onMounted(() => {
+            if (input.value) {
+                input.value.checked = isChecked.value;
+            }
+        });
+
+        return {
+            input,
+            hadValue,
+            isChecked,
+            change,
+            getLabel: computed(() => props.label || (typeof props.value === 'string' ? props.value : '')),
+        };
+    },
+});
+</script>

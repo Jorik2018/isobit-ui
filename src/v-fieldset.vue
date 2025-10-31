@@ -1,13 +1,18 @@
 <template>
 	<fieldset class="v-fieldset"><legend v-if="legend" 
-		v-on:click="closed=closable&&!closed" v-bind:style="{cursor:(closable?'pointer':'')}" >
+		@click="closed=closable&&!closed" v-bind:style="{cursor:(closable?'pointer':'')}" >
 		<span v-if="closable" v-bind:data-icon="closed?'plus':'minus'" style="margin:0px 5px 0px 0px">
 		<i v-bind:class="closed?'fa-plus':'fa-minus'" class="fa"></i></span>
-		<span v-html="legend"></span></legend><div v-show="!closed"><slot></slot></div>
+		<span v-html="legend"></span></legend><div v-show="!closed" 
+		style="flex: 1;
+    display: flex;
+    flex-direction: column;"
+		><slot></slot></div>
 	</fieldset>
 </template>
 <script>
 export default {
+	name: 'VFieldset',
     props: {
         legend: String,
 		closable: null

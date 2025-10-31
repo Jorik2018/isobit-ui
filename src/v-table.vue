@@ -1,184 +1,35 @@
 <script>
-import Vue from 'vue'
-const template = `
-	<div :class={reflow:reflow} :key="'v-table-'+keyBody" :style={width:width}
-    class="v-datatable v-resize">
-    <template v-if="active">
-		<div v-if="hasSlot('header')" class="v-datatable-header v-widget-header ui-corner-top"><slot name="header"></slot>
-		</div>
-		<div v-if="pagination" class="v-paginator v-paginator-top v-widget-header v-paginator-pages center">
-		
-		<v-button value="|<" :disabled="page<=1" v-on:click.prevent="to(1)"/><v-button value="<" v-on:click.prevent="to(page-1)" :disabled="page<=1"/><div style="padding:3px 8px;display:inline-block">
-		<input type="number" v-on:change="to(page,true)" style="width:60px" min="1" :max="pages" v-model="page"/> / {{pages}}</div>
-		<v-button value=">" v-on:click.prevent="to(page+1)" :disabled="page==pages"/><v-button v-on:click.prevent="to(pages)" value=">|" :disabled="page==pages"/>
-			</div>
-		<div v-if="scrollable0" class="v-widget-header v-datatable-scrollable-header" style="position:relative">
-		<div class="v-datatable-scrollable-header-box" style=""></div></div>
-		<div :class="{'v-datatable-scrollable-body':scrollable0}">
-		<table class="v-table" :style="{width:width}" v-if="columns">
-			<thead>
-            <tr>
-                <th v-if="selectable0" :width="getCheckColumnWidth" >
-                    <span class="v-check" v-on:click="rowSelect(null,-10)" :data-icon="selected.length?'square-check':'square'">
-                        <i class="fa fa-lg" :class="selected.length?'fa-square-check':'fa-square'"></i>
-                    </span>
-                </th>
-                <th :class="k['h-class']" v-for="k in columns" :width="k.width" v-on:click="sortBy(k)">
-                    <div v-html="k.header"></div>
-                </th>
-			</tr>
-            </thead>
-			<tbody class="v-datatable-data" :key="kc">
-                 <template v-for="(groupItem) in groupedData">
+import { computed, ref, h, inject, onMounted, onUnmounted, getCurrentInstance, onUpdated, watch } from 'vue'
+import VButton from './v-button.vue';
+import { clean, HTML2Canvas, sum, networkStatus, db, getStoredList, whichChild } from './commons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { faSquareCheck, faSquare } from '@fortawesome/free-regular-svg-icons';
+import { useAppStore } from './useAppStore';
 
-                    <tr v-if="hasSlot('header-group')" >
-                        <slot name="header-group" :group="groupItem"></slot>
-                    </tr>
-
-                    <tr v-for="(entry,r) in groupItem" @row="rowCreated(entry)" @click="_selectRow($event,entry,r)" 
-                    :class="getRowClass(r,entry)">
-                        <td v-if="selectable0" width="18" class="center">
-                            <span :data-index="r" class="v-check" v-on:click="rowSelect(entry,r)"
-                            :data-icon="isSelected(r)?'square-check':'square'"><i class="far fa-lg" :class="isSelected(r)?'fa-square-check':'fa-square'" ></i></span>
-                        </td>
-                        <slot :row="entry" :index="r+(page-1)*paginatio_"></slot>
-                    </tr>
-
-                    <tr v-if="hasSlot('footer-group')" >
-                        <slot name="footer-group" :group="groupItem"></slot>
-                    </tr>
-
-                 </template>
-
-				<tr v-if="!sortedData||sortedData.length==0">
-					<td :colspan="columns.length+(selectable0?1:0)">{{emptyMessage}}</td>
-				</tr>
-			</tbody>
-		</table>
-		</div>
-		<div v-if="summary||hasSlot('summary')" class="v-table-summary" :class="{'v-datatable-scrollable-body':scrollable}">
-			<table class="v-table v-table-summary"><tr>
-			<td v-if="selectable0" :width="getCheckColumnWidth" ></td>
-			<slot name="summary" :data="sortedData"></slot>
-			</tr></table>
-		</div>
-		<div class="hide filters"><slot name="filters"></slot><slot name="columns"></slot></div></template></div>
-`;
-const compiledTemplate = Vue.compile(template);
 export default {
-    props: {
-        value: Array,
-        filterKey: String,
-        reflow: null,
-        summary: null,
-        src: String,
-        gql: null,
-        filters: Object,
-        store: null,
-        width: null,
-        emptyMessage: { default: 'No existen registros' },
-        rowKey: { default: 'id' },
-        rowStyleClass: String,
-        groupKeys: { default: '' },
-        pagination: null,
-        selectable: { default: true },
-        scrollable: null,
-        autoload: {
-            default: true
-        }
-    },
-    data() {
-        var sortOrders = {};
-        return {
-            data: [],
-            sorter: null,
-            sortDir: 1,
-            pages: 1,
-            resizeAfterUpddate: 0,
-            page: 1,
-            active: 0,
-            selectable0: 1,
-            scrollable0: 0,
-            kc: 1,
-            keyBody: 1,
-            columns: null,
-            row: {},
-            hasFilters: 0,
-            kt: 0,
-            size: null,
-            sortKey: '',
-            selected: [],
-            paginatio_: 0,
-            remoteLoaded: null,
-            loaded: false,
-            sortOrders: sortOrders,
-            rowStyleClassFunc: null
-        };
-    },
-    render(createElement) {
-        var me = this, columns = [];
-
-        if (!me.def) me.def = me.$scopedSlots.default;
-        var children = me.def({ row: {} });
-        if (children) {
-            //me.columns=[];
-            children.forEach((e, i) => {
-                var column = e.data.attrs;
-                if (e.children) {
-                    e.children.filter((e) => e.tag == 'v-filter').forEach((e2) => {
-                        column.filter = e2;
-                        me.hasFilters = 1;
-                        //console.log(createElement('div',column.filter));
-                        e.children.shift();
-                        //console.log(createElement('div',column.filter));
-                    });
-                    e.children.filter((e) => e.tag == 'v-footer').forEach((e2) => {
-                        column.footer = e2;
-                        e.children.shift();
-                    });
-                }
-                columns.push(column);
-            });
-            if (!me.columns)
-                me.columns = columns;
-            //console.log(columns);
-            me.co = columns;
-        }
-        //se altera el virtual don of each row deleting v-filters
-        me.$scopedSlots.default = function (r, r2, r3) {
-            let item = me.def(r, r2, r3);
-            item.forEach((e, i) => {
-                delete e.data.attrs.header;
-                delete e.data.attrs.width;
-                if (e.children) {
-                    e.children.filter((e) => e.tag == 'v-filter').forEach((e2) => {
-                        me.hasFilters = 1;
-                        e.children.shift();
-                    });
-                    e.children.filter((e) => e.tag == 'v-footer').forEach((e2) => {
-                        e.children.shift();
-                    });
-                }
-            });
-            return item;
-        };
-        //console.log('render');
-        var ct = compiledTemplate.render.call(this, createElement);
-        //console.log(ct.children);
-        //Se agregan los filtros a las columnas
-        me.co.forEach(e => { if (e.filter) ct.children[ct.children.length - 1].children.push(e.filter) });
-        ;
-        return ct;
-    },
-    computed: {
-        getCheckColumnWidth() {
-            return 36;//18;
-        },
-        filteredData() {
-            const me = this;
-            let data = me.data, f, v;
-            data = data.filter(item => {
-                for (let key in me.filters) {
+    name: 'VTable',
+    setup(props, cxt) {
+        const { autoload, src, rowKey, store, groups } = props;
+        const app = useAppStore();
+        const viewCollector = inject('viewCollector');
+        const formCollector = inject('formCollector');
+        const selectable0 = ref(1)
+        const scrollable0 = ref(0);
+        const tableRef = ref(null);
+        const kc = ref(1)
+        const selected = ref([]);
+        const data = ref([]);
+        const sorter = ref(null);
+        const sortDir = ref(1);
+        const filteredData = computed(() => {
+            //https://itqna.net/questions/514/how-do-search-ignoring-accent-javascript
+            //https://stackoverflow.com/questions/5700636/using-javascript-to-perform-text-matches-with-without-accented-characters
+            const me = props, data_ = data.value;
+            let f, v;
+            data_.sum = sum;
+            console.log('data_===', data_);
+            return data_.filter(item => {
+                for (var key in me.filters) {
                     f = me.filters[key];
                     if (typeof f === 'function') {
                         if (!f(item)) {
@@ -197,480 +48,503 @@ export default {
                 };
                 return 1;
             });
-            data.sum = _.sum;
+        });
+        const sortedData = computed(() => {
+            let data = filteredData.value;
+            data = sorter ? data.sort((a, b) => {
+                b = b[sorter];
+                b = b ? b : 0;
+                a = a[sorter];
+                const aa = Number(a);
+                if (aa) a = aa;
+                if (a < b) return -1 * sortDir;
+                else if (a > b) return 1 * sortDir;
+                else return 0;
+            }) : data;
+            data.sum = sum;
             return data;
-        },
-        groupedData() {
-            const grouped = {}, groupKeys = this.groups,sortedData=this.sortedData||[];
-
+        });
+        const groupedData = computed(() => {
+            const sum = function (keyOrIndex) {
+                return this.reduce((total, item) => {
+                    if (typeof keyOrIndex === 'number') {
+                        return total + (item[keyOrIndex] || 0);
+                    } else if (typeof keyOrIndex === 'string') {
+                        return total + (item[keyOrIndex] || 0);
+                    }
+                    return total;
+                }, 0);
+            }
+            Array.prototype.sum = sum;
+            const grouped = {}, groupKeys = groups;
             if (groupKeys) {
-                alert(groupKeys);
-                sortedData.forEach(row => {
+                sortedData.value.forEach(row => {
                     const group = row[groupKeys];
                     if (!grouped[group]) {
-                        grouped[group] = [];
+                        const g = [];
+                        g.sum = sum
+                        grouped[group] = g;
+
                     }
                     grouped[group].push(row); // ✅ Copia para evitar referencias directas
                 });
-            } else {
-                alert(8);
-                return {group:'',values:sortedData};
+            } else if (sortedData.value.length) {
+                grouped[''] = sortedData;
             }
-
-
             return Object.entries(grouped).map(([group, values]) => ({
-                group: Number(group),
+                name: group,
                 values
             }));
-        },
-        sortedData() {
-            var me = this, data = me.filteredData;
-            data = me.sorter ? data.sort((a, b) => {
-                b = b[me.sorter];
-                b = b ? b : 0;
-                a = a[me.sorter];
-                aa = Number(a);
-                if (aa) a = aa;
-                if (a < b) return -1 * me.sortDir;
-                else if (a > b) return 1 * me.sortDir;
-                else return 0;
-            }) : data;
-            data.sum = _.sum;
-            return data;
+        })
+        const getCheckColumnWidth = () => (42);
+        const page = ref(1);
+        const pages = ref(1);
+        const { slots, expose, emit } = cxt;
+        //console.log(cxt);
+        watch(
+            () => props.value,
+            (newVal) => {
+                if (!props.src) {
+                    data.value = Array.isArray(newVal) ? newVal : [];
+                }
+            },
+            { immediate: true, deep: true }
+        );
+        const ci = getCurrentInstance();
+
+        const loadStore = async () => {
+            if (store != null) {
+                let datj;
+                if (db) datj = await getStoredList(store);
+                if (!datj) datj = [];
+                data.value = data.value ? datj.concat(data.value) : datj;
+            }
+            return data.value;
+        }
+        const _selectRow = (event, row, indexRow) => {
+            if (selectable0.value && whichChild(event.target) == 0)
+                return;
+            //se debe tener en cuenta si es 
+            //record, numero fila 
+            rowSelect(row, indexRow, 1);
+        }
+        const rowSelect = (row, i, c) => {
+            const me = this;
+            if (i === -10) {
+                if (filteredData.value.length === selected.value.length) {
+                    selected.value = [];
+                } else {
+                    selected.value = filteredData.value.map((value) => value);
+                }
+            } else if (c) {
+                if (selectable0.value || !selected.value.includes(row))
+                    selected.value = [row];
+                else {
+                    selected.value = [];
+                    row = null;
+                }
+            } else if (!selected.value.includes(row)) {
+                selected.value.push(row);
+            } else {
+                selected.value.splice(selected.value.indexOf(row), 1);
+                row = null;
+            }
+            emit('row-select', { target: me, current: row, selection: selected });
+        }
+        const isSelected = (row) => {
+            return selected.value.includes(row);
+        }
+        const getRowClass = (row) => {
+            const cls = [];
+            if (props.selectable && isSelected(row)) cls.push('v-selected');
+            if (props.rowStyleClass) {
+                if (typeof props.rowStyleClass == "string") {
+                    cls.push(props.rowStyleClass);
+                } else if (props.rowStyleClass) {
+                    cls.push(props.rowStyleClass(row));
+                }
+            }
+            return cls;
+        }
+        const to = (n, v) => { loadP(n, v) }
+        const loadP = (n, v) => {
+            if (page.value != n || v) {
+                page.value = n;
+                load()
+            }
+        }
+        let s = ('' + props.selectable);
+        selectable0.value = (s != 'false' && s != '0') ? 1 : 0;
+        s = ('' + props.scrollable);
+        scrollable0.value = (props.scrollable && s != 'false' && s != '0') ? 1 : 0;
+        const load = (/*s*/) => {
+            const me = props;
+            selected.value = [];
+            if (me.value) {
+                data.value = [];
+                data.value = me.value;
+                emit('loaded', { target: me });
+                emit('row-select', {});
+                me.remoteLoaded = 1;
+                me.loaded = 1;
+                kc.value++;
+            }
+            if (src) {
+
+                let s = src;
+                if (!s)//esto deberia darse si 
+                    return;
+                //s = me.$root.apiLink(window.location.pathname);
+                if (s.endsWith("/"))
+                    s = s.slice(0, s.length - 1);
+
+                const pagination = me.pagination;
+                //console.log(props);
+                if (pagination) {
+                    s += '/' + (page.value - 1) * pagination + '/' + pagination;
+                }
+                if (networkStatus.connected) {
+                    let request;
+                    if (me.gql) {
+                        const gql = me.gql;
+                        const query = ('query{' + Object.keys(gql)[0] + '(offset:' + ((page.value - 1) * pagination)
+                            + ' limit:' + (pagination) + '){\ndata{' + gql[Object.keys(gql)[0]] + '}\nsize\n}\n}');
+
+                        request = app.axios.post(src, { query: query });
+                    } else {
+                        request = app.axios.get(s, { params: clean(me.filters) });
+                    }
+                    request.then((r) => {
+                        if (r.data && r.data.error) {
+                            MsgBox(r.data.error);
+                        } else {
+                            let re = r.data;
+                            if (me.gql) {
+                                //console.log(r.data);
+                                //console.log(Object.keys(me.gql)[0]);
+                                re = r.data.data[Object.keys(me.gql)[0]];
+                            }
+                            data.value = re.data || re;
+                            //console.log(data)
+                            if (re && re.hasOwnProperty('size') && pagination) {
+                                pages.value = Math.ceil(re.size / pagination);
+                                if (page.value > pages.value)
+                                    page.value = 1;
+                                me.size = re.size;
+                            }
+                            //console.log('======');
+                            //console.log(me.data);
+                            loadStore();
+                            emit('loaded', { target: me });
+                            emit('row-select', {});
+                            me.remoteLoaded = 1;
+                            me.loaded = 1;
+                            kc.value++;
+                        }
+                    }).catch(me.error);
+                } else {
+                    data.value = [];
+                    const result = loadStore();
+                    if (result.then) result.then(result => { data.value = result });
+                    emit('row-select', { target: me });
+                }
+            } else {
+                //data.value = [];
+                //loadStore().then(() => emit('loaded', { target: me }));
+            }
+
+            console.log("======", data.value);
+
+
+            //data.value.push({});
+
+
+            kc.value++;
+            me.loaded = 1;
+        };
+        const rowSelectedCount = computed(() => {
+            return selected.value.length;
+        })
+        load.rowSelectedCount = rowSelectedCount;
+        load.src = src;
+        load.getForm = formCollector.get;
+        load.rowKey = rowKey;
+        load.rowSelect = rowSelect;
+        const j_is = (el) => {
+            return tableRef.value === el;
+        }
+        load.is = j_is;
+        load.remove = (item) => {
+            console.log(item, data.value);
+            const index = data.value.findIndex(_item => _item === item);
+            if (index !== -1) {
+                data.value.splice(index, 1);
+            }
+
+        };
+        load.selected = selected;
+
+        load.type = 'v-table';
+        viewCollector.push(load);
+        const listener = (event) => {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                load();
+            }
+        }
+        onMounted(() => {
+            if (autoload === true) load();
+            setTimeout(() => {
+                const component = ci.proxy;
+                const spans = component.$el.querySelectorAll('.v-cloned-header div > span');
+
+                // Obtener la altura máxima
+                const maxHeight = Math.max(...Array.from(spans).map(span => span.offsetHeight));
+
+                // Asignar la altura máxima a todos los elementos
+                spans.forEach(span => {
+                    span.style.height = maxHeight + 'px';
+                });
+                const filter = component.$el.querySelectorAll('v-filter');
+                filter.forEach(f => {
+                    console.log(f.querySelectorAll('input').forEach(e => e.addEventListener("keyup", listener)));
+                });
+            }, 100);
+        });
+        onUnmounted(() => {
+            viewCollector.remove(load);
+        });
+        expose({ load, rowSelectedCount, j_is })
+        return () => {
+            const checkColumnWidth = getCheckColumnWidth();
+            let tableWidth = 0;
+            let hasFilters = 0;
+            const children = slots.default({ row: {} });
+            const columns = [];
+            children.forEach((e, i) => {
+                const column = e.props;
+                if (e.children && typeof e.children.filter === "function") {
+                    e.children.filter((e) => e.type == 'v-filter').forEach((e2) => {
+                        column.filter = e2;
+                        hasFilters = 1;
+                        //console.log(createElement('div',column.filter));
+                        e.children.shift();
+                        //console.log(createElement('div',column.filter));
+                    });
+                    e.children.filter((e) => e.type == 'v-footer').forEach((e2) => {
+                        column.footer = e2;
+                        e.children.shift();
+                    });
+                }
+                tableWidth += column.width ? Number(column.width) : 0;
+                columns.push({
+                    filter: column.filter,
+                    header: column.header,
+                    width: column.width
+                });
+            });
+
+            tableWidth += (selectable0.value ? checkColumnWidth : 0);
+            const shb = h('div', { className: 'v-datatable-scrollable-header-box', style: 'left: 0px;' },//position: absolute; height: 47px; 
+                h('table', { className: 'v-cloned-header v-table', style: { width: `${tableWidth}px` } }, [
+                    selectable0.value ? h('th', { width: checkColumnWidth }, [
+                        h('span', {
+                            onclick() { rowSelect(null, -10) },
+                            className: 'v-check'
+                        },
+                            h(FontAwesomeIcon, { icon: selected.value.length ? faSquareCheck : faSquare, class: 'fa-lg' })
+                        )
+                    ]) : null,
+                    columns.map((column) => h('th', column, h('div', [
+
+                        h('span', {
+                            style: 'display: flex;justify-content: center;align-items: center;'
+                        },
+                            [column.header]
+                        ),
+                        h('v-filter', column.filter?.children)
+
+                    ])))
+                ])
+            );
+
+            return h('div', { ref: tableRef, className: 'v-datatable ' + props.class }, [
+                slots.header ? h('div', { className: 'v-datatable-header v-widget-header ui-corner-top' }, slots.header()) : null,
+                props.pagination ? h('div', { className: 'v-paginator v-paginator-top v-widget-header v-paginator-pages center' }, [
+                    h(VButton, { value: '|<', disabled: page.value <= 1, onClick: () => to(1) }),
+                    h(VButton, { value: '<', disabled: page.value <= 1, onClick: () => to(page.value - 1) }),
+                    h('div', { style: 'padding:3px 8px;display:inline-block' },
+                        [h('input', { type: 'number', style: 'width:60px', value: page.value, onInput: (e) => to(Number(e.target.value), true) }), '/' + pages.value]
+                    ),
+                    h(VButton, { value: '>', disabled: page.value == pages.value, onClick: () => to(page.value + 1) }),
+                    h(VButton, { value: '>|', disabled: page.value == pages.value, onClick: () => to(pages.value) })
+                ]) : null,
+                h('div', {
+                    className: 'v-widget-header v-datatable-scrollable-header',
+                    style: 'position: relative; margin-right: 0px;'//height: 110px; 
+                },
+                    shb
+                ),
+                h('div', {
+                    className: 'v-datatable-scrollable-body', style: 'overflow-y: auto; flex:1',
+                    onScroll(e) {
+                        const horizontal = e.currentTarget.scrollLeft;
+
+                        shb.el.style.transform = "translateX(-" + horizontal + "px)";
+                        //shb.el.style.left = "-" + horizontal + "px";
+                        //t[0].style.left = "-" + horizontal + "px";
+                    }
+                }, [
+                    h('table', { className: 'v-table', style: { width: `${tableWidth}px` } }, [
+                        /*h('thead', { className: 'v-head-cloned' }, [
+
+                            selectable0.value ? h('th', { width: checkColumnWidth }) : null,
+
+                            ...columns.map((column) => h('th', { width: column.width }))
+                        ]),*/
+                        h('tbody', { className: 'v-datatable-data', key: kc.value },
+                            groupedData.value.length < 1 ? h('td', { colspan: columns.length + (selectable0.value ? 1 : 0) }, props.emptyMessage) : [
+
+
+                                groupedData.value.map((groupItem) => {
+                                    //console.log('groupItem.value', groupItem)
+                                    return [
+
+                                        slots['header-group'] ? (h('tr', { className: "v-header-group" }, [
+                                            selectable0.value ? h('td') : null,
+                                            slots['header-group']({ group: groupItem })
+                                        ])) : null
+
+
+                                        , (groupItem.values.value || groupItem.values).map((row, index) => {
+                                            const item = slots.default({ row, index });
+                                            item.forEach((e, i) => {
+
+                                                //delete e.props.header;
+                                                //delete e.props.width;
+
+
+                                                if (e.children && typeof e.children.filter === "function") {
+                                                    e.children.filter((e) => e.type == 'v-filter').forEach((e2) => {
+                                                        hasFilters = 1;
+                                                        e.children.shift();
+                                                    });
+                                                    e.children.filter((e) => e.type == 'v-footer').forEach((e2) => {
+                                                        e.children.shift();
+                                                    });
+                                                }
+                                            });
+
+                                            return h('tr', {
+                                                class: getRowClass(row),
+                                                onclick(e) {
+                                                    _selectRow(e, row, index)
+                                                }
+                                            }, [
+
+                                                selectable0.value ? h('td', { className: 'center' }, h('span', {
+                                                    onclick() { rowSelect(row, index) },
+                                                    className: 'v-check'
+                                                },
+                                                    h(FontAwesomeIcon, { icon: isSelected(row) ? faSquareCheck : faSquare, class: 'fa-lg' })
+                                                )) : null
+
+
+                                                , ...item
+                                            ])
+                                        }),
+
+                                        slots['footer-group'] ? (h('tr', { className: "v-footer-group" }, [
+                                            selectable0.value ? h('td') : null,
+                                            slots['footer-group']({ group: groupItem })
+                                        ])) : null,
+
+                                        slots['extra-group'] ? slots['extra-group']({ group: groupItem, groups: groupedData.value }) : null
+
+                                    ]
+
+                                })
+
+
+                            ]
+                        )
+                    ])
+                ])
+            ]);
         }
     },
-    mounted() {
-        var me = this;
-        //console.log('mounted');
-        //me.columns.forEach(e=>{console.log(e.filter)});
-        //console.log(me.$el.querySelectorAll('.v-datatable-scrollable-header-box > th'));
-        var h = me.$el.style ? me.$el.style.height : null;
-        if (h) {
-            me.scrollable0 = 1;
-            //console.log('scroll for '+me.$el.id);
-            me.resizeAfterUpddate = 1;
+    props: {
+        class: null,
+        value: Array,
+        filterKey: String,
+        reflow: null,
+        summary: null,
+        src: String,
+        gql: null,
+        filters: Object,
+        store: null,
+        width: null,
+        emptyMessage: { default: 'No existen registros' },
+        groups: { default: '' },
+        rowKey: { default: 'id' },
+        rowStyleClass: null,
+        pagination: null,
+        selectable: { default: true },
+        scrollable: null,
+        autoload: {
+            default: true
         }
-        if (!!(me.$parent.tabs)) {
-            me.$el.addEventListener("tabChange", (e) => {
-                me.active = 1;
-                var k = e.$target.k;
-                if (me.kt != k) {
-                    me.load();
-                    me.kt = k;
-                }
-            });
-        }
-        if (me.active) {
-            me.buildColumns();
-            if (me.autoload === true) me.load();
-        }
-        me.$el.addEventListener("parentResize", (e) => {
-
-            me.resize(e.height);
-        });
-        me.$el.addEventListener("command", (e) => {
-            switch (e.name) {
-                case 'refresh':
-                    if (!e.key || me.$el.getAttribute('refresh') != e.key) {
-                        me.load();
-                        me.$el.getAttribute('refresh', e.key);
-                        break;
-                    }
-            }
-        });
-        if (h) {
-            me.resize(parseInt(h));
-        } else {
-            // me.resize(me.$el.offsetHeight);
-        }
-        //console.log('mointed');
+    },
+    data() {
+        const sortOrders = {};
+        return {
+            resizeAfterUpddate: 0,
+            active: 0,
+            keyBody: 1,
+            row: {},
+            kt: 0,
+            size: null,
+            sortKey: '',
+            paginatio_: 0,
+            remoteLoaded: null,
+            loaded: false,
+            sortOrders: sortOrders,
+            rowStyleClassFunc: null
+        };
     },
     created() {
-        var me = this;
-
+        const me = this;
         //Si el padre el un tabview debe considerarse q no se esta en la pestaña activa y no deberia cargarse
         if (!(me.$parent.tabs)) {
             //el padre es un tab
             me.active = 1;
         }
-        var s = ('' + me.selectable);
-        me.selectable0 = (s != 'false' && s != '0') ? 1 : 0;
-        s = ('' + me.scrollable);
-        me.scrollable0 = (me.scrollable && s != 'false' && s != '0') ? 1 : 0;
         me.paginatio_ = me.pagination ? me.pagination : 0;
         if (me.rowStyleClass) eval('me.rowStyleClassFunc=function(row){return ' + me.rowStyleClass + '}');
     },
     beforeUpdate() {
         var me = this;
+
         if (me.active) {
-            me.buildColumns();
+            //me.buildColumns();
             if (me.value) {
-                if (me.remoteLoaded == null)
-                    me.data = me.value;
+                // if (me.remoteLoaded == null)
+                //   me.data = me.value;
             }
-        }
-    },
-    updated() {
-        var me = this;
-        if (me.resizeAfterUpddate) {
-            me.resize(parseInt(me.$el.style.height));
-            me.resizeAfterUpddate = 0;
-        }
-
-        me.paginatio_ = me.pagination ? me.pagination : 0;
-        var t = me.$el.querySelectorAll(".v-table");
-        var p = me.$el.querySelectorAll(".v-datatable-scrollable-header-box")[0];
-        if (p) {
-            //console.log(me.co);
-            var clonedHeader = me.$el.querySelectorAll(".v-cloned-header");
-            if (clonedHeader.length === 0) {
-                clonedHeader = document.createElement("table");
-                var originalHeader = t[0].querySelectorAll("thead")[0];
-
-                var tw = 0;
-                var maxLabelHeight = 0;
-                var ca = document.createElement('canvas');
-                var cs = window.getComputedStyle(p);
-                var ctx = ca.getContext("2d");
-                ctx.font = cs.fontSize + " PTSans";
-                var filtersMap = {};
-                var listener = (event) => {
-                    if (event.keyCode === 13) {
-                        event.preventDefault();
-                        me.load();
-                    }
-                }
-                var th = originalHeader.childNodes[0].querySelectorAll("th");
-                me.columns.forEach(e => {
-                    if (e.filter) {
-                        e.filter.elm.querySelectorAll('input').forEach(e => e.addEventListener("keyup", listener));
-                    }
-                });
-                var ht = new _.HTML2Canvas({ lineHeight: parseInt(cs.lineHeight), ctx: ctx }), i, tw = 0;
-                th.forEach((e, i) => {
-                    e.childNodes[0].onclick = sortClick;
-                    var f = me.columns[(i - (me.selectable0 ? 1 : 0))];
-                    //cltd.setAttribute("ind", '' + (i - (me.selectable0?1:0)));
-                    if (f && f.filter && f.filter.elm) {
-                        //console.log(f.filter.elm.children);
-                        //console.log(typeof f.filter.elm.children);
-                        if (f.filter.elm.children.forEach)
-                            f.filter.elm.children.forEach(ef => e.appendChild(ef));
-                        else
-                            for (let ef of f.filter.elm.children) {
-                                e.appendChild(ef);
-                            }
-                    } else if (i > 0 && me.hasFilters) {
-                        var input = document.createElement("input");
-                        input.disabled = "disabled";
-                        input.className = "center"; // set the CSS class
-                        e.appendChild(input);
-                    }
-
-                    if (e.clientHeight > maxLabelHeight)
-                        maxLabelHeight = e.clientHeight;
-                    tw += parseInt(e.width);
-                    var hh = e.childNodes[0].offsetHeight;
-                    hh = ht.heightText(e.childNodes[0].textContent, parseInt(e.width));
-                    e.childNodes[0].style.width = e.width + 'px';
-                    e.childNodes[0].style.display = 'table-cell';
-                    e.childNodes[0].style.verticalAlign = 'middle';
-                    if (hh > maxLabelHeight) maxLabelHeight = hh;
-                });
-                th.forEach((e, i) => {
-                    if (i) e.childNodes[0].style.height = maxLabelHeight + 'px';
-                    clonedHeader.appendChild(e);
-                });
-                th.forEach((e, i) => {
-                    var e2 = document.createElement('th');
-                    e2.width = e.width;
-                    originalHeader.childNodes[0].appendChild(e2);
-                });
-                t[0].style.width = tw + 'px';
-                t[0].width = tw;
-                //console.log(t);
-                if (t.length > 1) {
-                    t[1].style.width = tw + 'px';
-                    t[1].width = tw;
-                    t[0].parentNode.style.overflowX = 'hidden';
-                    t[0].parentNode.style.position = 'relative';
-                    t[0].style.position = 'absolute';
-                    t[0].parentNode.style.height = '150px'
-                    t[1].parentNode.addEventListener("scroll", (e) => {
-                        var horizontal = e.currentTarget.scrollLeft;
-                        p.style.left = "-" + horizontal + "px";
-                        t[0].style.left = "-" + horizontal + "px";
-                    });
-                    var ts = t[1].querySelectorAll('td');
-                    //se debe considerar las columnas agregadas como el selector
-                    for (i = 0; i < th.length; i++) {
-                        if (ts[i])
-                            ts[i].style.width = th[i].width + 'px';
-                    }
-                } else {
-
-                    t[0].parentElement.addEventListener("scroll", (e) => {
-                        var horizontal = e.currentTarget.scrollLeft;
-                        p.style.left = "-" + horizontal + "px";
-                    });
-                }
-                clonedHeader.style.width = tw + 'px';
-                var sortClick = (e) => {
-                    var sort = me.columns[e.target.parentNode.getAttribute("ind")].sort;
-                    if (sort == me.sorter) me.sortDir = me.sortDir * -1;
-                    me.sorter = sort;
-                };
-
-                clonedHeader.className = "v-cloned-header v-table";
-                p.appendChild(clonedHeader);
-                p.appendChild(p.firstChild);
-                p.style.position = 'absolute';
-                //no se para q agrego 37  -------
-                p.style.height = (maxLabelHeight + 37 - 37) + 'px';
-                //.v-widget-header
-                p.parentElement.style.height = p.style.height;
-
-                if (me.$el.style.maxHeight)
-                    p.parentElement.nextElementSibling.style.maxHeight = (parseInt(me.$el.style.maxHeight) - maxLabelHeight) + 'px';
-
-                originalHeader.className = 'v-head-cloned';
-            }
-            //resize();
-        }
-        var svg = me.$el.querySelectorAll('.v-check > svg');
-        for (i = 0; i < svg.length; i++) {
-            //square-check':'square
-            svg[i].dataset.icon = svg[i].parentNode.dataset.icon;
-        }
-        if (me.loaded) {
-            var group = me.$el.querySelectorAll('.group');
-            for (var k = 0; k < group.length; k++) {
-                group[k].parentNode.removeChild(group[k]);
-            }
-            me.$emit('updated', me);
-            me.loaded = 0;
         }
     },
     filters: {
         capitalize(str) {
             return str ? (str.charAt(0).toUpperCase() + str.slice(1)) : str;
         },
-        rowSelectedCount() {
-            return this.selected.length;
-        }
-    },
-    watch: {
-        kc(nv) {
-            var me = this;
-            setTimeout(function () {
-                me.$emit('updated', me);
-            }, 100);
-        }
     },
     methods: {
-        buildColumns() { },
-        getRowClass(r, row) {
-            var cls = [];
-            var me = this;
-            if (me.selectable && me.isSelected(r)) cls.push('v-selected');
-            if (me.rowStyleClassFunc) cls.push(me.rowStyleClassFunc(row));
-            return cls;
-        },
-        resize(h) {
-            var el = this.$el;
-            setTimeout(() => {
-                //h=el.style.maxHeight?Math.min(parseInt(el.style.maxHeight,10),h):h;
-                var e = el.querySelector(".v-datatable-header");
-                if (e) h -= e.offsetHeight;
-                e = el.querySelector(".v-paginator");
-                if (e) h -= e.offsetHeight;
-                e = el.querySelector(".v-datatable-scrollable-header");
-                if (e) {
-                    e.style.height = e.querySelector("table").offsetHeight + 'px';
-                    h -= e.offsetHeight;
-                }
-                e = el.querySelector(".v-table-summary");
-                if (e) {
-                    h -= e.offsetHeight;
-                }
-                e = el.querySelector(".v-datatable-scrollable-body");
-                const scrollbarWidth = e.offsetWidth - e.clientWidth;
-                e.style.overflowY = 'auto';
-                e.style.height = h + 'px';
-
-                e = el.querySelector(".v-datatable-scrollable-header-box");
-                if (e) {
-                    e.parentNode.style.marginRight = scrollbarWidth + 'px';
-                }
-                e = el.querySelector(".v-table-summary");
-                if (e) {
-                    e.style.overflowY = 'hidden';
-                    e.style.marginRight = scrollbarWidth + 'px';
-                }
-
-            }, 100);
-        },
-        to(n, v) { this.loadP(n, v) },
-        loadP(n, v) {
-            var m = this;
-            //console.log('m.page != n=' + (m.page != n));
-            if (m.page != n || v) {
-                m.page = n;
-                m.load()
-            }
-        },
-        rowCreated(/*r*/) {
-            /*this.$parent.$parent.row=r;
-             console.log(this.$parent.$parent.row);
-             this.$emit('row',r);*/
-        },
         hasSlot(s) {
             return !!this.$slots[s];
         },
         sortBy(/*key*/) {
             //this.sortKey = key
             //this.sortOrders[key] = this.sortOrders[key] * -1
-        },
-        isSelected(r) {
-            return this.selected.contains(r);
-        },
-        _selectRow(event, rec, r) {
-            var me = this;
-            if (me.selectable0 && _.whichChild(event.target) == 0)
-                return;
-            //se debe tener en cuenta si es 
-            //record, numero fila 
-            this.rowSelect(rec, r, 1);
-        },
-        rowSelect(r, i, c) {
-            var me = this, j;
-            if (i === -10) {
-                if (me.filteredData.length === me.selected.length) {
-                    me.selected = [];
-                } else {
-                    me.selected = [];
-                    for (j = 0; j < me.filteredData.length; j++) {
-                        me.selected.push(j);
-                    }
-                }
-            } else if (c) {
-                if (this.selectable0 || !me.selected.contains(i))
-                    me.selected = [i];
-                else {
-                    me.selected = [];
-                    r = null;
-                }
-            } else if (!me.selected.contains(i)) {
-                me.selected.push(i);
-            } else {
-                me.selected.splice(me.selected.indexOf(i), 1);
-                r = null;
-            }
-            var s2 = [], s = me.selected.sort((a, b) => { return a - b; });
-            for (var i = 0; s.length > i; i++) {
-                s2.push(me.data[s[i]]);
-            }
-            me.$emit('row-select', { target: me, current: r, selection: s2 });
-        },
-        async getStoredList(store) {
-            let p = new Promise((resolve) => {
-                var t = window._.db.transaction(store), objectStore = t.objectStore(store);//,d=[];
-                var r = objectStore.getAll();
-                r.onsuccess = function () {
-                    resolve(r.result);
-                }
-                //t.onerror = event => reject(event.target.error);
-            });
-            try {
-                let result = await p;
-                //console.log(result);
-                return result;
-            } catch (e) {
-                alert(store);
-                throw e;
-            }
-        },
-        async loadStore() {
-            var me = this, store = me.store;
-            if (store != null) {
-                var datj;
-                if (window._.db) datj = await me.getStoredList(store);
-                if (!datj) datj = [];
-                me.data = me.data ? datj.concat(me.data) : datj;
-            }
-            return me.data;
-        },
-        load(/*s*/) {
-            var me = this;
-            this.selected = [];
-            if (me.value) {
-                me.data = me.value;
-            }
-            if (me.src) {
-                var s = me.src;
-                if (!s)//esto deberia darse si 
-                    return;
-                //s = me.$root.apiLink(window.location.pathname);
-                if (s.endsWith("/"))
-                    s = s.slice(0, s.length - 1);
-                var pagination = me.pagination;
-                if (pagination) {
-
-                    s += '/' + (me.page - 1) * pagination + '/' + (me.pagination);
-                }
-                if (_.networkStatus.connected) {
-                    var request;
-                    if (me.gql) {
-                        var gql = me.gql;
-                        var query = ('query{' + Object.keys(gql)[0] + '(offset:' + ((me.page - 1) * pagination)
-                            + ' limit:' + (me.pagination) + '){\ndata{' + gql[Object.keys(gql)[0]] + '}\nsize\n}\n}');
-
-                        request = axios.post(me.src, { query: query });
-                    } else {
-                        request = axios.get(s, { params: _.clean(me.filters) });
-                    }
-
-
-                    request.then((r) => {
-                        if (r.data && r.data.error) {
-                            MsgBox(r.data.error);
-                        } else {
-                            var re = r.data;
-                            if (me.gql) {
-                                //console.log(r.data);
-                                //console.log(Object.keys(me.gql)[0]);
-                                re = r.data.data[Object.keys(me.gql)[0]];
-                            }
-                            me.data = re.data || re;
-                            if (re && re.hasOwnProperty('size') && pagination) {
-                                me.pages = Math.ceil(re.size / pagination);
-                                if (me.page > me.pages)
-                                    me.page = 1;
-                                me.size = re.size;
-                            }
-                            //console.log('======');
-                            //console.log(me.data);
-                            me.loadStore();
-                            me.$emit('loaded', { target: me });
-                            me.$emit('row-select', {});
-                            me.remoteLoaded = 1;
-                            me.loaded = 1;
-                            me.kc++;
-                        }
-                    }).catch(me.error);
-                } else {
-                    me.data = [];
-                    var result = me.loadStore();
-                    if (result.then) result.then(result => { me.data = result });
-                    me.$emit('row-select', { target: me });
-                }
-            } else {
-                me.data = [];
-                me.loadStore();
-                me.$emit('loaded', { target: me });
-            }
-            me.kc++;
-            me.loaded = 1;
         },
         filter() {
             alert(12);

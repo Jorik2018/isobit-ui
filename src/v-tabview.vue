@@ -1,7 +1,9 @@
 <template>
 	<div class="v-tabview" :style="{height:height+'px'}">
+
 		<ul class="v-tab-nav">
-			<li :class="{'v-selected': index==currentTabIndex }" v-for="(tab,index) in tabs" :key="index" @click="currentTabIndex=index">
+			<li :class="{'v-selected': index==currentTabIndex }" 
+            v-for="(tab,index) in tabs" :key="index" @click="currentTabIndex=index">
 				{{tab.title}}
 			</li>
 		</ul>
@@ -10,6 +12,7 @@
 </template>
 <script>
 export default {
+    name: 'VTabview',
        data() {
         return {
             tabs: [],height:0,
@@ -32,7 +35,7 @@ export default {
         currentTabIndex(v) {
             var me=this,t=me.$el.children[v+1],c=me.$children[v+1];
             if(t){
-                console.log('aviso al actual tab q esta seleccionado seltab='+v);
+                //console.log('aviso al actual tab q esta seleccionado seltab=='+v);
                 var event=new Event("tabChange", {bubbles: false});
                 event.$target=me;
                 t.dispatchEvent(event);
@@ -50,17 +53,22 @@ export default {
         var el = this.$el;
         var cn = el.children;
         for (var j = 1; j < cn.length; j++) {
+
             if (cn[j].tagName) {
                 if((j-1) === this.currentTabIndex){
-                    cn[j].style.display='';
-                    cn[j].style.height=(this.$el.offsetHeight-cn[0].offsetHeight)+'px';
+                    cn[j].style.display='flex';
+                    cn[j].style.flex='1';
+                    cn[j].style.flexDirection='column';
+                    //cn[j].style.height=(this.$el.offsetHeight-cn[0].offsetHeight)+'px';
                 }
                 if((j-1) === this.currentTabIndex){
                     cn[j].classList.remove('hide');
                 }else{
+                    cn[j].style.display='none';
                     cn[j].classList.add('hide');
                 }
             }
+            console.log(cn[j])
         }
     },
     mounted(){

@@ -9,7 +9,9 @@
 	</div>
 </template>
 <script>
+import axios from 'axios'
 export default {
+    name: 'VUploader',
     props: {
         value: String,
         onlyicon:Boolean,

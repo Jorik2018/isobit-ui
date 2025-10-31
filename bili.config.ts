@@ -3,17 +3,15 @@ import { Config } from 'bili'
 const config: Config = {
 	banner: true,
 	output: {
+				//format: 'esm',
+		fileName:'index.js',
 		extractCSS: false
 	},
 	plugins: {
 		vue: {
-			css: true
+			css: false
 		}
-	},
-	output: {
-		//format: 'esm',
-		fileName:'index.js',
-	  }
+	}
 }
 
 export default config

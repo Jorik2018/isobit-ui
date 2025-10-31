@@ -1,246 +1,331 @@
 <template>
   <div class="v-select" style="position: relative">
-    <select
-      v-if="!readonly"
-      v-show="!multiple"
-      style="width: 100%"
-      @change="onChange($event.target.value)"
-      v-bind:required="required"
-      v-bind:disabled="disabled"
-      v-bind:click="expand"
-    >
+
+    <select v-if="!readonly" v-show="!multiple" style="width: 100%" ref="selectRef" @change="onChange"
+      :required="required" :disabled="disabled" :click="expand">
       <slot></slot>
     </select>
     <template v-if="multiple">
-      <div
-        class="v-widget-header"
-        style="padding-top: 3px; padding-bottom: 3px"
-        v-bind:class="{ 'v-selected': show }"
-        v-on:click="toggle"
-      >
+      <div class="v-widget-header" ref="button" style="padding-top: 3px; padding-bottom: 3px"
+        :class="{ 'v-selected': show }" @click="toggle">
         &nbsp;
       </div>
-      <div v-show="show" style="padding: 5px; border: 1px solid lightgray">
-        <div
-          class="_ ui-widget ui-state-default ui-corner-all"
-          style="padding: 5px 5px 1px 5px; margin-bottom: 5px"
-        >
-          <v-checkbox v-model="sela" v-on:input="selectAll" />
+      <div v-show="show" ref="popup" @click="close" style="background-color: #0000009c;">
+        <div style="border: 1px solid lightgray;background-color: white; padding:5px;">
+          <div class="_ ui-widget ui-state-default ui-corner-all" style="padding: 3px 3px 1px 3px; margin-bottom: 5px">
+            <v-checkbox v-model="sela" @input="selectAll" />
+          </div>
+          <v-checkbox-group class="v-select-checkbox-group" style="overflow-y: auto;" :key="'p' + ik" v-model="sel"
+            @input="checkboxInput">
+            <template v-if="data.length">
+              <div v-for="d in data">
+                <v-checkbox :value="d.value" :label="d.label" />
+              </div>
+            </template></v-checkbox-group>
+          <div class="center" style="padding-top: 4px;"><v-button icon="fa-sync" value="Filtrar"></v-button>
+          </div>
         </div>
-        <v-checkbox-group
-          v-bind:key="'p' + ik"
-          v-model="sel"
-          v-on:input="checkboxInput"
-        >
-          <template v-if="data.length">
-            <div v-for="d in data">
-              <v-checkbox v-bind:value="d.value" v-bind:label="d.label" />
-            </div> </template
-        ></v-checkbox-group>
       </div>
     </template>
     <template v-if="readonly">{{ label ? label : "---" }}</template>
   </div>
 </template>
 <script>
+import { onMounted, provide, ref, watch, nextTick } from 'vue'
+import { log } from './commons'
 export default {
+  name: 'VSelect',
+  setup(props, ctx) {
+    const { slots, emit } = ctx;
+    const { valueField, disabled, readonly, autoload, name } = props;
+    const options = ref([]);
+    const valueField_ = ref([]);
+    const prevValue = ref(null);
+    const lastLoad = ref([]);
+    const loaders = [];
+    const autoload_ = ref(!(autoload + "" == "false" || autoload * 1 == 0));
+    const selectRef = ref(null);
+    const collect = (items) => {
+      options.value = items;
+      nextTick(() => {
+        //log(name, 'collect.nextTick=' + items.length)
+        updateSelect(props.modelValue || prevValue.value)
+      })
+    }
+
+    const onChange = (event) => {
+      event.stopPropagation();
+      let selectedValue = event.target.value;
+      const select = selectRef.value;
+      log(name, 'select.onchange=', selectedValue);
+      if (!selectedValue || selectedValue === "") {
+        selectedValue = null;
+        select.selectedIndex = 0;
+      }
+      let found = 0, oo;
+      const items = options.value;
+      for (let i = 0; i < loaders.length; i++) {
+        found = loaders[i].getValueByIndex(select.selectedIndex - 1);
+        if (found == -1) {
+          found = 0;
+        } else {
+          oo = loaders[i].getObjectByIndex(select.selectedIndex - 1);
+          break;
+        }
+      }
+      if (found) {
+        log(name, 'change=found=', found)
+        selectedValue = found;
+      } else if (items.length) {
+        select.selectedIndex = 0;
+      }
+      emit("update:modelValue", selectedValue, {
+        value: selectedValue,
+        select: select,
+        //option: items[sel.selectedIndex],
+        //target: me,
+        object: oo,
+      });
+      nextTick(() => {
+        emit("input", selectedValue, {
+          value: selectedValue,
+          select: select,
+          //option: items[sel.selectedIndex],
+          //target: me,
+          object: oo,
+        });
+      })
+    };
+
+    const updateSelect = (v) => {
+      let value = v || props.modelValue;
+      if (selectRef.value) {
+        let select = selectRef.value;
+        let oldSelectedIndex = select.selectedIndex;
+        if (!value || value === "") {
+          select.selectedIndex = 0;
+        }
+        //if(value)value = value.id||value.code||value;
+        log(name, 'value===', value)
+        const valueId = value ? ('' + (value.id || value.code || value)) : value;
+        //se recorre los items en el select
+        for (let k = 0; k < select.length; k++) {
+          //aquiobjeto_es_igual_a_objeto_yq_q_el_objeto_se_convierte_en_string_al_comparar_con_un_string
+
+          if (select[k].value === valueId) {
+            //log(name, 'select[k].value == value', select[k].value, "===", value, 'v=', v)
+
+            select.selectedIndex = k;
+          }
+        }
+        const children = loaders;
+        for (let j = 0; j < children.length; j++) {
+          if (!children[j].getValueByIndex) continue;
+          //el problema es cuando 
+          let oldSelectedValue = children[j].getValueByIndex(oldSelectedIndex - 1);
+          //se recupera el anterior valor para si detectar si el valor cambio
+
+          children[j].getIndexByValue(value, (index, found) => {
+            if (index > -1) {
+              let object = children[j].getObjectByIndex(index);
+              let a = Number(oldSelectedValue);
+
+              if (!isNaN(a)) {
+                a = a == Number(value);
+              } else if (oldSelectedValue) {
+                if (!value) {
+                  a = false;
+                } else if (value.id) {
+                  a = value.id == oldSelectedValue.id;
+                } else {
+                  a = value == oldSelectedValue;
+                }
+              } else {
+                a = !value;
+              }
+
+              if (prevValue.value != props.modelValue) {
+                log(name, 'select.value', value, 'object=', object)
+                if (props.modelValue) prevValue.value = props.modelValue;
+                if (!a) {
+
+                  log(name, 'select.updateSelect=' + value + ' ' + JSON.stringify(options.value.length));
+
+                  select.selectedIndex = index + 1;
+                  emit("update:modelValue", value, {
+                    value: value,
+                    select,
+                    object
+                  });
+                  nextTick(() => {
+                    emit("input", value, {
+                      value: value,
+                      select,
+                      object
+                    });
+                  });
+                }
+              }
+
+            } else {
+              if (props.modelValue) prevValue.value = props.modelValue;
+              log(name, 'select.updateselect.not fout', index)
+              emit("update:modelValue", null, null);
+              nextTick(() => {
+                emit("input", null, {
+                  value: null
+                });
+              });
+              select.selectedIndex = 0;
+            }
+
+          });
+        }
+      }
+    }
+
+    collect.remove = (loader) => {
+      const filteredArray = loaders.filter(item => item !== loader);
+      loaders.length = 0;
+      filteredArray.forEach(item => loaders.push(item));
+    };
+
+    collect.push = (loader) => {
+      loaders.push(loader);
+    };
+
+    if (valueField) valueField_.value = valueField.split(".");
+    provide('collect', collect)
+    const getValueField = (i, t) => {
+      const vf = valueField_.value;
+      if (vf && vf.length)
+        for (let j = 0; j < vf.length; j++) {
+          if (i) i = i[vf[j]];
+        }
+      else if (i && !t) i = i.id ? i.id : i.code ? i.code : i;
+      return i;
+    };
+
+
+    watch(() => props.modelValue, (newValue, oldValue) => {
+      if (newValue != oldValue) {
+        updateSelect()
+      }
+    });
+
+    watch(() => props.disabled, (newValue, oldValue) => {
+      activate(newValue, oldValue);
+    })
+
+    const activate = (newVal, oldVal) => {
+      newVal = !!newVal;
+      oldVal = !!oldVal;
+      let ll = lastLoad.value;
+      log(name, 'activate.newVal=', newVal, 'oldVal=', oldVal)
+      if (!newVal && (!newVal) === oldVal && ll.length) {
+        //this.$el.disabled = false;
+        load(ll[0], ll[1]);
+      }
+    }
+
+    const load = (params, b) => {
+      
+      if (!props.disabled) {//} && !readonly) {
+        lastLoad.value = [];
+        loaders.forEach((loader) => {
+          loader(params, b);
+        });
+      } else {
+        log(name, 'select.load.params=', params);
+        //tiene q aplicarse el filtro al data existente
+        lastLoad.value = [params, b];
+        loaders.forEach((loader) => {
+          loader(params, b);
+        });
+      }
+    };
+
+    onMounted(() => {
+      if (autoload_.value)
+        load();
+    });
+
+    return { options, getValueField, onChange, selectRef, load, lastLoad, autoload_ }
+  },
   props: {
+    modelValue: null,
     required: null,
     readonly: null,
     multiple: null,
     label: null,
+    name: null,
     disabled: null,
     autoload: null,
+    valueField: null
   },
   data() {
     return {
       autoload_: true,
       ik: 0,
-      lastLoad: null,
       data: [],
       popup: null,
       show: false,
       sel: [],
       sela: null,
+      tmp: [],
+      sel2: []
     };
   },
-  created() {
-    var me = this;
-    me.autoload_ = !(me.autoload + "" == "false" || me.autoload * 1 == 0);
-  },
-  mounted() {
-    this.internalLoad();
-    this.updateSelect();
-  },
   watch: {
-    //value: function(newVal/*, oldVal*/) {console.log('newv='+newVal)},
-    disabled(newVal) {
-      var ll = this.lastLoad,
-        me = this;
-      if (!newVal && ll) {
-        this.$el.disabled = false;
-        setTimeout(function () {
-          me.load(ll[0], ll[1]);
-        }, 50);
-      }
-    },
-    readonly(newVal) {
-      let ll = this.lastLoad,
-        me = this;
-      if (!newVal && ll) {
-        this.$el.disabled = false;
-        setTimeout(() => {
-          me.load(ll[0], ll[1]);
-        }, 50);
-      }
-    },
-    show(s) {
-      if (s) {
-        var cn = this.$el.childNodes[1];
-        if (!this.popup) {
-          this.popup = this.$el.childNodes[2];
-          this.popup.style.position = "absolute";
-          this.popup.style.backgroundColor = "white";
-          document.body.append(this.popup);
-        }
-        var rect = cn.getBoundingClientRect();
-        this.popup.style.top = rect.bottom + 0 + "px";
-        this.popup.style.left = rect.left + 0 + "px";
-      } else {
-        if (this.$parent.load) this.$parent.load();
-      }
-    },
-  },
-  updated() {
-    this.updateSelect();
-  },
-  methods: {
-    expand(){console.log('click')},
-    updateSelect() {
-      var me = this;
-      var v = me.$attrs.value;
-      //console.log(typeof v);
-      if (v != null && v.target) v = v.value;
-      //console.log(v);
-      //console.log('updated.'+me.$el.id+'='+JSON.stringify(v));
-      var select = me.$el.childNodes[0];
-      var old = select.selectedIndex;
-      //Si el valor es vacio se debe escoger 0
-      if (!v || v === "") {
-        select.selectedIndex = 0;
-      }
-      for (var k = 0; k < select.length; k++) {
-        if (select[k].value == v) {
-          select.selectedIndex = k;
-        }
-      }
-      //Se busca en cada options
-      for (var j = 0; j < me.$children.length; j++) {
-        if (!me.$children[j].getValueByIndex) continue;
-        var oldv = me.$children[j].getValueByIndex(old - 1);
-        //se recupera el anterior valor para si detectar si el valor cambio
-        me.$children[j].getIndexByValue(v, function (ii, found) {
-          if (ii > -1) {
-            select.selectedIndex = ii + 1;
-            var ffound = me.$children[j].getValueByIndex(
-              select.selectedIndex - 1
-            );
-            if (ffound == -1) {
-              ffound = null;
-            } else {
-              ffound = me.$children[j].filterList[select.selectedIndex - 1];
-            }
-            /*if(me.$el.id){
-						for(k=0;k<select.length;k++){
-							console.log(k+'--'+select[k].value);
-						}
-						console.log('select.length.'+me.$el.id+'='+select.length);
-						console.log('select.selectedIndex .'+me.$el.id+'='+select.selectedIndex);
-						}*/
-            var a = Number(oldv);
-            if (!isNaN(a)) {
-              a = a == Number(v);
-            } else if (oldv) {
-              if (!v) {
-                a = false;
-              } else if (v.id) {
-                a = v.id == oldv.id;
-              } else a = v == oldv;
-            } else {
-              a = !v;
-            }
-            if (!a) {
-              if (me.$el.id) {
-                console.log(
-                  "emit input ." + me.$el.id + "=" + JSON.stringify(v)
-                );
-                console.log("ffound=", ffound);
-              }
-              me.$emit("input", v, {
-                value: v,
-                select: select,
-                option: select[select.selectedIndex],
-                target: me,
-                object: ffound,
-              });
-            }
-          }
-        });
-      }
-    },
-    internalLoad() {
-      var me = this;
-      me.autoload_ = !(me.autoload + "" == "false" || me.autoload * 1 == 0);
-      let v = me.$attrs.value;
-      if (v != null && v.target) v = v.value;
-      //console.log(v);
-      var select = me.$el.childNodes[0];
-      if (!v || v === "") {
-        select.selectedIndex = 0;
-      }
-      v = me.$attrs.value;
-      for (let k = 0; k < select.length; k++) {
-        if (select[k].value == v) {
-          select.selectedIndex = k;
-        }
-      }
-      //console.log('me.autoload_='+me.autoload_);
-      if (me.autoload_){
-        me.load();
-      }
-      me.$emit("mounted", me);
-      me.$on("changed", function (m) {
-        let op = m.querySelectorAll("option"),
-          d = [];
-        for (let j = 0; op.length > j; j++) {
-          d.push({ value: op[j].value, label: op[j].textContent });
-        }
-        me.data = d;
-        //console.log(d);
-      });
-    },
-    load(a, b) {
-      let me = this;
-      me.$children.forEach(child => {
-        if (child.load) {
-          child.load(a, b);
-        }
-      });
-      if (!me.disabled && !me.readonly) {
-        //console.log(this.$el.name+' loading with value='+me.$attrs.value);
 
-        me.lastLoad = null;
+    show(s) {
+      let me = this;
+      if (s) {
+        let cn = this.$refs.button, popup = this.popup;
+        if (!popup) {
+          popup = this.$refs.popup;
+          popup.style.position = "absolute";
+          document.body.append(popup);
+        }
+        let rect = cn.getBoundingClientRect();
+        const body = popup.children[0];
+        if (window.innerWidth < 400) {
+          popup.style.padding = "40px";
+          popup.style.height = "100%";
+          body.style.height = "100%";
+        } else {
+          popup.style.top = rect.bottom + 0 + "px";
+          popup.style.left = rect.left + 0 + "px";
+          popup.style.maxHeight = (window.innerHeight - rect.bottom - 30) + 'px'
+          body.style.maxHeight = popup.style.maxHeight;
+        }
+        body.style.display = 'flex';
+        body.style.flexDirection = 'column';
+        me.tmp = me.sel.sort().join(',');
       } else {
-        //                console.log(this.$el.name+' is disabled');
-        me.lastLoad = [a, b];
+        let d = me.sel, t = me.$el.parentNode.tagName;
+        if (t != 'TH' && d && d.length) d = d.join(',');
+        else if (d && d.length == 0) d = null;
+        if (me.tmp !== me.sel.sort().join(','))
+          if (me.$parent.load) {
+            me.$parent.load();
+          } else {
+            //me.$emit('input', d);
+          }
       }
     },
+  }
+  /*methods: {
+    expand() { console.log('click') },
     toggle() {
       this.show = !this.show;
     },
+    close() {
+      this.show = false;
+    },
     selectAll() {
-      var ee = [];
-      for (var j = 0; j < this.data.length; j++) {
+      let ee = [];
+      for (let j = 0; j < this.data.length; j++) {
         ee.push(this.data[j].value);
       }
       this.sel = ee;
@@ -248,43 +333,10 @@ export default {
       this.ik++;
     },
     checkboxInput() {
-      var d = this.sel;
+      let d = this.sel;
       if (d && d.length) d = d.join(",");
-      this.$emit("input", d);
+      //this.$emit("input", d);
     },
-    onChange(value) {
-      var me = this;
-      //console.log(me.$el.id+'.onchange='+JSON.stringify(value));
-      //console.log(me.$el.id+'.onchange='+JSON.stringify(value));
-      var select = this.$el.childNodes[0];
-      if (!value || value === "") {
-        value = null;
-        select.selectedIndex = 0;
-      }
-      var found = 0,
-        oo;
-      for (var i = 0; i < me.$children.length; i++) {
-        found = me.$children[i].getValueByIndex(select.selectedIndex - 1);
-        if (found == -1) {
-          found = 0;
-        } else {
-          oo = me.$children[i].filterList[select.selectedIndex - 1];
-          break;
-        }
-      }
-      if (found) {
-        value = found;
-      } else if (me.$children.length) {
-        select.selectedIndex = 0;
-      }
-      me.$emit("input", value, {
-        value: value,
-        select: select,
-        option: select[select.selectedIndex],
-        target: me,
-        object: oo,
-      });
-    },
-  },
+  },*/
 };
 </script>
