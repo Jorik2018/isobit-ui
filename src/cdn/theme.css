@@ -2212,7 +2212,13 @@ legend, .v-fieldset > legend {
 		margin: 0 auto;
 	}
 }
+.v-msgbox {
+	position: relative;
+}
 @media (min-width: 700px) {
+	.v-msgbox {
+		margin: 0px auto 20%;
+	}
 	.v-js-close{
 		font-size: 21px;
 	}
@@ -2291,6 +2297,7 @@ legend, .v-fieldset > legend {
 	.no-padding[role="gridcell"]:not(th) {
 		padding: 0px !important;
 	}
+
 }
 @media (max-width: 600px) {
 	.ui-panelgrid .ui-grid-responsive .ui-grid-row {

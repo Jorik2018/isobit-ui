@@ -491,8 +491,6 @@ export const MsgBox = (m, cb?, b?) => {
 	overlay.style.visibility = "unset";
 	overlay.style.opacity = "unset";
 	overlay.style.overflow = "auto";
-	dialog.style.margin = "0px auto 50%";
-	dialog.style.position = "unset";
 	let nid = 'v_' + 0;// _.id();
 
 	let acl = dialog.querySelector('.v-js-close');
