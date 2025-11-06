@@ -773,7 +773,7 @@ export const ui = (cfg) => {
 							top: 0,
 							behavior: 'smooth'
 						});
-					}else{¿
+					}else{
 						p.querySelector('form > .v-form')!.scroll({
 							top: 0,
 							behavior: 'smooth'
