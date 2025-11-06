@@ -2317,6 +2317,9 @@ legend, .v-fieldset > legend {
 	}
 }
 @media (max-width: 700px) {
+	.v-msgbox {
+		margin: 0px auto 50%;
+	}
     .aaa > div {
         padding-left: 0px !important;
         width: 100% !important;
