@@ -14,7 +14,7 @@
     "dev": "vue serve v-video-player.vue",
     "eslint": "eslint",
     "build2": "bili --name index --plugin vue --vue.css false",
-    "patch": "pnpm version patch & git add . & git commit -m \"x\" & git push & pnpm build &  pnpm publish"
+    "patch": "pnpm version patch & git add . & git commit -m \"x\" & git push &  pnpm publish"
   },
   "author": "",
   "license": "ISC",
