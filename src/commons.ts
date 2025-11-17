@@ -604,7 +604,7 @@ export const configureAxios = (a) => {
 	});
 }
 
-export const pad = (num, size: number) => {
+export const pad = (num:number, size: number) => {
 	if (num != null) {
 		let s = (1 * num) + "";
 		while (s.length < size)
@@ -616,8 +616,6 @@ export const pad = (num, size: number) => {
 export const clean = (obj: any) => {
 	// Create a shallow copy of the object to avoid mutating the original object
 	const newObj = { ...obj };
-
-	// Iterate over the properties of the copied object
 	for (let propName in newObj) {
 		// Check for properties that are empty string, null, function, or undefined
 		if (

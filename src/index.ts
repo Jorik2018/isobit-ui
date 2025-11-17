@@ -561,10 +561,10 @@ export const ui = (cfg) => {
 				  .then(result => console.log(result))
 				  .catch(error => console.log('error', error))
 				*/
-				let a = ("" + o) ? axios.post(url, o, {
+				let a = ("" + o) ? app.axios.post(url, o, {
 					responseType: 'blob'
 				}) :
-					axios({
+					app.axios({
 						method: "post",
 						url: url,
 						data: o,
