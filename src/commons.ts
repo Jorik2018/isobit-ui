@@ -694,6 +694,7 @@ export const initDB = (version, stores) => {
 						// Eliminar la base de datos si la versión nueva es mayor
 						const deleteRequest = db.deleteDatabase('db');
 						deleteRequest.onsuccess = () => {
+							sessionStorage.removeItem('loadedStores');
 
 							let request = db.open("db", version);
 							request.onupgradeneeded = (event: any) => {
