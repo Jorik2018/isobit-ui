@@ -267,7 +267,7 @@ export default {
         })
         load.rowSelectedCount = rowSelectedCount;
         load.src = src;
-        load.getForm = formCollector.get;
+        if(formCollector)load.getForm = formCollector.get;
         load.rowKey = rowKey;
         load.rowSelect = rowSelect;
         const j_is = (el) => {
@@ -389,10 +389,7 @@ export default {
                     className: 'v-datatable-scrollable-body', style: 'overflow-y: auto; flex:1',
                     onScroll(e) {
                         const horizontal = e.currentTarget.scrollLeft;
-
                         shb.el.style.transform = "translateX(-" + horizontal + "px)";
-                        //shb.el.style.left = "-" + horizontal + "px";
-                        //t[0].style.left = "-" + horizontal + "px";
                     }
                 }, [
                     h('table', { className: 'v-table', style: { width: `${tableWidth}px` } }, [
