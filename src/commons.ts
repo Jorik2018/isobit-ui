@@ -441,7 +441,153 @@ export const mask = (ms, cfg) => {
 	return p;
 };
 
-export const MsgBox = (m, cb?, b?) => {
+type MsgBoxOptions = {
+  buttons?: string[]
+  onClose?: (index: number | null) => boolean | void
+  closeOnEsc?: boolean
+  closeOnOutsideClick?: boolean
+  fade?: boolean
+}
+
+function normalizeArgs(arg2, arg3) {
+
+    let options:MsgBoxOptions = {
+        buttons: ['OK'],
+        closeOnEsc: true,
+        closeOnOutsideClick: false,
+        fade: true
+    };
+
+    if (!arg2) return options;
+
+    // arg2 es función → modo antiguo
+    if (typeof arg2 === "function") {
+        options.onClose = arg2;
+        if (Array.isArray(arg3)) options.buttons = arg3;
+        return options;
+    }
+
+    // arg2 es array → buttons
+    if (Array.isArray(arg2)) {
+        options.buttons = arg2;
+        return options;
+    }
+
+    // arg2 es objeto → nueva config
+    if (typeof arg2 === "object") {
+        return { ...options, ...arg2 };
+    }
+
+    return options;
+}
+
+export const MsgBox = (content:Element|string, 
+	arg2:((index: number | null) => boolean | void)|MsgBoxOptions, 
+	arg3) => {
+
+    const config = normalizeArgs(arg2, arg3);
+
+    const overlay = document.createElement("div");
+    overlay.className = "v-overlay";
+    overlay.style.zIndex = "2000";
+    overlay.style.opacity = "0";
+    overlay.style.transition = "opacity 0.2s ease";
+
+    const dialog = document.createElement("div");
+    dialog.className = "v-dialog v-msgbox";
+    dialog.style.opacity = "0";
+    dialog.style.transform = "scale(0.95)";
+    dialog.style.transition = "all 0.2s ease";
+
+    const dialogBody = document.createElement("div");
+    dialogBody.className = "v-dialog-content v-widget-content";
+
+    const buttonContainer = document.createElement("div");
+    buttonContainer.className = "v-msgbox-buttons";
+
+    let contentNode;
+    let originalParent = null;
+    let originalNextSibling = null;
+
+    if (content instanceof Element) {
+        contentNode = content;
+        originalParent = content.parentNode;
+        originalNextSibling = content.nextSibling;
+    } else {
+        contentNode = document.createElement("div");
+        contentNode.innerHTML = content;
+    }
+
+    dialogBody.appendChild(contentNode);
+
+    const closeDialog = (index = null) => {
+
+        let result;
+        if (config.onClose)
+            result = config.onClose(index);
+
+        if (result === false) return;
+
+        if (originalParent) {
+            if (originalNextSibling)
+                originalParent.insertBefore(contentNode, originalNextSibling);
+            else
+                originalParent.appendChild(contentNode);
+        }
+
+        if (config.fade) {
+            overlay.style.opacity = "0";
+            dialog.style.opacity = "0";
+            dialog.style.transform = "scale(0.95)";
+            setTimeout(() => overlay.remove(), 200);
+        } else {
+            overlay.remove();
+        }
+
+        document.removeEventListener("keydown", escHandler);
+    };
+
+    // botones
+    config.buttons.forEach((label:string, i:number) => {
+        const btn = document.createElement("button");
+        btn.textContent = label;
+        btn.className = "v-button ui-widget ui-state-default ui-corner-all";
+        btn.addEventListener("click", () => closeDialog(i));
+        buttonContainer.appendChild(btn);
+    });
+
+    dialogBody.appendChild(buttonContainer);
+    dialog.appendChild(dialogBody);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    // fade in
+    if (config.fade) {
+        requestAnimationFrame(() => {
+            overlay.style.opacity = "1";
+            dialog.style.opacity = "1";
+            dialog.style.transform = "scale(1)";
+        });
+    }
+
+    // ESC
+    const escHandler = (e) => {
+        if (config.closeOnEsc && e.key === "Escape")
+            closeDialog(null);
+    };
+    document.addEventListener("keydown", escHandler);
+
+    // click fuera
+    if (config.closeOnOutsideClick) {
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay)
+                closeDialog(null);
+        });
+    }
+
+};
+
+export const MsgBox0 = (m /**content (text|Element) */, cb? /*callback*/ , b? /**buttons */) => {
 	if (!b) b = ['OK'];
 	//si el elemento debe cargarse en un dialog
 	if (!document.body) return;
