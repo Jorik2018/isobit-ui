@@ -465,13 +465,15 @@ export const MsgBox = (m, cb?, b?) => {
 	dialog.setAttribute("path", _.currentPath);
 	//dialog.setAttribute("callback", nid);
 	let closeListener = function () {
-		dialog.style.display = "none";
-		overlay.style.display = "none";
-
-		dialog.parentNode.removeChild(dialog);
-		overlay.parentNode.removeChild(overlay);
+		let bb;
 		if (cb) {
-			cb(this.getAttribute("index"));
+			bb = cb(this.getAttribute("index"));
+		}
+		if(bb!==false){
+			dialog.style.display = "none";
+			overlay.style.display = "none";
+			dialog.parentNode.removeChild(dialog);
+			overlay.parentNode.removeChild(overlay);
 		}
 	};
 	for (let i = 0; i < b.length; i++) {
