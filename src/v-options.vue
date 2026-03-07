@@ -1,5 +1,15 @@
+<template>
+  <option v-for="(item, i) in filterList" :key="i"
+    :value="vf ? getValueField(item) : (item.id || item.code || JSON.stringify(item))">
+    <slot :item="item">
+      {{ df ? item[df] : item }}
+    </slot>
+  </option>
+</template>
 <script>
-import axios from "axios";
+
+import { useAppStore } from './useAppStore';
+
 import {
   inject, ref, onUnmounted, h, onMounted, computed, watch,
   onUpdated
@@ -9,7 +19,8 @@ import { mergeDeep, getStoredList, log } from "./commons";
 export default ({
   setup(props, cxt) {
     const me = props;
-    const { valueField, displayField, store, filter, name } = me;
+    const { valueField, displayField, store, filter, name, src } = me;
+    const app = useAppStore();
     const { expose, emit } = cxt;
     const queue = ref([]);
     const data2 = ref([]);
@@ -48,14 +59,16 @@ export default ({
       return -1;
     }
 
-    const getValueField = (i, t) => {
+    const getValueField = (value, t) => {
       const vf = valueField_.value;
-      if (vf && vf.length)
+      if (vf && vf.length) {
         for (let j = 0; j < vf.length; j++) {
-          if (i) i = i[vf[j]];
+          if (value) value = value[vf[j]];
         }
-      else if (i && !t) i = i.id ? i.id : i.code ? i.code : i; //es necesario que el elemento tenga la propiedad id
-      return i;
+      } else if (value && !t) {
+        value = value.id ? value.id : value.code ? value.code : value;//es necesario que el elemento tenga la propiedad id
+      }
+      return value;
     }
 
     const getValueByIndex = (i) => {
@@ -80,11 +93,11 @@ export default ({
         if (key) {
           let itemTmp;
           try {
-            const l = (storedList.filter((item) => {
+            const filteredData = (storedList.filter((item) => {
               itemTmp = item;
               return itemTmp[key].startsWith(params[key]);
             }));
-            data2.value = l;
+            data2.value = filteredData;
             //console.log('load4', params, data2.value);
           } catch (e) {
             log(name, "options.error trying to filter ", itemTmp);
@@ -94,27 +107,21 @@ export default ({
           data2.value = data2.value.concat(storedList);
         }
       }
-      if (false && (me.url || me.src)) {// && !pa.disabled) {
-        if (!data2.value) data2.value = [];
+      if (src) {// && !pa.disabled) {
         if (me.filters) params = mergeDeep(params ? params : {}, me.filters);
         //console.log(pa.name+'.options.load '+JSON.stringify(p));
-        await axios.get('' + (me.url ? me.url : me.src), { params: params })
-          .then((r) => {
-            let data = r.data.data ? r.data.data : r.data;
-            //me.$emit("loaded", { target: me, data: data });
+        await app.axios.get(src, { params })
+          .then((response) => {
+            let data = response.data.data ? response.data.data : response.data;
+            emit("loaded", { target: me, data: data });
             data2.value = data2.value.concat(data);
-
             collect(data2)
             loaded.value = 1;
             //if (me.store) localstore.setItem(me.store, JSON.stringify(data));
             //console.log('me.$parent.$forceUpdate()');
             if (nou) nou();
           })
-          .catch(() => {
-            //r = r.response;
-            //let e = me.$parent.$el;
-            //let error = document.createElement("div");
-          });
+          .catch(me.error);
       }
       collect(filterList)
       if (!clearQueue) queue.value.shift();
@@ -143,20 +150,11 @@ export default ({
       collect.remove(load);
     });
     expose({ load })
-    return () => {
-      /*<option v-for="(item, i) in filterList" :key="i" v-bind:value="getValueField(item)">
-          {{ item[displayField] }}
-          <slot v-bind:item="item"></slot>
-        </option>*/
-
-      return filterList.value.map((item) => {
-        const display=df?item[df]:item;
-        if (!vf) {
-          return h('option', { value: item.id||item.code||JSON.stringify(item) }, display);
-        } else {
-          return h('option', { value: getValueField(item) }, display);
-        }
-      })
+    return {
+      filterList,
+      getValueField,
+      vf,
+      df
     }
   },
   name: 'VOptions',

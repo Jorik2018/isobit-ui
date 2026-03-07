@@ -190,10 +190,7 @@ export default {
                 kc.value++;
             }
             if (src) {
-
                 let s = src;
-                if (!s)//esto deberia darse si 
-                    return;
                 //s = me.$root.apiLink(window.location.pathname);
                 if (s.endsWith("/"))
                     s = s.slice(0, s.length - 1);
