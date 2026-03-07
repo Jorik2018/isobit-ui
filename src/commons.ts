@@ -524,7 +524,7 @@ export const MsgBox = (content:Element|string,
 
         let result;
         if (config.onClose)
-            result = config.onClose(index);
+            result = await config.onClose(index);
 
         if (result === false) return;
 
