@@ -520,7 +520,7 @@ export const MsgBox = (content:Element|string,
 
     dialogBody.appendChild(contentNode);
 
-    const closeDialog = (index = null) => {
+    const closeDialog = async (index = null) => {
 
         let result;
         if (config.onClose)
