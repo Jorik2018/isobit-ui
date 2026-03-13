@@ -1121,7 +1121,7 @@ export const ui = (cfg) => {
 				listeners.push({ name, fn });
 			}
 
-			let q = customSetup ? customSetup({ ...props, $on, router, getStoredList, app, save }, ctx) : {};
+			let q = customSetup ? customSetup({ ...props, $on, router, getStoredList, app, save, open }, ctx) : {};
 			ctx.expose({ router })
 			let res = {
 				app, cleanedFilters,
