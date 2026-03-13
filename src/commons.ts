@@ -548,17 +548,20 @@ export const MsgBox = (content:Element|string,
     };
 
     // botones
-    config.buttons.forEach((label:string, i:number) => {
-        const btn = document.createElement("button");
-        btn.textContent = label;
-        btn.className = "v-button ui-widget ui-state-default ui-corner-all";
-        btn.addEventListener("click", () => closeDialog(i));
-        buttonContainer.appendChild(btn);
-    });
+	if(config.buttons.length){
+		config.buttons.forEach((label:string, i:number) => {
+			const btn = document.createElement("button");
+			btn.textContent = label;
+			btn.className = "v-button ui-widget ui-state-default ui-corner-all";
+			btn.addEventListener("click", () => closeDialog(i));
+			buttonContainer.appendChild(btn);
+		});
+		dialogBody.appendChild(buttonContainer);
+	}
 
-    dialogBody.appendChild(buttonContainer);
     dialog.appendChild(dialogBody);
     overlay.appendChild(dialog);
+	(overlay as any).closeDialog = closeDialog;
     document.body.appendChild(overlay);
 
     // fade in

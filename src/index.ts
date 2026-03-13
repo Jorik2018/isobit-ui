@@ -595,9 +595,15 @@ export const ui = (cfg) => {
 				});
 			}
 
-			const save = () => {
-				let view = views.filter(view => view.type == 'v-form')[0]
-				console.log(view)
+			const save = (e) => {
+				const form = e?.target?.closest('form');
+				const overlay = form?.closest('.v-msgbox')?.closest('.v-overlay');
+				let view = views
+					.filter(v => v.type === 'v-form')
+					.find(v => v.$el?.children?.[0] === form);
+				if (!view) {
+					view = views.find(v => v.type === 'v-form')
+				}
 				const component = ci.proxy;
 				view.$forceUpdate();
 				let p = view.$el;
@@ -682,7 +688,6 @@ export const ui = (cfg) => {
 									}
 									me.$emit('stored', o, storedList, objectStore);
 									if (me.$ionic) app.toast('El registro fue grabado exitosamente! onstored');
-									console.log("============2", component);
 									component.close({ success: true, data: o });
 								};
 								item.onerror = function () {
@@ -724,11 +729,13 @@ export const ui = (cfg) => {
 							if (app && app.toast)
 								app.toast('El registro fue grabado exitosamente!', () => {
 									component.close({ success: true, data: data });
+									overlay?.closeDialog?.(1);
 								});
 							else {
 								MsgBox('El registro fue grabado exitosamente! msg', () => {
 									//component
 									close({ success: true, data: data });
+									overlay?.closeDialog?.(1);
 								});
 							}
 						}).catch(function (r) {
@@ -773,7 +780,7 @@ export const ui = (cfg) => {
 							top: 0,
 							behavior: 'smooth'
 						});
-					}else{
+					} else {
 						p.querySelector('form > .v-form')!.scroll({
 							top: 0,
 							behavior: 'smooth'
@@ -782,7 +789,7 @@ export const ui = (cfg) => {
 				}
 			}
 
-			const showerror = (e:any, m?:string) => {
+			const showerror = (e: any, m?: string) => {
 				if (e.$el) e = e.$el;
 				removeError(e)
 				let previousElementSibling = e.previousElementSibling;
