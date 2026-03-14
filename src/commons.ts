@@ -441,222 +441,197 @@ export const mask = (ms, cfg) => {
 	return p;
 };
 
+type MsgBoxButton = {
+	label: string
+	icon?: string
+}
+
 type MsgBoxOptions = {
-  buttons?: string[]
-  onClose?: (index: number | null) => boolean | void
-  closeOnEsc?: boolean
-  closeOnOutsideClick?: boolean
-  fade?: boolean
+	buttons?: MsgBoxButton[]
+	onClose?: (index: number | null) => boolean | void
+	closeOnEsc?: boolean
+	closeOnOutsideClick?: boolean
+	fade?: boolean
 }
 
-function normalizeArgs(arg2, arg3) {
+function normalizeArgs(
+	arg2?: MsgBoxOptions | string[] | MsgBoxButton[] | ((index: number | null) => boolean | void),
+	arg3?: string[] | MsgBoxButton[]
+): MsgBoxOptions {
 
-    let options:MsgBoxOptions = {
-        buttons: ['OK'],
-        closeOnEsc: true,
-        closeOnOutsideClick: false,
-        fade: true
-    };
+	const options: MsgBoxOptions = {
+		buttons: [{ label: "OK" }],
+		closeOnEsc: true,
+		closeOnOutsideClick: false,
+		fade: true
+	}
 
-    if (!arg2) return options;
+	if (!arg2) return options
 
-    // arg2 es función → modo antiguo
-    if (typeof arg2 === "function") {
-        options.onClose = arg2;
-        if (Array.isArray(arg3)) options.buttons = arg3;
-        return options;
-    }
+	// arg2 es función → modo antiguo
+	if (typeof arg2 === "function") {
+		options.onClose = arg2
 
-    // arg2 es array → buttons
-    if (Array.isArray(arg2)) {
-        options.buttons = arg2;
-        return options;
-    }
+		if (Array.isArray(arg3)) {
+			options.buttons = normalizeButtons(arg3)
+		}
 
-    // arg2 es objeto → nueva config
-    if (typeof arg2 === "object") {
-        return { ...options, ...arg2 };
-    }
+		return options
+	}
 
-    return options;
+	// arg2 es array → buttons
+	if (Array.isArray(arg2)) {
+		options.buttons = normalizeButtons(arg2)
+		return options
+	}
+
+	// arg2 es objeto → nueva config
+	return {
+		...options,
+		...arg2,
+		buttons: arg2.buttons ? normalizeButtons(arg2.buttons as any) : options.buttons
+	}
 }
 
-export const MsgBox = (content:Element|string, 
-	arg2:((index: number | null) => boolean | void)|MsgBoxOptions, 
+function normalizeButtons(btns: (string | MsgBoxButton)[]): MsgBoxButton[] {
+	return btns.map(b => typeof b === "string" ? { label: b } : b)
+}
+
+export const MsgBox = (content: Element | string,
+	arg2: ((index: number | null) => boolean | void) | MsgBoxOptions,
 	arg3) => {
 
-    const config = normalizeArgs(arg2, arg3);
+	const config = normalizeArgs(arg2, arg3);
 
-    const overlay = document.createElement("div");
-    overlay.className = "v-overlay";
-    overlay.style.zIndex = "2000";
-    overlay.style.opacity = "0";
-    overlay.style.transition = "opacity 0.2s ease";
+	const overlay = document.createElement("div");
+	overlay.className = "v-overlay";
+	overlay.style.zIndex = "2000";
+	overlay.style.opacity = "0";
+	overlay.style.transition = "opacity 0.2s ease";
 
-    const dialog = document.createElement("div");
-    dialog.className = "v-dialog v-msgbox";
-    dialog.style.opacity = "0";
-    dialog.style.transform = "scale(0.95)";
-    dialog.style.transition = "all 0.2s ease";
+	const dialog = document.createElement("div");
+	dialog.className = "v-dialog v-msgbox";
+	dialog.style.opacity = "0";
+	dialog.style.transform = "scale(0.95)";
+	dialog.style.transition = "all 0.2s ease";
 
-    const dialogBody = document.createElement("div");
-    dialogBody.className = "v-dialog-content v-widget-content";
+	const dialogBody = document.createElement("div");
+	dialogBody.className = "v-dialog-content v-widget-content";
 
-    const buttonContainer = document.createElement("div");
-    buttonContainer.className = "v-msgbox-buttons";
+	const buttonContainer = document.createElement("div");
+	buttonContainer.className = "v-msgbox-buttons";
 
-    let contentNode;
-    let originalParent = null;
-    let originalNextSibling = null;
+	let contentNode;
+	let originalParent = null;
+	let originalNextSibling = null;
 
-    if (content instanceof Element) {
-        contentNode = content;
-        originalParent = content.parentNode;
-        originalNextSibling = content.nextSibling;
-    } else {
-        contentNode = document.createElement("div");
-        contentNode.innerHTML = content;
-    }
+	if (content instanceof Element) {
+		contentNode = content;
+		originalParent = content.parentNode;
+		originalNextSibling = content.nextSibling;
+	} else {
+		contentNode = document.createElement("div");
+		contentNode.innerHTML = content;
+	}
 
-    dialogBody.appendChild(contentNode);
+	dialogBody.appendChild(contentNode);
 
-    const closeDialog = async (index = null) => {
+	const closeDialog = async (index = null) => {
 
-        let result;
-        if (config.onClose)
-            result = await config.onClose(index);
+		let result;
+		if (config.onClose)
+			result = await config.onClose(index);
 
-        if (result === false) return;
+		if (result === false) return;
 
-        if (originalParent) {
-            if (originalNextSibling)
-                originalParent.insertBefore(contentNode, originalNextSibling);
-            else
-                originalParent.appendChild(contentNode);
-        }
+		if (originalParent) {
+			if (originalNextSibling)
+				originalParent.insertBefore(contentNode, originalNextSibling);
+			else
+				originalParent.appendChild(contentNode);
+		}
 
-        if (config.fade) {
-            overlay.style.opacity = "0";
-            dialog.style.opacity = "0";
-            dialog.style.transform = "scale(0.95)";
-            setTimeout(() => overlay.remove(), 200);
-        } else {
-            overlay.remove();
-        }
+		if (config.fade) {
+			overlay.style.opacity = "0";
+			dialog.style.opacity = "0";
+			dialog.style.transform = "scale(0.95)";
+			setTimeout(() => overlay.remove(), 200);
+		} else {
+			overlay.remove();
+		}
 
-        document.removeEventListener("keydown", escHandler);
-    };
+		document.removeEventListener("keydown", escHandler);
+	};
 
-    // botones
-	if(config.buttons.length){
-		config.buttons.forEach((label:string, i:number) => {
+	// botones
+	if (config.buttons?.length) {
+		config.buttons.forEach((button:MsgBoxButton, i: number) => {
+
 			const btn = document.createElement("button");
-			btn.textContent = label;
-			btn.className = "v-button ui-widget ui-state-default ui-corner-all";
+			btn.type = "button";
+
+			btn.className =
+				"_ ui-widget ui-state-default ui-corner-all v-button blue v-button-text-icon-left";
+
+			btn.setAttribute("value", button.label);
+			// icono
+			if(button.icon) {
+				btn.setAttribute("icon", button.icon);
+				const icon = document.createElement("i");
+				icon.className = "fa "+button.icon;
+				btn.appendChild(icon);
+			}
+			// texto
+			const span = document.createElement("span");
+			span.textContent = button.label;
+			btn.appendChild(span);
 			btn.addEventListener("click", () => closeDialog(i));
+
 			buttonContainer.appendChild(btn);
 		});
 		dialogBody.appendChild(buttonContainer);
 	}
 
-    dialog.appendChild(dialogBody);
-    overlay.appendChild(dialog);
-	(overlay as any).closeDialog = closeDialog;
-    document.body.appendChild(overlay);
-
-    // fade in
-    if (config.fade) {
-        requestAnimationFrame(() => {
-            overlay.style.opacity = "1";
-            dialog.style.opacity = "1";
-            dialog.style.transform = "scale(1)";
-        });
-    }
-
-    // ESC
-    const escHandler = (e) => {
-        if (config.closeOnEsc && e.key === "Escape")
-            closeDialog(null);
-    };
-    document.addEventListener("keydown", escHandler);
-
-    // click fuera
-    if (config.closeOnOutsideClick) {
-        overlay.addEventListener("click", (e) => {
-            if (e.target === overlay)
-                closeDialog(null);
-        });
-    }
-
-};
-
-export const MsgBox0 = (m /**content (text|Element) */, cb? /*callback*/ , b? /**buttons */) => {
-	if (!b) b = ['OK'];
-	//si el elemento debe cargarse en un dialog
-	if (!document.body) return;
-	let overlay = document.createElement("div");
-	overlay.classList.add("v-overlay");
-	overlay.style.padding = "40px";
-	overlay.style.zIndex = "2000";
-	document.body.appendChild(overlay);
-	let dialog = document.createElement("div");
-	let dialogContent = document.createElement("div");
-	let msgContent = document.createElement("div");
-	let buttons = document.createElement("div");
-
-	buttons.className = "v-msgbox-buttons";
-	dialog.classList.add("v-dialog");
-	dialog.classList.add("v-msgbox");
-	if (m instanceof Element) {
-		msgContent = m;
-	} else
-		msgContent.innerHTML = m;
-	dialog.setAttribute("path", _.currentPath);
-	//dialog.setAttribute("callback", nid);
-	let closeListener = function () {
-		let bb;
-		if (cb) {
-			bb = cb(this.getAttribute("index"));
-		}
-		if(bb!==false){
-			dialog.style.display = "none";
-			overlay.style.display = "none";
-			dialog.parentNode.removeChild(dialog);
-			overlay.parentNode.removeChild(overlay);
-		}
-	};
-	for (let i = 0; i < b.length; i++) {
-		let button = document.createElement("button");
-		button.innerHTML = b[i];
-		button.type = "button";
-		button.setAttribute("index", i);
-		button.className = "v-button ui-widget ui-state-default ui-corner-all";
-		buttons.appendChild(button);
-		button.addEventListener("click", closeListener);
-	}
-	dialogContent.className = "v-dialog-content v-widget-content";
-	dialogContent.appendChild(msgContent);
-	dialogContent.appendChild(buttons);
-	dialog.appendChild(dialogContent);
+	dialog.appendChild(dialogBody);
 	overlay.appendChild(dialog);
-	overlay.style.visibility = "unset";
-	overlay.style.opacity = "unset";
-	overlay.style.overflow = "auto";
-	let nid = 'v_' + 0;// _.id();
+	(overlay as any).closeDialog = closeDialog;
+	document.body.appendChild(overlay);
 
+	// fade in
+	if (config.fade) {
+		requestAnimationFrame(() => {
+			overlay.style.opacity = "1";
+			dialog.style.opacity = "1";
+			dialog.style.transform = "scale(1)";
+		});
+	}
+
+	// ESC
+	const escHandler = (e) => {
+		if (config.closeOnEsc && e.key === "Escape")
+			closeDialog();
+	};
+	document.addEventListener("keydown", escHandler);
+
+	// click fuera
+	if (config.closeOnOutsideClick) {
+		overlay.addEventListener("click", (e) => {
+			if (e.target === overlay)
+				closeDialog(null);
+		});
+	}
 	let acl = dialog.querySelector('.v-js-close');
 	if (!acl) {
 		let span = document.createElement("span");
-		dialog.style.position = "relative";
-		span.style.position = "absolute";
 		span.className = "fa fa-close";
 		acl = document.createElement("a");
 		acl.className = "v-js-close ui-dialog-titlebar-icon ui-dialog-titlebar-close ui-corner-all";
 		acl.appendChild(span);
+		dialog.style.position = "relative";
 		dialog.appendChild(acl);
-		acl.addEventListener("click", closeListener);
+		acl.addEventListener("click", () => closeDialog());
 	}
-}
+};
 
 export const configureAxios = (a) => {
 	if (a.configured) return;
@@ -755,7 +730,7 @@ export const configureAxios = (a) => {
 	});
 }
 
-export const pad = (num:number, size: number) => {
+export const pad = (num: number, size: number) => {
 	if (num != null) {
 		let s = (1 * num) + "";
 		while (s.length < size)
@@ -909,8 +884,8 @@ export const getStoredList = async (storeName, params) => {
 	//console.log(loadedStores);
 	if (!loadedStores[storeName] && networkStatus.connected) {
 
-		const store=_.stores.filter(e => e[0] == storeName);
-		if(!store.length) throw `ERROR: store '${storeName}' no exists!`;
+		const store = _.stores.filter(e => e[0] == storeName);
+		if (!store.length) throw `ERROR: store '${storeName}' no exists!`;
 		let e = store[0];
 		const { src } = e[1];
 

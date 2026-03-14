@@ -926,12 +926,6 @@ p li {
 .title {
 	font-size: 30px !important;
 }
-.ui-panel .v-panel-titlebar {
-	padding: 5px !important;
-	background: black;
-	color: white;
-	text-shadow: unset;
-}
 .bold * {
 	font-weight: bold;
 }
@@ -1908,7 +1902,7 @@ button.v-filter {
 	padding-left: 0px;
 }
 .v-menu-main .v-panel-titlebar {
-	background-color: black !important;
+	background-color: black;
 	-webkit-border-radius: 0px;
 	border-radius: 0px;
 }
@@ -2033,13 +2027,6 @@ input {
 .v-dialog-content > form > center > button {
 	margin-bottom: 10px;
 }
-.v-panel-titlebar {
-	background: none;
-	background-color: #0f62ac !important;
-	text-shadow: none;
-	color: white;
-	border-color: #104a7d;
-}
 .v-ol-overlay {
 	color: black;
 	transition: opacity 1000ms ease-in-out;
@@ -2059,7 +2046,7 @@ input {
 }
 .v-ol-overlay .v-panel-titlebar {
 	border-radius: 4px 4px 0px 0px;
-	background-color: #0f62ac !important;
+	background-color: #0f62ac;
 	color: white;
 }
 .v-calendar > input {
@@ -2188,16 +2175,19 @@ legend, .v-fieldset > legend {
 	border: 1px solid white;
     border-radius: 50%;
     padding: 4px 7px;
-    top: -16px;
-    right: -15px;
     position: absolute;
     height: 32px;
     background-color: #000000;
     color: #ffffff;
+	cursor: pointer;
     width: 32px;
+    top: 0;
+    right: 0;
+    transform: translate(50%, -50%);
+	display: flex;
+    align-items: center;
+    justify-content: center;
 }
-
-
 .v-mask{
 	-opacity: 0.4;
 	-filter: alpha(opacity=40);
@@ -3054,14 +3044,6 @@ a.pretty-link {
 	width: 100% !important;
 	min-width: 0px !important;
 }
-.x-dialog .ui-panel-content,.v-dialog .ui-panel-content {
-	padding: 10px;
-}
-.x-dialog .v-widget-header,.v-dialog .v-widget-header {
-	background: #0f62ac;
-	color: white;
-	text-shadow: unset;
-}
 .v-widget-header {
 	font-weight: bold;
 	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -3086,21 +3068,16 @@ a.pretty-link {
 	margin: 0px 16px 0px 0px !important;
 	font-weight: bolder;
 }
-.v-widget-header > .v-panel-title {
-	background-size: 20px !important;
-	padding-left: 25px !important;
-	background: url(/fs/images/favicon.png) no-repeat scroll 0 0 transparent;
-}
 .v-dialog-title, form > div > div > .v-panel-title {
 	padding-left: 25px !important;
 	background-color: transparent;
 	background-size: 20px;
 }
-.x-dialog .v-panel-title, .v-dialog .v-panel-title {
+.v-widget-header > .v-panel-title {
 	background-size: 20px !important;
+	padding-left: 25px;
 	background: url(/fs/images/favicon.png) no-repeat scroll 0 0 transparent;
 	display: block;
-	padding-left: 25px;
 	margin-right: 15px;
 	margin: 0px 16px 0px 0px !important;
 }
@@ -3467,7 +3444,13 @@ select:not([disabled]){
 		background-color: #f0f0f0;
 	}
 }
-
+.v-panel-titlebar {
+	padding: 5px;
+	color: white;
+	text-shadow: unset;
+	background: #0f62ac;
+	border-color: #104a7d;
+}
 @media (prefers-color-scheme: dark) {
 	input:empty[aria-required='true'], 
 	textarea:empty[aria-required='true'], 
