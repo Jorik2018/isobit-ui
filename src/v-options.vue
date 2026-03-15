@@ -95,12 +95,12 @@ export default ({
           try {
             const filteredData = (storedList.filter((item) => {
               itemTmp = item;
-              return itemTmp[key].startsWith(params[key]);
+              return itemTmp[key]?.startsWith(params[key]);
             }));
             data2.value = filteredData;
             //console.log('load4', params, data2.value);
           } catch (e) {
-            log(name, "options.error trying to filter ", itemTmp);
+            log(name, "options.error trying to filter ", itemTmp, "key", key);
             console.error(e);
           }
         } else {
