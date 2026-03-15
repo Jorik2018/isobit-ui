@@ -88,23 +88,15 @@ export default ({
       //let pa = me.$el.parentElement;
       data2.value = [];
       if (store) {
-        let storedList = await getStoredList(store, params);
-        const [key] = params ? Object.keys(params) : [];
-        if (key) {
-          let itemTmp;
-          try {
-            const filteredData = (storedList.filter((item) => {
-              itemTmp = item;
-              return itemTmp[key]?.startsWith(params[key]);
-            }));
-            data2.value = filteredData;
-            //console.log('load4', params, data2.value);
-          } catch (e) {
-            log(name, "options.error trying to filter ", itemTmp, "key", key);
-            console.error(e);
-          }
+        const storedList = await getStoredList(store, params);
+        if (params && Object.keys(params).length) {
+          data2.value = storedList.filter(item =>
+            Object.entries(params).every(([k, v]) =>
+              String(item[k] ?? '').startsWith(v)
+            )
+          );
         } else {
-          data2.value = data2.value.concat(storedList);
+          data2.value.push(...storedList);
         }
       }
       if (src) {// && !pa.disabled) {
