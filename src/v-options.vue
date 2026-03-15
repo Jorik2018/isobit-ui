@@ -85,10 +85,13 @@ export default ({
     const load = async (params = null, nou = null, clearQueue = false) => {
       if (!clearQueue && nou && params) queue.value.push([params, nou]);
       if (queue.value.length > 1) return;
+      
       //let pa = me.$el.parentElement;
       data2.value = [];
       if (store) {
+        
         const storedList = await getStoredList(store, params);
+        console.log(store, params)
         if (params && Object.keys(params).length) {
           data2.value = storedList.filter(item =>
             Object.entries(params).every(([k, v]) =>

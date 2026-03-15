@@ -888,10 +888,8 @@ export const getStoredList = async (storeName, params) => {
 		if (!store.length) throw `ERROR: store '${storeName}' no exists!`;
 		let e = store[0];
 		const { src } = e[1];
-
-		//console.log(e);
 		if (!src) throw `ERROR: Url for store '${e[0]}' is empty!`;
-		let data = src ? await _.axios_get(src) : [];
+		let { data } = await _.axios_get(src);
 		data = data.data || data;
 		await new Promise((resolve, reject) => {
 			let transaction = _db.transaction([e[0]], "readwrite");

@@ -191,8 +191,9 @@ export const ui = (cfg) => {
 				if (!loadedStores[store] && component.connected) {
 					let e = _.stores.filter(e => e[0] == store)[0];
 					//console.log(e);
+
 					if (!e[2]) throw `ERROR: Url for store '${e[0]}' is empty!`;
-					let data = await app.axios.get(e[2]);
+					let { data } = await app.axios.get(e[2]);
 					data = data.data || data;
 					await new Promise((resolve, reject) => {
 						let transaction = db.transaction([e[0]], "readwrite");
