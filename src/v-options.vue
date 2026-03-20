@@ -11,7 +11,7 @@
 import { useAppStore } from './useAppStore';
 
 import {
-  inject, ref, onUnmounted, h, onMounted, computed, watch,
+  inject, ref, onUnmounted, h, onMounted, computed, watch, toRef,
   onUpdated
 } from "vue";
 import { mergeDeep, getStoredList, log } from "./commons";
@@ -19,7 +19,9 @@ import { mergeDeep, getStoredList, log } from "./commons";
 export default ({
   setup(props, cxt) {
     const me = props;
-    const { valueField, displayField, store, filter, name, src } = me;
+    const { valueField, displayField, store, name, src } = me;
+
+    const filterRef = toRef(props, 'filter')
     const app = useAppStore();
     const { expose, emit } = cxt;
     const queue = ref([]);
@@ -32,25 +34,40 @@ export default ({
 
     const filterList = computed(() => {
       const data = (me.data || []).concat(data2.value || [])
-      return filter ? data.filter((el) => {
-        return (
-          JSON.stringify(el)
-            .toLowerCase()
-            .indexOf(filter.toLowerCase()) !== -1
-        );
-      }) : data;
+      const f = filterRef.value
+
+      if (!f) return data
+
+      if (typeof f === 'string') {
+        return data.filter(el =>
+          JSON.stringify(el).toLowerCase().includes(f.toLowerCase())
+        )
+      }
+
+      if (typeof f === 'object') {
+        return data.filter(el =>
+          Object.entries(f).every(([key, value]) => {
+            if (value == null || value === '') return true
+            return String(el[key] ?? '')
+              .toLowerCase()
+              .includes(String(value).toLowerCase())
+          })
+        )
+      }
+
+      return data
     })
 
     watch(filterList, (nv) => {
       //console.log('options.' + name, nv)
     })
 
-    const getIndexByValue = (v, callback) => {
-      if (v && v.id) v = v.id;
-      else if (v && v.code) v = v.code;
+    const getIndexByValue = (value, callback) => {
+      if (value && value.id) value = value.id;
+      else if (value && value.code) value = value.code;
       for (let j = 0; j < filterList.value.length; j++) {
         const o = filterList.value[j];
-        if (getValueField(o) == v) {
+        if (getValueField(o) == value) {
           if (callback) callback(j, o);
           return j;
         }
@@ -85,11 +102,11 @@ export default ({
     const load = async (params = null, nou = null, clearQueue = false) => {
       if (!clearQueue && nou && params) queue.value.push([params, nou]);
       if (queue.value.length > 1) return;
-      
+
       //let pa = me.$el.parentElement;
       data2.value = [];
       if (store) {
-        
+
         const storedList = await getStoredList(store, params);
         console.log(store, params)
         if (params && Object.keys(params).length) {
@@ -104,7 +121,8 @@ export default ({
       }
       if (src) {// && !pa.disabled) {
         if (me.filters) params = mergeDeep(params ? params : {}, me.filters);
-        //console.log(pa.name+'.options.load '+JSON.stringify(p));
+        if (name)
+          console.log(name + '.options.load ', JSON.stringify(params));
         await app.axios.get(src, { params })
           .then((response) => {
             let data = response.data.data ? response.data.data : response.data;
@@ -179,8 +197,8 @@ export default ({
     },
     getSelectedItem() {
       let me = this;
-      let p = me.$el.parentElement;
-      return me.filterList[p.selectedIndex - 1];
+      let parentElement = me.$el.parentElement;
+      return me.filterList[parentElement.selectedIndex - 1];
     }
   },
 });
