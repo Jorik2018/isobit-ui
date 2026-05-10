@@ -1,68 +1,127 @@
 <template>
-	<div v-on:click="other" v-bind:class="onlyicon?'':'v-button ui-widget ui-state-default ui-corner-all'" class="v-uploader" 
-		v-bind:style="{padding:(onlyicon?'0px':'')}">
-		<label style="cursor:pointer" class="">
-			<input v-if="!click" type="file" v-on:change="handleFileUpload()"/>
-			<i class="fa" v-bind:data-icon="icon" v-bind:class="icon?icon:'fa-upload'" v-bind:style="{marginRight:(onlyicon||value=='')?'':'10px'}"></i>{{!onlyicon?(value!=null?value:'Adjuntar Archivo'):''}}
-			<progress v-if="showProgress" max="100" style="width:100%"  v-bind:value.prop="uploadPercentage"></progress>
-		</label>
-	</div>
+  <div
+    class="v-uploader"
+    :class="onlyicon ? '' : 'v-button ui-widget ui-state-default ui-corner-all'"
+    :style="{ padding: onlyicon ? '0px' : '' }"
+    @click="handleClick"
+  >
+    <label style="cursor:pointer">
+      <input
+        v-if="!click"
+        type="file"
+        @change="handleFileUpload"
+      />
+
+      <i
+        class="fa"
+        :class="icon || 'fa-upload'"
+        :data-icon="icon"
+        :style="{ marginRight: (onlyicon || !value) ? '' : '10px' }"
+      />
+
+      {{ !onlyicon ? (value ?? 'Adjuntar Archivo') : '' }}
+
+      <progress
+        v-if="showProgress"
+        max="100"
+        :value="uploadPercentage"
+        style="width: 100%"
+      />
+    </label>
+  </div>
 </template>
-<script>
+
+<script setup>
+import { ref } from 'vue'
 import axios from 'axios'
-export default {
-    name: 'VUploader',
-    props: {
-        value: String,
-        onlyicon:Boolean,
-		click:null,
-        icon:String,
-		domain:String
-    },
-	mounted(){
-		var me=this;
-		setTimeout(function(){
-			me.$el.querySelector('svg').dataset.icon='image'; }, 1000);
-	},
-	updated(){
-		var me=this;
-		setTimeout(function(){me.$el.querySelector('svg').dataset.icon='image'; }, 1000);
-	},
-    data() {
-        return {
-            uploadPercentage: 0,
-            showProgress: false
-        }
-    },
-    methods: {
-		other(){
-			if(this.click)this.click(this);
-		},
-        handleFileUpload() {
-            this.uploadPercentage = 0;
-            this.submitFile(this.$el.children[0].children[0].files[0])
-        },
-        submitFile(f,name) {
-            var me = this;
-            /*let*/ var formData = new FormData();
-			name=name?name:f.name.replace(/[^\w\s.]/gi, '');
-            formData.append('filename', name);
-			formData.append('file', f, name);
-            me.showProgress = true;
-            axios.post((me.domain?me.domain:'')+'/api/file/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                },
-                onUploadProgress: function (progressEvent) {
-                    this.uploadPercentage = parseInt(Math.round((progressEvent.loaded / progressEvent.total) * 100));
-                }.bind(this)
-            }).then(function (r) {
-                me.$emit('input', r.data);
-                me.showProgress = false;
-            }).catch(function () {
-                console.log('FAILURE!!');
-            });
-        }
+
+/**
+ * Props
+ */
+const props = defineProps({
+  value: String,
+  onlyicon: Boolean,
+  click: Function,
+  icon: String,
+  domain: String,
+  dst: String
+})
+
+/**
+ * Emits
+ */
+const emit = defineEmits(['update:value', 'input'])
+
+/**
+ * State
+ */
+const uploadPercentage = ref(0)
+const showProgress = ref(false)
+
+/**
+ * Optional click override
+ */
+function handleClick() {
+  if (props.click) {
+    props.click()
+  }
+}
+
+/**
+ * File handler
+ */
+function handleFileUpload(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  uploadPercentage.value = 0
+  submitFile(file)
+}
+
+/**
+ * Upload logic
+ */
+function submitFile(file, name) {
+  const formData = new FormData()
+
+  name = name || file.name.replace(/[^\w\s.]/gi, '')
+
+  formData.append('filename', name)
+  formData.append('file', file, name)
+
+  if (props.dst) {
+    const fullPath = props.dst.endsWith('\\')
+      ? props.dst + name
+      : props.dst + '\\' + name
+
+    formData.append('dst', fullPath)
+  }
+
+  showProgress.value = true
+
+  axios.post(
+    (props.domain || '') + '/api/file/upload',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (e) => {
+        uploadPercentage.value = Math.round(
+          (e.loaded * 100) / (e.total || 1)
+        )
+      }
     }
+  )
+  .then((r) => {
+    emit('input', r.data)
+    emit('update:value', r.data)
+  })
+  .catch((err) => {
+    console.error('Upload error:', err)
+  })
+  .finally(() => {
+    showProgress.value = false
+  })
 }
 </script>
