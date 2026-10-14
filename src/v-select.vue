@@ -6,23 +6,25 @@
       <slot></slot>
     </select>
     <template v-if="multiple">
-      <div class="v-widget-header" ref="button" style="padding-top: 3px; padding-bottom: 3px"
-        :class="{ 'v-selected': show }" @click="toggle">
+      <div class="v-widget-header v-button v-filter" ref="button" 
+      style="padding-top: 7px; padding-bottom: 7px"
+        :class="{ 'v-selected': show || sel.length }" @click="toggle">
+        <template v-if="sel.length">
+          ({{ sel.length }})
+        </template>
         &nbsp;
       </div>
-      <div v-show="show" ref="popup" @click="close" style="background-color: #0000009c;">
-        <div style="border: 1px solid lightgray;background-color: white; padding:5px;">
-          <div class="_ ui-widget ui-state-default ui-corner-all" style="padding: 3px 3px 1px 3px; margin-bottom: 5px">
-            <v-checkbox v-model="sela" @input="selectAll" />
+      <div v-show="show" ref="popup" class="v-popup">
+        <div>
+          <div>
+            <v-checkbox v-model="sela" @change="selectAll" />
           </div>
-          <v-checkbox-group class="v-select-checkbox-group" style="overflow-y: auto;" :key="'p' + ik" v-model="sel"
+          <v-checkbox-group class="v-select-checkbox-group" style="overflow-y: auto;" v-model="sel"
             @input="checkboxInput">
-            <template v-if="data.length">
-              <div v-for="d in data">
-                <v-checkbox :value="d.value" :label="d.label" />
-              </div>
-            </template></v-checkbox-group>
-          <div class="center" style="padding-top: 4px;"><v-button icon="fa-sync" value="Filtrar"></v-button>
+            <v-checkbox v-for="d in options" :value="d.id" :label="d.name" />
+          </v-checkbox-group>
+          <div class="center"><v-button icon="fa-sync" value="Filtrar"
+              @click="apply"></v-button>
           </div>
         </div>
       </div>
@@ -31,8 +33,8 @@
   </div>
 </template>
 <script>
-import { onMounted, provide, ref, watch, nextTick } from 'vue'
-import { log } from './commons'
+import { onMounted, provide, ref, watch, nextTick, unref } from 'vue'
+import { app, log } from './commons'
 export default {
   name: 'VSelect',
   setup(props, ctx) {
@@ -45,13 +47,43 @@ export default {
     const loaders = [];
     const autoload_ = ref(!(autoload + "" == "false" || autoload * 1 == 0));
     const selectRef = ref(null);
+    const updateMultiple = (value) => {
+      if (
+        value === null ||
+        value === undefined ||
+        value === ''
+      ) {
+        sel.value = [];
+        return;
+      }
+
+      if (Array.isArray(value)) {
+        sel.value = [...value];
+        return;
+      }
+
+      sel.value = String(value).split(',');
+    };
     const collect = (items) => {
-      options.value = items;
+
+      const list = unref(items) || [];
+
+      options.value = Array.isArray(list)
+        ? list.filter(item => item != null)
+        : [];
+
       nextTick(() => {
-        //log(name, 'collect.nextTick=' + items.length)
-        updateSelect(props.modelValue || prevValue.value)
-      })
-    }
+
+        if (props.multiple) {
+          updateMultiple(props.modelValue);
+        } else {
+          updateSelect(
+            props.modelValue || prevValue.value
+          );
+        }
+
+      });
+    };
 
     const onChange = (event) => {
       event.stopPropagation();
@@ -207,11 +239,21 @@ export default {
     };
 
 
-    watch(() => props.modelValue, (newValue, oldValue) => {
-      if (newValue != oldValue) {
-        updateSelect()
+    watch(
+      () => props.modelValue,
+      (newValue, oldValue) => {
+
+        if (newValue == oldValue) {
+          return;
+        }
+
+        if (props.multiple) {
+          updateMultiple(newValue);
+        } else {
+          updateSelect();
+        }
       }
-    });
+    );
 
     watch(() => props.disabled, (newValue, oldValue) => {
       activate(newValue, oldValue);
@@ -229,7 +271,7 @@ export default {
     }
 
     const load = (params, b) => {
-      
+
       if (!props.disabled) {//} && !readonly) {
         lastLoad.value = [];
         loaders.forEach((loader) => {
@@ -250,7 +292,101 @@ export default {
         load();
     });
 
-    return { options, getValueField, onChange, selectRef, load, lastLoad, autoload_ }
+
+    const show = ref(false);
+    const sel = ref([]);
+    const sela = ref(false);
+    const tmp = ref("");
+
+
+
+    const close = () => {
+
+      show.value = false;
+
+    };
+
+    const apply = () => {
+
+      const current = [...sel.value]
+        .map(String)
+        .sort();
+
+      const previous = [...tmp.value]
+        .map(String)
+        .sort();
+
+      const changed =
+        current.length !== previous.length ||
+        current.some(
+          (value, index) =>
+            value !== previous[index]
+        );
+
+      if (changed) {
+        const value = current.length
+          ? current.join(',')
+          : null;
+        emit(
+          'update:modelValue',
+          value
+        );
+      }
+      close();
+    };
+    const toggle = () => {
+      if (!show.value) {
+        tmp.value = [...sel.value];
+      }
+      show.value = !show.value;
+      if (!show.value) {
+        apply()
+      }
+    };
+
+    const checkboxInput = () => {
+
+      let value = null;
+
+      if (sel.value && sel.value.length) {
+        value = sel.value.join(",");
+      }
+      console.log(sel);
+      /*emit("update:modelValue", value);
+
+      nextTick(() => {
+        emit("input", value);
+      });*/
+    };
+
+    const selectAll = (checked) => {
+      console.log('selectAll.checked=', checked);
+      if (checked) {
+        sel.value = options.value.map(item => getValueField(item));
+      } else {
+        sel.value = [];
+      }
+      checkboxInput();
+    };
+    const expand = (event) => {
+      if (props.readonly) {
+        event.preventDefault();
+        return false;
+      }
+    };
+    return {
+      options, getValueField, onChange, selectRef, load, lastLoad, autoload_,
+      expand,
+      show,
+      sel,
+      sela,
+      toggle,
+      close,
+
+      apply,
+      selectAll,
+      checkboxInput
+    }
   },
   props: {
     modelValue: null,
@@ -265,13 +401,8 @@ export default {
   },
   data() {
     return {
-      autoload_: true,
-      ik: 0,
       data: [],
       popup: null,
-      show: false,
-      sel: [],
-      sela: null,
       tmp: [],
       sel2: []
     };
@@ -301,42 +432,8 @@ export default {
         }
         body.style.display = 'flex';
         body.style.flexDirection = 'column';
-        me.tmp = me.sel.sort().join(',');
-      } else {
-        let d = me.sel, t = me.$el.parentNode.tagName;
-        if (t != 'TH' && d && d.length) d = d.join(',');
-        else if (d && d.length == 0) d = null;
-        if (me.tmp !== me.sel.sort().join(','))
-          if (me.$parent.load) {
-            me.$parent.load();
-          } else {
-            //me.$emit('input', d);
-          }
       }
     },
   }
-  /*methods: {
-    expand() { console.log('click') },
-    toggle() {
-      this.show = !this.show;
-    },
-    close() {
-      this.show = false;
-    },
-    selectAll() {
-      let ee = [];
-      for (let j = 0; j < this.data.length; j++) {
-        ee.push(this.data[j].value);
-      }
-      this.sel = ee;
-      //console.log(this.sel);
-      this.ik++;
-    },
-    checkboxInput() {
-      let d = this.sel;
-      if (d && d.length) d = d.join(",");
-      //this.$emit("input", d);
-    },
-  },*/
 };
 </script>

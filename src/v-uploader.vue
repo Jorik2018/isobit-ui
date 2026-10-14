@@ -1,7 +1,10 @@
 <template>
   <div
     class="v-uploader"
-    :class="onlyicon ? '' : 'v-button ui-widget ui-state-default ui-corner-all'"
+    :class="[
+      onlyicon ? '' : 'v-button ui-widget ui-state-default ui-corner-all',
+      { disabled }
+    ]"
     :style="{ padding: onlyicon ? '0px' : '' }"
     @click="handleClick"
   >
@@ -9,6 +12,7 @@
       <input
         v-if="!click"
         type="file"
+        :disabled="disabled"
         @change="handleFileUpload"
       />
 
@@ -35,53 +39,49 @@
 import { ref } from 'vue'
 import axios from 'axios'
 
-/**
- * Props
- */
 const props = defineProps({
   value: String,
   onlyicon: Boolean,
   click: Function,
   icon: String,
   domain: String,
-  dst: String
+  dst: String,
+  disabled: {
+    type: Boolean,
+    default: false
+  }
 })
 
-/**
- * Emits
- */
 const emit = defineEmits(['update:value', 'input'])
 
-/**
- * State
- */
 const uploadPercentage = ref(0)
 const showProgress = ref(false)
 
-/**
- * Optional click override
- */
 function handleClick() {
+  if (props.disabled) return
+
   if (props.click) {
     props.click()
   }
 }
 
-/**
- * File handler
- */
 function handleFileUpload(event) {
+  if (props.disabled) {
+    event.target.value = ''
+    return
+  }
+
   const file = event.target.files?.[0]
+
   if (!file) return
 
   uploadPercentage.value = 0
   submitFile(file)
 }
 
-/**
- * Upload logic
- */
 function submitFile(file, name) {
+  if (props.disabled) return
+
   const formData = new FormData()
 
   name = name || file.name.replace(/[^\w\s.]/gi, '')
@@ -113,15 +113,15 @@ function submitFile(file, name) {
       }
     }
   )
-  .then((r) => {
-    emit('input', r.data)
-    emit('update:value', r.data)
-  })
-  .catch((err) => {
-    console.error('Upload error:', err)
-  })
-  .finally(() => {
-    showProgress.value = false
-  })
+    .then((r) => {
+      emit('input', r.data)
+      emit('update:value', r.data)
+    })
+    .catch((err) => {
+      console.error('Upload error:', err)
+    })
+    .finally(() => {
+      showProgress.value = false
+    })
 }
 </script>

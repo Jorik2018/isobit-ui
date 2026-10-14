@@ -1,14 +1,31 @@
 <template>
     <div>
-        <input :required="required" ref="input" :readonly="readonly" :min="min" :max="max" @change="enterD"
-            :type="type ? type : 'date'" />
+        <input
+            ref="input"
+            :required="required"
+            :readonly="readonly"
+            :min="min"
+            :max="max"
+            :type="type || 'date'"
+            @change="enterD"
+        />
     </div>
 </template>
+
 <script>
-import { ref, watch, nextTick } from 'vue';
-import { pad } from "./commons";
+import {
+    ref,
+    watch,
+    nextTick,
+    onMounted
+} from 'vue'
+
+import { pad } from './commons'
+
 export default {
+
     name: 'VCalendar',
+
     props: {
         modelValue: null,
         type: String,
@@ -17,100 +34,242 @@ export default {
         max: String,
         min: String
     },
+
+
     setup(props, { emit }) {
-        const { type, modelValue, max, min } = props;
-        const input = ref(null);
-        const _emit = (o) => {
-            emit('update:modelValue', o);
+
+        const input = ref(null)
+
+
+        const _emit = (value) => {
+
+            emit(
+                'update:modelValue',
+                value
+            )
+
             nextTick(() => {
-                emit('changed', o);
+                emit(
+                    'changed',
+                    value
+                )
             })
         }
-        const enterD = (event) => {
-            let v = event.target.value;
-            let t = toDate(v);
-            if (max) {
-                if (t && t.getTime() >= toDate(max).getTime()) {
-                    emit('invalid', { target: me, value: t });
-                    t = null;
-                    event.target.value = t;
-                    //this.$emit('input', t);
-                    return;
-                }
-            }
-            if (min) {
-                if (t && t.getTime() <= toDate(min).getTime()) {
-                    emit('invalid', { target: me, value: t });
-                    t = null;
-                    event.target.value = t;
-                    //this.$emit('input', t);
-                    return;
-                }
-            }
-            if (type === 'time') {
-                _emit(pad(t.getHours(), 2) + ':' + pad(t.getMinutes(), 2) + ':00');
-            } else {
-                //solo se sobreescribira la fecha si es fecha valida
-                if (t.getTime) {
-                    _emit(t.getTime());
-                }
-            }
-        }
+
+
         const toDate = (v) => {
-            if (v) {
 
-                let d;
-                if (type === 'time') {
-                    d = v.split(':');
-                    return new Date(1981, 1, 6, parseInt(d[0]), parseInt(d[1]), d.length > 2 ? parseInt(d[2]) : 0);
-                } else {
-                    if (!isNaN(v)) {
-                        return new Date(v);
-                    }
-                    let t;
-                    if (type === 'datetime-local') {
-                        t = v.split('T');
-                        d = t[1].split(':');
-                        t = t[0].split('-');
-                        t = new Date(parseInt(t[0]), parseInt(t[1]) - 1, parseInt(t[2]), parseInt(d[0]), parseInt(d[1]), d.length > 2 ? parseInt(d[2]) : 0);
-                        return t;
-                    } else {
-                        t = v.split('-');
-                        let y = parseInt(t[0]);
-
-                        if (y < 100) {
-                            //aqui retorna '0000-00-00' 
-                            return v;
-                        }
-                        t = new Date(y, parseInt(t[1]) - 1, parseInt(t[2]));
-
-                        return t;
-                    }
-                }
+            if (!v) {
+                return v
             }
-            return v;
+
+
+            if (props.type === 'time') {
+
+                const d = v.split(':')
+
+                return new Date(
+                    1981,
+                    1,
+                    6,
+                    parseInt(d[0]),
+                    parseInt(d[1]),
+                    d.length > 2
+                        ? parseInt(d[2])
+                        : 0
+                )
+            }
+
+
+            if (!isNaN(v)) {
+                return new Date(
+                    Number(v)
+                )
+            }
+
+
+            if (props.type === 'datetime-local') {
+
+                let t = v.split('T')
+
+                const d = t[1].split(':')
+
+                t = t[0].split('-')
+
+                return new Date(
+                    parseInt(t[0]),
+                    parseInt(t[1]) - 1,
+                    parseInt(t[2]),
+                    parseInt(d[0]),
+                    parseInt(d[1]),
+                    d.length > 2
+                        ? parseInt(d[2])
+                        : 0
+                )
+            }
+
+
+            const t = v.split('-')
+
+            const y = parseInt(t[0])
+
+
+            if (y < 100) {
+                return v
+            }
+
+
+            return new Date(
+                y,
+                parseInt(t[1]) - 1,
+                parseInt(t[2])
+            )
         }
-        watch(() => props.modelValue, (newValue) => {
-            changeDate(newValue)
-        });
+
+
         const changeDate = (modelValue) => {
-            if (!input.value) return;
-            let d = toDate(modelValue);
-            let fd;
+
+            if (!input.value) {
+                return
+            }
+
+
+            const d = toDate(modelValue)
+
+            let fd = ''
+
+
             if (d) {
-                if (typeof d == 'string') {
-                    fd = d;
-                } else if (type === 'time') {
-                    fd = pad(d.getHours(), 2) + ":" + pad(d.getMinutes(), 2);
-                } else if (type === 'datetime-local') {
-                    fd = pad(d.getFullYear(), 4) + "-" + pad((d.getMonth() + 1), 2) + "-" + pad(d.getDate(), 2) + 'T' + pad(d.getHours(), 2) + ":" + pad((d.getMinutes()), 2);
+
+                if (typeof d === 'string') {
+
+                    fd = d
+
+                } else if (props.type === 'time') {
+
+                    fd =
+                        pad(d.getHours(), 2) +
+                        ':' +
+                        pad(d.getMinutes(), 2)
+
+                } else if (
+                    props.type === 'datetime-local'
+                ) {
+
+                    fd =
+                        pad(d.getFullYear(), 4) +
+                        '-' +
+                        pad(d.getMonth() + 1, 2) +
+                        '-' +
+                        pad(d.getDate(), 2) +
+                        'T' +
+                        pad(d.getHours(), 2) +
+                        ':' +
+                        pad(d.getMinutes(), 2)
+
                 } else {
-                    fd = pad(d.getFullYear(), 4) + "-" + pad((d.getMonth() + 1), 2) + "-" + pad(d.getDate(), 2)
+
+                    fd =
+                        pad(d.getFullYear(), 4) +
+                        '-' +
+                        pad(d.getMonth() + 1, 2) +
+                        '-' +
+                        pad(d.getDate(), 2)
                 }
             }
-            input.value.value = fd;
+
+
+            input.value.value = fd
         }
-        return { enterD, input }
+
+
+        const enterD = (event) => {
+
+            const value = event.target.value
+
+            let t = toDate(value)
+
+
+            if (props.max) {
+
+                if (
+                    t &&
+                    t.getTime() >=
+                    toDate(props.max).getTime()
+                ) {
+
+                    emit('invalid', {
+                        target: input.value,
+                        value: t
+                    })
+
+                    event.target.value = ''
+
+                    return
+                }
+            }
+
+
+            if (props.min) {
+
+                if (
+                    t &&
+                    t.getTime() <=
+                    toDate(props.min).getTime()
+                ) {
+
+                    emit('invalid', {
+                        target: input.value,
+                        value: t
+                    })
+
+                    event.target.value = ''
+
+                    return
+                }
+            }
+
+
+            if (props.type === 'time') {
+
+                _emit(
+                    pad(t.getHours(), 2) +
+                    ':' +
+                    pad(t.getMinutes(), 2) +
+                    ':00'
+                )
+
+            } else if (
+                t &&
+                typeof t.getTime === 'function'
+            ) {
+
+                _emit(
+                    t.getTime()
+                )
+            }
+        }
+
+
+        watch(
+            () => props.modelValue,
+            (newValue) => {
+                changeDate(newValue)
+            }
+        )
+
+
+        onMounted(() => {
+            changeDate(
+                props.modelValue
+            )
+        })
+
+
+        return {
+            enterD,
+            input
+        }
     }
 }
 </script>

@@ -56,16 +56,28 @@ const updateInputs = () => {
     let groupChecked = false;
     for (let i = 0; i < rl.length; i++) {
         rl[i].name = name;
+
         if (!processedElements.has(rl[i])) {
             rl[i].addEventListener('change', onChange);
             processedElements.add(rl[i]);
         }
-        rl[i].checked = rl[i].value === value.value;
-        if (rl[i].checked) groupChecked = true;
+
+        rl[i].checked =
+            value.value != null &&
+            rl[i].value === String(value.value);
+
+        if (rl[i].checked) {
+            groupChecked = true;
+        }
+
         rl[i].required = required;
+
         if (required) {
-            if (value.value) rl[i].nextElementSibling.classList.remove('required');
-            else rl[i].nextElementSibling.classList.add('required');
+            if (value.value) {
+                rl[i].nextElementSibling.classList.remove('required');
+            } else {
+                rl[i].nextElementSibling.classList.add('required');
+            }
         }
     }
     if (groupChecked) {
@@ -113,7 +125,7 @@ const render = () => {
             });
         }));
     }
-    return h('div', {class:'v-radio-group'}, [
+    return h('div', { class: 'v-radio-group' }, [
         props.label && h('label', props.label),
         ...children
     ]);

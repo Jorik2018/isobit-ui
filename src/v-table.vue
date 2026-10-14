@@ -8,8 +8,13 @@ import { useAppStore } from './useAppStore';
 
 export default {
     name: 'VTable',
+    emits: [
+        'dblclick',
+        'row-select',
+        'loaded'
+    ],
     setup(props, cxt) {
-        const { autoload, src, rowKey, store, groups } = props;
+        const { autoload, src, rowKey='id', store, groups } = props;
         const app = useAppStore();
         const viewCollector = inject('viewCollector');
         const formCollector = inject('formCollector');
@@ -27,7 +32,7 @@ export default {
             const me = props, data_ = data.value;
             let f, v;
             data_.sum = sum;
-            console.log('data_===', data_);
+            //console.log('data_===', data_);
             return data_.filter(item => {
                 for (var key in me.filters) {
                     f = me.filters[key];
@@ -250,7 +255,7 @@ export default {
                 //loadStore().then(() => emit('loaded', { target: me }));
             }
 
-            console.log("======", data.value);
+            //console.log("======", data.value);
 
 
             //data.value.push({});
@@ -272,7 +277,7 @@ export default {
         }
         load.is = j_is;
         load.remove = (item) => {
-            console.log(item, data.value);
+            //console.log(item, data.value);
             const index = data.value.findIndex(_item => _item === item);
             if (index !== -1) {
                 data.value.splice(index, 1);
@@ -304,7 +309,10 @@ export default {
                 });
                 const filter = component.$el.querySelectorAll('v-filter');
                 filter.forEach(f => {
-                    console.log(f.querySelectorAll('input').forEach(e => e.addEventListener("keyup", listener)));
+                    //console.log(
+                        f.querySelectorAll('input').forEach(e => e.addEventListener("keyup", listener))
+                    //)
+                    ;
                 });
             }, 100);
         });
@@ -390,12 +398,12 @@ export default {
                     }
                 }, [
                     h('table', { className: 'v-table', style: { width: `${tableWidth}px` } }, [
-                        /*h('thead', { className: 'v-head-cloned' }, [
+                        h('thead', { className: 'v-head-cloned' }, [
 
                             selectable0.value ? h('th', { width: checkColumnWidth }) : null,
 
                             ...columns.map((column) => h('th', { width: column.width }))
-                        ]),*/
+                        ]),
                         h('tbody', { className: 'v-datatable-data', key: kc.value },
                             groupedData.value.length < 1 ? h('td', { colspan: columns.length + (selectable0.value ? 1 : 0) }, props.emptyMessage) : [
 
@@ -405,7 +413,7 @@ export default {
                                     return [
 
                                         slots['header-group'] ? (h('tr', { className: "v-header-group" }, [
-                                            selectable0.value ? h('td') : null,
+                                            //selectable0.value ? h('td') : null, seria mejor darle opcion de poner un checkbox al q construye el grupo
                                             slots['header-group']({ group: groupItem })
                                         ])) : null
 
@@ -431,6 +439,10 @@ export default {
 
                                             return h('tr', {
                                                 class: getRowClass(row),
+                                                onDblclick(e) {
+                                                    _selectRow(e, row, index)
+                                                    emit('dblclick',e)
+                                                },
                                                 onclick(e) {
                                                     _selectRow(e, row, index)
                                                 }

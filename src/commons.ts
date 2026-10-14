@@ -676,7 +676,7 @@ export const configureAxios = (a) => {
 						msg = response.data.data.message;
 					}
 					if (!msg) {
-						msg = response.data.msg || response.data.message;
+						msg = response.data.msg || response.data.message || response.data.detail;
 					}
 				}
 				if (!msg) {

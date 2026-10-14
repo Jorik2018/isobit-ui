@@ -1362,35 +1362,6 @@ a.pretty-link:hover {
 	background-color: #FFFFFF;
 	border: 1px solid #CBCBCB;
 }
-.coresec>div>div {
-	-background-color: green;
-	width: 80% !important;
-}
-.coresec > div > div:hover {
-	background-color: #cedfff;
-	border-radius: 15px;
-}
-.coresec > div img {
-	width: 60% !important;
-	margin: 0px 15px;
-}
-.coresec>div>div {
-	cursor: pointer;
-}
-.coresec>div>div>div {
-	padding: 20px;
-}
-.coresec > div > div > div:nth-child(1) {
-	padding: 15px;
-	border-radius: 15px 15px 0px 0px;
-	text-transform: uppercase;
-	margin-bottom: 15px;
-	font-weight: bolder;
-}
-.coresec > div > div:hover > div:nth-child(1) {
-	background-color: #106e8a;
-	color: white;
-}
 .ui-menubar {
 	background: #0f62ac;
 	color: white;
@@ -1617,7 +1588,7 @@ fieldset.v-form>div>input,.v-form>fieldset>div>input,fieldset.v-form>div>input:n
 	background-color: #0f62ac;
 }
 .label, label {
-	font-weight: bolder !important;
+	font-weight: bolder;
 	padding: 3px 0px;
 	display: inline-block;
 }
@@ -1844,10 +1815,7 @@ input[readonly], textarea[readonly] {
 .ol-attribution a, .ol-attribution a:hover {
 	color: #5050e0;
 }
-.v-uploader.disabled, .v-uploader.disabled > label {
-	opacity: 0.5;
-	cursor: not-allowed !important;
-}
+
 input {
 	width: -webkit-fill-available;
 	width: -moz-available;
@@ -2192,7 +2160,7 @@ legend, .v-fieldset > legend {
 		-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
 		background-color: #F5F5F5;
 	}
-	::-webkit-scrollbar {
+	--::-webkit-scrollbar {
 		background-color: #F5F5F5;
 	}
 	.no-padding[role="gridcell"]:not(th) {
@@ -3092,6 +3060,13 @@ label.v-radio, label.v-checkbox {
 	width: auto;
 	border-color: transparent;
 }
+.v-uploader.disabled, .v-uploader.disabled > label, .v-uploader.disabled > span {
+	opacity: 0.5;
+	cursor: not-allowed !important;
+}
+.v-uploader > label > svg {
+    margin-right: 4px ;
+}
 .v-uploader input {
 	display: none !important;
 }
@@ -3292,7 +3267,7 @@ v-filter select{
 	opacity: 0.5;
 	-background: #c4c4c4 -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.8)), to(rgba(255, 255, 255, 0))) !important;
 }
-.v-button:disabled {
+.v-button:disabled,.v-uploader.disabled {
 	opacity: .35 !important;
 	filter: Alpha(Opacity=35);
 	-background-image: none;
@@ -3377,7 +3352,7 @@ select:not([disabled]){
 	textarea:required:empty, .required label,.required .ui-selectcheckboxmenu-multiple-container {
 		background-color: rgb(255, 229, 218);
 	}
-	.v-button:hover{
+	.v-button:not(.disabled):not([disabled]):hover{
 		background: linear-gradient(to bottom, #ffffff, #cccccc);
 		border: 1px solid #e5e5e5;
 	}
@@ -3396,6 +3371,13 @@ select:not([disabled]){
 	  .v-popup-2 > li:hover{
 		background-color: #f0f0f0;
 	}
+	.v-popup {
+		background-color: #ffffff;
+		border: 1px solid gray;
+	}
+	.v-popup > div > :first-child{
+		background-color: #d3d3d3;
+	}
 }
 .v-panel-titlebar {
 	padding: 5px;
@@ -3404,6 +3386,9 @@ select:not([disabled]){
 	background: #0f62ac;
 	border-color: #104a7d;
 }
+	.v-popup > div > div {
+		padding: 5px;
+	}
 @media (prefers-color-scheme: dark) {
 	input:empty[aria-required='true'], 
 	textarea:empty[aria-required='true'], 
@@ -3436,7 +3421,9 @@ select:not([disabled]){
 		background: linear-gradient(to bottom, #151515, #271e1e);
 		border: 1px solid gray;
 	}
-	.v-button:not([disabled]):hover,select:not([disabled]):hover {
+	.v-button:not(.disabled):not([disabled]):hover,.v-uploader > span:not(.disabled):hover,
+	.v-uploader:not(.disabled):hover,
+	select:not([disabled]):hover {
 		background: linear-gradient(to bottom, #3a3737, #271e1e);
 	}
 	.v-popup-2 > li{
@@ -3445,6 +3432,14 @@ select:not([disabled]){
 	}
 	.v-popup-2 > li:hover{
 		background-color: #222222;
+	}
+
+	.v-popup {
+		background-color: #2c2c2c;
+		border: 1px solid gray;
+	}
+	.v-popup > div > :first-child{
+		background-color: #000000;
 	}
 	.marked{
 		background: #8e6f49 -webkit-gradient(linear, left top, left bottom, from(rgb(64 39 11 / 80%)), to(rgba(255, 255, 255, 0))) !important;
@@ -3475,6 +3470,14 @@ select:not([disabled]){
 	
 }
 
+
+.v-button.v-selected,.v-button.v-selected:hover {
+        background: linear-gradient(to bottom, #c5af1e, #c49d00);
+}
+.v-button.v-selected:not(.disabled):not([disabled]):hover,
+	select.v-selected:not([disabled]):hover {
+		 background: linear-gradient(to bottom, #c5af1e, #c49d00);
+	}
 .v-menu {
   margin: 0px;
 }
@@ -3504,3 +3507,6 @@ select:not([disabled]){
   margin-right: 10px;
 }
 
+.v-datatable-header > .v-uploader > label {
+    font-weight: normal;
+}

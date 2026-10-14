@@ -26,7 +26,8 @@ import VTabview from './v-tabview.vue'
 import VTextarea from './v-textarea.vue'
 import VUploader from './v-uploader.vue'
 import VItem from './v-item.vue'
-import VCalendarFilter from './v-calendar-range.vue'
+import VFilterDate from './v-filter-date.vue'
+import VFilterNumber from './v-filter-number.vue'
 
 export default { 
     InputTextarea, 
@@ -35,7 +36,8 @@ export default {
     VAutocomplete,
     VButton,
     VCalendar,
-    VCalendarFilter,
+    VFilterDate,
+    VFilterNumber,
     VCheckboxGroup,
     VCheckbox,
     VDataview,

@@ -1,72 +1,116 @@
 <template>
     <div>
-        <slot></slot>
+        <slot />
     </div>
 </template>
+
 <script>
+import {
+    provide,
+    computed
+} from 'vue'
+
 import { id } from './commons'
+
 export default {
     name: 'VCheckboxGroup',
+
     props: {
+        modelValue: {
+            type: [Array, String],
+            default: undefined
+        },
         required: String,
         name: String
     },
-    data() {
-        return {
-            value: [], options: [], nam: null
-        }
-    },
-    created() {
-        if (!this.nam) {
-            this.nam = (this.$props.name ? this.$props.name : 'input_' + id());
-        }
-        this.update2();
 
-    },
+    emits: [
+        'update:modelValue'
+    ],
 
-    updated() {
-        this.update2();
-    },
-    mounted() {
-        this.options = this.$el.querySelectorAll('input:not(.v-chk)');
-        for (var i = 0; i < this.options.length; i++) {
-            this.options[i].classList.add("v-chk");
+    setup(props, { emit }) {
+
+        const nam =
+            props.name ||
+            'input_' + id()
+
+        const normalize = value => {
+
+            if (Array.isArray(value)) {
+                return [...value]
+            }
+
+            if (
+                typeof value === 'string' ||
+                value instanceof String
+            ) {
+                return value
+                    ? value.split('|')
+                    : []
+            }
+
+            return []
         }
-        this.update2();
-    },
-    methods: {
-        update2() {
-            var me = this;
-            var rl = me.options;
-            var va = me.$attrs.value;
-            if ((typeof va) == 'string') va = va.split('|');
-            for (var i = 0; i < rl.length; i++) {
-                rl[i].checked = false;
-                for (var j = 0; va && j < va.length; j++) {
-                    if (rl[i].value == va[j]) {
-                        rl[i].checked = true;
-                    }
-                }
+
+        const currentValue = computed(() => {
+
+            if (props.modelValue !== undefined) {
+                return normalize(props.modelValue)
             }
-        },
-        onChange: function (v, c) {
-            var me = this;
-            var va = me.$attrs.value;
-            if (typeof va === 'string' || va instanceof String) {
-                va = va.split('|');
-            }
-            if (c) {
-                if (!va) {
-                    me.$attrs.value = (va = [])
+
+            return normalize(props.value)
+        })
+
+        const isSelected = value => {
+            return currentValue.value.some(
+                item => item == value
+            )
+        }
+
+        const onChange = (value, checked) => {
+
+            const values = [
+                ...currentValue.value
+            ]
+
+            if (checked) {
+
+                const exists = values.some(
+                    item => item == value
+                )
+
+                if (!exists) {
+                    values.push(value)
                 }
-                va.push(v);
+
             } else {
-                //console.log('buscar '+v+' en '+JSON.stringify(va));
-                var ii = va.indexOf(v);
-                if (ii > -1) va.splice(ii, 1);
-                //console.log(va);
+
+                const index = values.findIndex(
+                    item => item == value
+                )
+
+                if (index !== -1) {
+                    values.splice(index, 1)
+                }
             }
-            me.$emit('input', va);
+            emit(
+                'update:modelValue',
+                values
+            )
+        }
+
+        provide(
+            'v-checkbox-group',
+            {
+                name: nam,
+                isSelected,
+                onChange
+            }
+        )
+        return {
+            nam,
+            onChange,
+            isSelected
         }
     }
 }

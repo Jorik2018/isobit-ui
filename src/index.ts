@@ -34,7 +34,7 @@ export const removeError = (e) => {
 	}
 }
 
-export const ui = (cfg) => {
+export const ui = (cfg:any) => {
 
 	const defs = {
 
@@ -43,9 +43,9 @@ export const ui = (cfg) => {
 				return _.app.session;
 			},
 			perms() {
-				return this.session.perms || this.session.allcaps || {};
+				return this.session?.perms || this.session?.allcaps || {};
 			}
-		},
+		} as any,
 		data() {
 			let me = this;
 			return {
@@ -240,12 +240,20 @@ export const ui = (cfg) => {
 				views.find(view => view.type == 'v-table')();
 			}
 
+			provide('refresh', refresh)
+
 			const rewrite = (url: string) => {
 				return '/admin' + url;
 			}
 
 			const open = (response: any, path?: any, o?: any) => {
-				if (!(response.$el) && !(response instanceof HTMLElement)) {
+				let popup = views.find(view => view.type == 'v-popup');
+				console.log(response)
+				if(response.open){
+					response.open()
+				} else if (popup && (response instanceof String || typeof response=='string')) {
+				    popup.open(response);
+				} else if (!(response.$el) && !(response instanceof HTMLElement)) {
 					let e = response;
 					let t = e.target;
 					if (typeof e == 'string') {
@@ -729,8 +737,10 @@ export const ui = (cfg) => {
 
 							if (app && app.toast)
 								app.toast('El registro fue grabado exitosamente!', () => {
+							console.log(props)
 									component.close({ success: true, data: data });
 									overlay?.closeDialog?.(1);
+
 								});
 							else {
 								MsgBox('El registro fue grabado exitosamente! msg', () => {
@@ -897,12 +907,10 @@ export const ui = (cfg) => {
 					action = window.location.pathname;
 				}
 				if (action) action = action.replace("/api", "");
+				action = action + '/create';
 				if (app) {
-					open(action + '/create');
-				} /*else {
-					instance.get(_.currentPath = (action + '/create').replace(/([^:]\/)\/+/g, "$1") + '?modal')
-						.then(_.open).catch(_error);
-				}*/
+					open(action);
+				}
 			}
 
 			const findInSameParent = (el: HTMLElement, qs: string) => {
@@ -930,12 +938,7 @@ export const ui = (cfg) => {
 				const selected = view.selected.value[0];
 				let id = selected[view.rowKey];
 				if (selected.tmpId) id = -selected.tmpId;
-				if (app) {
-					open(action + '/' + id + '/edit');
-				} else {
-					app.axios.get((_.currentPath = (action + '/' + id + '/edit').replace(/([^:]\/)\/+/g, "$1")) + '?modal')
-						.then(me.open).catch(_error);
-				}
+				open(action + '/' + id + '/edit');
 			}
 
 			const getSelected = () => {
@@ -943,7 +946,10 @@ export const ui = (cfg) => {
 			}
 
 			const close = (ok) => {
-				console.log(ctx);
+				if(ok && props.callback) {
+					props.callback(ok)
+					
+				}
 				/*if (ok.$el) ok = ok.$el;
 				let dlg = (ok instanceof HTMLElement) ? ok : null;
 				try {
@@ -1122,7 +1128,7 @@ export const ui = (cfg) => {
 				listeners.push({ name, fn });
 			}
 
-			let q = customSetup ? customSetup({ ...props, $on, router, getStoredList, app, save, open, refresh }, ctx) : {};
+			let q = customSetup ? customSetup({ ...props, $on, router, getStoredList, app, save, open, refresh, saveAs, edit }, ctx) : {};
 			ctx.expose({ router })
 			let res = {
 				app, cleanedFilters,
