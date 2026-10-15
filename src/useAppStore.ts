@@ -130,24 +130,27 @@ export const useAppStore = defineStore("connection", () => {
     networkStatus.value = status;
   };
 
-  const logout = () => {
-    session.value = null;
+  const logout = async () => {
+    try {
+      await axios.value.get("/api/logout");
+    } finally {
+      session.value = null;
+      localStorage.removeItem("session");
 
-    localStorage.removeItem("session");
+      delete axios.value.defaults.headers.common.Authorization;
 
-    delete axios.value.defaults.headers.common.Authorization;
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
+      }
 
-    if (refreshTimer) {
-      clearTimeout(refreshTimer);
-      refreshTimer = null;
+      deleteAllCookies();
+
+      // Recarga la ruta actual.
+      // El guard detectará la ausencia de sesión y redirigirá al login,
+      // conservando la ruta actual como destiny.
+      router.value.go(0);
     }
-
-    deleteAllCookies();
-
-    // /login pertenece a React Auth
-    //To Do: agregar un parametro env
-    //router.value.push("/login");
-    window.location.replace("/login");
   };
 
   const authenticated = computed(() => !!session.value?.token);
