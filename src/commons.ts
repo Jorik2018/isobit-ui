@@ -819,6 +819,14 @@ export const initDB = (version, stores) => {
 
 						// Eliminar la base de datos si la versión nueva es mayor
 						const deleteRequest = db.deleteDatabase('db');
+						deleteRequest.onblocked = (event) => {
+    console.error('DELETE DATABASE BLOCKED', event);
+};
+
+deleteRequest.onerror = (event) => {
+    console.error('DELETE DATABASE ERROR', event);
+    reject(deleteRequest.error);
+};
 						deleteRequest.onsuccess = () => {
 							sessionStorage.removeItem('loadedStores');
 
