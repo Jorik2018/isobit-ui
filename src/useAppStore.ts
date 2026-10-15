@@ -1,130 +1,186 @@
-import { defineStore } from 'pinia';
-import { ref, watch, computed } from 'vue';
-import { configureAxios, getPiniaInstance, getConfigApp } from './commons';
+import { defineStore } from "pinia";
+import { computed, ref, watch } from "vue";
+import { configureAxios, getConfigApp, getPiniaInstance } from "./commons";
 
 const deleteAllCookies = () => {
-    // Retrieve all cookies from the document
-    const cookies = document.cookie.split(";");
+  // Retrieve all cookies from the document
+  const cookies = document.cookie.split(";");
 
-    // Iterate over each cookie and set its expiration date to a past date
-    for (let cookie of cookies) {
-        const cookieName = cookie.split("=")[0].trim();
-        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  // Iterate over each cookie and set its expiration date to a past date
+  for (let cookie of cookies) {
+    const cookieName = cookie.split("=")[0].trim();
+    document.cookie =
+      `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  }
+};
+
+export const useAppStore = defineStore("connection", () => {
+  const pinia = getPiniaInstance();
+
+  const _config = getConfigApp();
+
+  if (!pinia) {
+    throw new Error(
+      "Pinia no ha sido inicializado. Llama a setupPinia() en tu app.",
+    );
+  }
+
+  const connected = ref<boolean>(false);
+
+  const unauthorized = ref<boolean>(false);
+
+  const router = ref(_config.router);
+
+  const axios = ref(_config.axios);
+
+  const session = ref<Record<string, any> | null>(null);
+
+  const networkStatus = ref<Record<string, any> | null>(null);
+
+  connected.value = localStorage.getItem("connected") !== "false";
+
+  const refreshSession = async () => {
+    axios.value.noInterceptor = 1;
+    const url = axios.value.VITE_LOGIN_PATH + "/refresh";
+    console.log("REFRESH URL:", url);
+    const { data } = await axios.value.post(
+      url,
+      {},
+      {
+        withCredentials: true,
+      },
+    );
+
+    const {
+      token,
+      user_nicename,
+      perms,
+    } = data;
+
+    session.value = {
+      token,
+      people: {
+        display_name: user_nicename,
+      },
+      perms,
+    };
+
+    return session.value;
+  };
+
+  let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const scheduleRefresh = () => {
+    if (refreshTimer) {
+      return;
     }
-}
 
-export const useAppStore = defineStore('connection', () => {
+    refreshTimer = setTimeout(async () => {
+      refreshTimer = null;
 
-    const pinia = getPiniaInstance();
+      try {
+        await refreshSession();
+        scheduleRefresh();
+      } catch (e) {
+        console.error("Error refreshing session", e);
+      }
+    }, 10 * 60 * 1000);
+  };
 
-    const _config = getConfigApp();
+  watch(session, (newValue: any) => {
+    if (newValue?.token) {
+      // Token solamente en memoria
+      axios.value.defaults.headers.common.Authorization =
+        `Bearer ${newValue.token}`;
 
-    if (!pinia) throw new Error('Pinia no ha sido inicializado. Llama a setupPinia() en tu app.');
+      // Persistimos sesión offline SIN token
+      const {
+        token,
+        ...cachedSession
+      } = newValue;
 
-    const connected = ref<boolean>(false);
+      localStorage.setItem(
+        "session",
+        JSON.stringify(cachedSession),
+      );
 
-    const unauthorized = ref<boolean>(false);
+      scheduleRefresh();
+    } else {
+      // Puede haber people/perms cacheados,
+      // simplemente no tenemos access token.
+      delete axios.value.defaults.headers.common.Authorization;
 
-    const router = ref(_config.router);
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
+      }
+    }
+  });
 
-    const axios = ref(_config.axios);
+  const s = localStorage.getItem("session");
+  session.value = s ? JSON.parse(s) : null;
 
-    const session = ref<Record<string, any> | null>(null);
+  watch(connected, (newValue: any) => {
+    localStorage.setItem("connected", String(newValue));
+  });
 
-    const networkStatus = ref<Record<string, any> | null>(null);
+  const online = computed(() => networkStatus.value?.connected);
 
-    connected.value = localStorage.getItem('connected') !== 'false';
+  const networkStatusChange = (status: any) => {
+    networkStatus.value = status;
+  };
 
-    /*connected: {
-        get() {
-            return this.online && this.x_connected_ !== false;
-        },
-        set(v) {
-            let me = this;
-            let session = me.session;
-            this.x_connected_ = v;
-            //session.connected=v;
-            this.$set(session, 'connected', v);
-            me.session = session;
-            console.log(me);
-        },
-    }*/
-    const refresh = (callback: Function) => {
-        setTimeout(() => {
-            if (session.value) {
-                axios.value.noInterceptor = 1;
-                axios.value.post(axios.value.VITE_LOGIN_PATH + '/refresh', {}
-                    //, { withCredentials: true }
-                )
-                    .then(({ data }) => {
-                        const { token, user_nicename, perms } = data;
-                        session.value = { token, people: { display_name: user_nicename }, perms };
-                        callback(refresh)
-                    }).catch((e) => {
-                        console.error(e);
-                        //alert(JSON.stringify(e.data))
-                    });
-            }
-        }, 1000 * 1 * 600);
+  const logout = () => {
+    session.value = null;
+
+    localStorage.removeItem("session");
+
+    delete axios.value.defaults.headers.common.Authorization;
+
+    if (refreshTimer) {
+      clearTimeout(refreshTimer);
+      refreshTimer = null;
     }
 
-    let startRefresh: any;
+    deleteAllCookies();
 
-    watch(session, (newValue: any) => {
-        if (newValue && newValue.token) {
-            axios.value.defaults.headers.common = {
-                Authorization: `Bearer ` + newValue.token,
-            };
-            localStorage.setItem('session', JSON.stringify(newValue));
-            if (!startRefresh) {
-                startRefresh = refresh;
-                refresh(refresh);
-            }
-        } else {
-            localStorage.removeItem('session');
-            startRefresh = null;
-        }
-    });
+    // /login pertenece a React Auth
+    //To Do: agregar un parametro env
+    //router.value.push("/login");
+    window.location.replace("/login");
+  };
 
-    const s = localStorage.getItem('session');
-    session.value = s ? JSON.parse(s) : null;
+  const authenticated = computed(() => !!session.value?.token);
 
-    watch(connected, (newValue: any) => {
-        localStorage.setItem('connected', String(newValue));
-    });
+  const config = ({ axios: axiosInstance, router: routerInstance }: any) => {
+    if (routerInstance) {
+      //console.log('setRouter==', router)
+      router.value = routerInstance;
+    }
+    if (axiosInstance) {
+      //console.log('setAxios==', axios)
+      axios.value = axiosInstance;
+      configureAxios(axiosInstance);
+    }
+  };
 
-    const online = computed(() => networkStatus.value?.connected);
+  const connect = (value: Record<string, any>) => {
+    session.value = value;
+    router.value.push("/admin");
+  };
 
-    const networkStatusChange = (status: any) => {
-        networkStatus.value = status;
-    };
-
-    const logout = () => {
-        //connected.value = false;
-        session.value = null;
-        //localStorage.removeItem('connected');
-        deleteAllCookies();
-        router.value.push('/login');
-    };
-
-    const authenticated = computed(() => !!session.value?.token);
-
-    const config = ({ axios: axiosInstance, router: routerInstance }: any) => {
-        if (routerInstance) {
-            //console.log('setRouter==', router)
-            router.value = routerInstance;
-        }
-        if (axiosInstance) {
-            //console.log('setAxios==', axios)
-            axios.value = axiosInstance;
-            configureAxios(axiosInstance);
-        }
-    };
-
-    const connect = (value: Record<string, any>) => {
-        session.value = value;
-        router.value.push("/admin");
-    };
-
-    return { connected, session, logout, unauthorized, connect, authenticated, config, axios, router, online, networkStatusChange };
+  return {
+    connected,
+    session,
+    logout,
+    refreshSession,
+    unauthorized,
+    connect,
+    authenticated,
+    config,
+    axios,
+    router,
+    online,
+    networkStatusChange,
+  };
 });
