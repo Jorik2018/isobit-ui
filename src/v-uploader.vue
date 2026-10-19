@@ -100,7 +100,7 @@ function submitFile(file, name) {
   showProgress.value = true
 
   axios.post(
-    (props.domain || '') + '/api/file/upload',
+    (props.domain || '') + (props.action || '/api/file/upload'),
     formData,
     {
       headers: {

@@ -2995,12 +2995,12 @@ tr.blue.v-selected {
 	background-size: 20px;
 }
 .v-widget-header > .v-panel-title {
-	background-size: 20px !important;
-	padding-left: 25px;
-	background: url(/fs/images/favicon.png) no-repeat scroll 0 0 transparent;
-	display: block;
-	margin-right: 15px;
-	margin: 0px 16px 0px 0px !important;
+	background-size: 24px !important;
+    padding-left: 28px;
+    background: url(/fs/images/favicon.png) no-repeat scroll 0px 3px transparent;
+    display: block;
+    margin-right: 15px;
+    margin: 0 18px 0 0 !important;
 }
 .v-list > div:last-child {
 	border-bottom-width: 0px;
