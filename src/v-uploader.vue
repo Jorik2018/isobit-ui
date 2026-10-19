@@ -45,6 +45,7 @@ const props = defineProps({
   click: Function,
   icon: String,
   domain: String,
+  action: String, 
   dst: String,
   disabled: {
     type: Boolean,
@@ -98,7 +99,6 @@ function submitFile(file, name) {
   }
 
   showProgress.value = true
-
   axios.post(
     (props.domain || '') + (props.action || '/api/file/upload'),
     formData,
