@@ -100,6 +100,7 @@ export default ({
       df = vf;
     }
     const load = async (params = null, nou = null, clearQueue = false) => {
+    
       if (!clearQueue && nou && params) queue.value.push([params, nou]);
       if (queue.value.length > 1) return;
 
@@ -156,9 +157,8 @@ export default ({
     collect.push(load);
 
     onUpdated(() => {
-      collect((me.data || []).concat(data2.value))
+     // collect((me.data || []).concat(data2.value))
     })
-
     onUnmounted(() => {
       collect.remove(load);
     });
@@ -184,10 +184,10 @@ export default ({
     mode: null,
   },
   updated() {
-    let me = this;
+    /*let me = this;
     if (!me.loaded && me.data) {
       me.data2 = me.data;
-    }
+    }*/
     //me.$parent.$emit("changed", p);
     //me.$parent.updateSelect();
   },

@@ -35,6 +35,10 @@ export const useAppStore = defineStore("connection", () => {
 
   const session = ref<Record<string, any> | null>(null);
 
+  const can = (permission: string): boolean => {
+    return session.value?.perms?.[permission] === 1;
+  };
+
   const networkStatus = ref<Record<string, any> | null>(null);
 
   connected.value = localStorage.getItem("connected") !== "false";
@@ -62,7 +66,13 @@ export const useAppStore = defineStore("connection", () => {
       people: {
         display_name: user_nicename,
       },
-      perms,
+      perms: (perms || []).reduce(
+        (result: any, permission: string) => {
+          result[permission] = 1;
+          return result;
+        },
+        {},
+      ),
     };
 
     return session.value;
@@ -179,6 +189,7 @@ export const useAppStore = defineStore("connection", () => {
     refreshSession,
     unauthorized,
     connect,
+    can,
     authenticated,
     config,
     axios,

@@ -11,15 +11,17 @@
         <transition name="fade">
             <div v-show="show && !selected" class="v-resultpane"
                 :style="{ zIndex: 2, width: 'calc(100% - 2px)', position: (floating ? 'absolute' : 'relative') }">
-                <div class="v-list">
-                    <div v-for="(d, i) in data2" :key="i"
+                <div class="v-list" style="max-height: 300px;overflow-y: auto;">
+                    <div v-for="(d, i) in filteredData" :key="i"
                         :class="{ 'v-selected': selected == d, 'v-focused': focused == i }" @click="setSelected(d)">
                         <slot :row="d"></slot>
                     </div>
-                    <div v-if="data0 && data0.length < total" class="center" @click="search(1)">Load more {{ total -
-                        data0.length }} results...</div>
+                    <div v-if="allData.length < total" class="center" @click="search(1)">Load more {{ total -
+                        allData.length }} results...</div>
                 </div>
-                <div v-if="data2 && data2.length < 1" class="center yellow" style="padding:5px">No results found.</div>
+                <div v-if="filteredData.length < 1 && total == 0" class="center yellow" style="padding:5px">No results
+                    found.
+                </div>
             </div>
         </transition>
     </div>
@@ -33,6 +35,9 @@ import { useAppStore } from './useAppStore';
 
 export default {
     name: 'VAutocomplete',
+    emits: [
+        'input'
+    ],
     props: {
         modelValue: { type: Object, default: null },
         data: { type: Array, default: () => null },
@@ -58,19 +63,19 @@ export default {
         const selected = ref(null);
         const focused = ref(-1);
         const query = ref('');
-        const data0 = ref(null);
+        const allData = ref([]);
         const show = ref(false);
-        const total = ref(0);
+        const total = ref(-1);
         const inputClass = ref('');
         const autocomplete = ref(null);
 
         watch(() => props.modelValue, newValue => {
-            console.log('==============>',newValue);
+            console.log('==============>', newValue);
             selected.value = newValue;
         });
 
         watch(() => props.data, newValue => {
-            data0.value = newValue;
+            allData.value = newValue;
         });
 
         onMounted(() => {
@@ -85,13 +90,13 @@ export default {
         });
 
         // Computed data for filtering
-        const data2 = computed(() => {
+        const filteredData = computed(() => {
             focused.value = -1;
             const q = query.value ? query.value.trim().toLowerCase().split(/[ ,]+/) : null;
-            return data0.value && query.value ? data0.value.filter((el) => {
+            return allData.value && query.value ? allData.value.filter((el) => {
                 const v = JSON.stringify(el).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
                 return q.every(qPart => v.includes(qPart));
-            }) : data0.value;
+            }) : allData.value;
         });
 
         // Define methods
@@ -114,11 +119,11 @@ export default {
                     console.log(d)
                     if (!d.error) {
                         if (e === 1) {
-                            data0.value = data0.value.concat(d.data ? d.data : d);
+                            allData.value = allData.value.concat(d.data ? d.data : d);
                         } else {
-                            data0.value = d.data ? d.data : d;
+                            allData.value = d.data ? d.data : d;
                         }
-                        console.log(data0);
+                        console.log(allData);
                         total.value = d.size;
                         if (!props.autoload) show.value = true;
                         console.log('=========================');
@@ -127,7 +132,7 @@ export default {
                         MsgBox(d.error);
                     }
                 }).catch(errorLog).then(() => {
-                    emit('complete', { data: data0.value, query: query.value, target: 'me' });
+                    emit('complete', { data: allData.value, query: query.value, target: 'me' });
                 });
         };
         const errorLog = (e) => { console.log(e) };
@@ -141,6 +146,7 @@ export default {
             if (parent && !parent.contains(event.target)) {
                 show.value = false;
             }
+
         };
         const focusout = (event) => { /* Logic for focus out */ };
         const setSelected = (value) => {
@@ -169,10 +175,12 @@ export default {
             query,
             show,
             selected,
-            data2,
+            filteredData,
+            allData,
             focused, autocomplete,
             inputClass,
             search,
+            total,
             remove,
             clickout,
             focusout,

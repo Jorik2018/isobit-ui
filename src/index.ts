@@ -160,6 +160,8 @@ export const ui = (cfg:any) => {
 
 			let router = useRouter();
 
+			const filters = reactive({});
+
 			const ci = getCurrentInstance();
 
 			const views: any[] = reactive([]);
@@ -170,7 +172,8 @@ export const ui = (cfg:any) => {
 				},
 				push(view: any) {
 					views.push(view);
-				}
+				},
+				filters
 			};
 
 			const _error = (e) => {
@@ -1055,7 +1058,7 @@ export const ui = (cfg:any) => {
 				return clean(filters.value);
 			})
 
-			const filters = reactive({});
+			
 
 			const refreshTimeout = ref(null);
 

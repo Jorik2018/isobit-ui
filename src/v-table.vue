@@ -14,7 +14,7 @@ export default {
         'loaded'
     ],
     setup(props, cxt) {
-        const { autoload, src, rowKey='id', store, groups } = props;
+        const { autoload, src, rowKey = 'id', store, groups } = props;
         const app = useAppStore();
         const viewCollector = inject('viewCollector');
         const formCollector = inject('formCollector');
@@ -26,34 +26,41 @@ export default {
         const data = ref([]);
         const sorter = ref(null);
         const sortDir = ref(1);
+        const normalizeText = (value) =>
+            value
+                .toUpperCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+
         const filteredData = computed(() => {
-            //https://itqna.net/questions/514/how-do-search-ignoring-accent-javascript
-            //https://stackoverflow.com/questions/5700636/using-javascript-to-perform-text-matches-with-without-accented-characters
-            const me = props, data_ = data.value;
-            let f, v;
-            data_.sum = sum;
-            //console.log('data_===', data_);
-            return data_.filter(item => {
-                for (var key in me.filters) {
-                    f = me.filters[key];
-                    if (typeof f === 'function') {
-                        if (!f(item)) {
-                            return 0;
-                        }
-                    } else if (f && typeof f === 'string' && key in item) {
-                        v = item[key];
-                        if (typeof v === 'string') {
-                            v = v.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                            if (!v.includes(f.toUpperCase())) {
-                                //console.log(v+'  no contains2 '+f.toUpperCase()+' '+v.includes(f.toUpperCase()));
-                                return 0;
-                            }
-                        }
+            const filters = Object.entries(viewCollector.filters)
+                .filter(([, filter]) =>
+                    typeof filter === 'function' ||
+                    (typeof filter === 'string' && filter !== '')
+                )
+                .map(([key, filter]) => [
+                    key,
+                    typeof filter === 'string' ? normalizeText(filter) : filter
+                ])
+
+            return data.value.filter((item) =>
+                filters.every(([key, filter]) => {
+                    if (typeof filter === 'function') {
+                        return filter(item)
                     }
-                };
-                return 1;
-            });
-        });
+
+                    const value = item[key]
+
+                    // Conserva el comportamiento original: ignorar valores no textuales.
+                    if (typeof value !== 'string') {
+                        return true
+                    }
+
+                    return normalizeText(value).includes(filter)
+                })
+            )
+        })
+
         const sortedData = computed(() => {
             let data = filteredData.value;
             data = sorter ? data.sort((a, b) => {
@@ -183,7 +190,9 @@ export default {
         s = ('' + props.scrollable);
         scrollable0.value = (props.scrollable && s != 'false' && s != '0') ? 1 : 0;
         const load = (/*s*/) => {
+
             const me = props;
+
             selected.value = [];
             if (me.value) {
                 data.value = [];
@@ -214,7 +223,7 @@ export default {
 
                         request = app.axios.post(src, { query: query });
                     } else {
-                        request = app.axios.get(s, { params: clean(me.filters) });
+                        request = app.axios.get(s, { params: clean(viewCollector.filters) });
                     }
                     request.then((r) => {
                         if (r.data && r.data.error) {
@@ -269,7 +278,7 @@ export default {
         })
         load.rowSelectedCount = rowSelectedCount;
         load.src = src;
-        if(formCollector)load.getForm = formCollector.get;
+        if (formCollector) load.getForm = formCollector.get;
         load.rowKey = rowKey;
         load.rowSelect = rowSelect;
         const j_is = (el) => {
@@ -310,9 +319,9 @@ export default {
                 const filter = component.$el.querySelectorAll('v-filter');
                 filter.forEach(f => {
                     //console.log(
-                        f.querySelectorAll('input').forEach(e => e.addEventListener("keyup", listener))
-                    //)
-                    ;
+                    f.querySelectorAll('input').forEach(e => e.addEventListener("keyup", listener))
+                        //)
+                        ;
                 });
             }, 100);
         });
@@ -341,12 +350,14 @@ export default {
                         e.children.shift();
                     });
                 }
+                if(column){
                 tableWidth += column.width ? Number(column.width) : 0;
                 columns.push({
                     filter: column.filter,
                     header: column.header,
                     width: column.width
                 });
+            }
             });
 
             tableWidth += (selectable0.value ? checkColumnWidth : 0);
@@ -441,7 +452,7 @@ export default {
                                                 class: getRowClass(row),
                                                 onDblclick(e) {
                                                     _selectRow(e, row, index)
-                                                    emit('dblclick',e)
+                                                    emit('dblclick', e)
                                                 },
                                                 onclick(e) {
                                                     _selectRow(e, row, index)
@@ -547,13 +558,6 @@ export default {
     methods: {
         hasSlot(s) {
             return !!this.$slots[s];
-        },
-        sortBy(/*key*/) {
-            //this.sortKey = key
-            //this.sortOrders[key] = this.sortOrders[key] * -1
-        },
-        filter() {
-            alert(12);
         }
     }
 }

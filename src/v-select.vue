@@ -324,12 +324,9 @@ export default {
         );
 
       if (changed) {
-        const value = current.length
-          ? current.join(',')
-          : null;
         emit(
           'update:modelValue',
-          value
+          current
         );
       }
       close();
@@ -410,7 +407,6 @@ export default {
   watch: {
 
     show(s) {
-      let me = this;
       if (s) {
         let cn = this.$refs.button, popup = this.popup;
         if (!popup) {

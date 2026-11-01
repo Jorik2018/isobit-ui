@@ -1,37 +1,37 @@
 <template>
     <Teleport to="body">
-        <div
-            v-if="isOpen"
-            class="popup-overlay"
-            @click.self="close"
-        >
-            <div class="popup" :style="{ width }">
+        <Transition name="popup-fade" @after-leave="afterLeave">
+            <div
+                v-if="isOpen"
+                class="popup-overlay"
+                @click.self="close"
+            >
+                <div class="popup" :style="{ width }">
+                    <button
+                        type="button"
+                        class="popup-close"
+                        @click="close"
+                    >
+                        ✕
+                    </button>
 
-                <button
-                    type="button"
-                    class="popup-close"
-                    @click="close"
-                >
-                    ✕
-                </button>
+                    <!-- Componente cargado por ruta -->
+                    <component
+                        v-if="currentView"
+                        :is="currentView"
+                        v-bind="currentParams"
+                        :callback="callback"
+                    />
 
-                <!-- Componente cargado por ruta -->
-                <component
-                    v-if="currentView"
-                    :is="currentView"
-                    v-bind="currentParams"
-                    :callback="callback"
-                />
-
-                <!-- Si no hay componente, mostrar slot -->
-                <slot
-                    v-else
-                    :close="close"
-                    :callback="callback"
-                />
-
+                    <!-- Si no hay componente, mostrar el slot -->
+                    <slot
+                        v-else
+                        :close="close"
+                        :callback="callback"
+                    />
+                </div>
             </div>
-        </div>
+        </Transition>
     </Teleport>
 </template>
 
@@ -44,7 +44,6 @@ import {
 
 import { useRouter } from 'vue-router'
 
-
 const props = defineProps({
     width: {
         type: String,
@@ -56,7 +55,6 @@ const props = defineProps({
     },
 })
 
-
 const emit = defineEmits([
     'success',
     'close',
@@ -65,13 +63,10 @@ const emit = defineEmits([
 const router = useRouter()
 
 const isOpen = ref(false)
-
 const currentView = shallowRef(null)
-
 const currentParams = ref({})
 
-const viewCollector = inject('viewCollector');
-
+const viewCollector = inject('viewCollector')
 const parentRefresh = inject('refresh', null)
 
 const resolveView = async (routeRef) => {
@@ -119,8 +114,7 @@ const open = async (
     routeRef = null,
     data = null,
 ) => {
-
-    // Sin ruta => mostrar slot
+    // Sin ruta: mostrar el slot.
     if (!routeRef) {
         currentView.value = null
         currentParams.value = data ?? {}
@@ -128,7 +122,7 @@ const open = async (
         return
     }
 
-    // Con ruta => comportamiento actual
+    // Con ruta: cargar el componente correspondiente.
     const resolved = await resolveView(routeRef)
 
     currentView.value = resolved.component
@@ -140,31 +134,56 @@ const open = async (
     isOpen.value = true
 }
 
-const close = (v) => {
-
+const close = (value) => {
     isOpen.value = false
-
-    emit('close',v);
-    currentView.value = null
+    emit('close', value)
 }
 
-const callback = async (
-    value = null,
-) => {
-    if (value?.success) {
-         parentRefresh?.()
+// Limpiar la vista después de terminar la transición de salida.
+const afterLeave = () => {
+    if (!isOpen.value) {
+        currentView.value = null
     }
+}
+
+const callback = async (value = null) => {
+    if (value?.success) {
+        parentRefresh?.()
+    }
+
     close(value)
 }
 
 viewCollector.push({
     open,
     props,
-    type: 'v-popup'
-});
+    type: 'v-popup',
+})
 
 defineExpose({
     open,
     close,
 })
 </script>
+
+<style scoped>
+.popup-fade-enter-active,
+.popup-fade-leave-active {
+    transition: opacity 0.25s ease;
+}
+
+.popup-fade-enter-from,
+.popup-fade-leave-to {
+    opacity: 0;
+}
+
+.popup-fade-enter-active .popup,
+.popup-fade-leave-active .popup {
+    transition: transform 0.25s ease;
+}
+
+.popup-fade-enter-from .popup,
+.popup-fade-leave-to .popup {
+    transform: translateY(-10px);
+}
+</style>

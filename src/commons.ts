@@ -740,22 +740,23 @@ export const pad = (num: number, size: number) => {
 };
 
 export const clean = (obj: any) => {
-	// Create a shallow copy of the object to avoid mutating the original object
 	const newObj = { ...obj };
-	for (let propName in newObj) {
-		// Check for properties that are empty string, null, function, or undefined
+
+	for (const propName in newObj) {
+		if (Array.isArray(newObj[propName])) {
+			newObj[propName] = newObj[propName].join(',');
+		}
+
 		if (
 			newObj[propName] === '' ||
 			newObj[propName] === null ||
 			typeof newObj[propName] === 'function' ||
 			newObj[propName] === undefined
 		) {
-			// Delete properties that meet the criteria
 			delete newObj[propName];
 		}
 	}
 
-	// Return the new object with unwanted properties removed
 	return newObj;
 };
 
