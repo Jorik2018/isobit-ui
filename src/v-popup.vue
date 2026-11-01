@@ -1,34 +1,17 @@
 <template>
     <Teleport to="body">
         <Transition name="popup-fade" @after-leave="afterLeave">
-            <div
-                v-if="isOpen"
-                class="popup-overlay"
-                @click.self="close"
-            >
+            <div v-if="isOpen" class="popup-overlay" @click.self="closableOnScreen && close()">
                 <div class="popup" :style="{ width }">
-                    <button
-                        type="button"
-                        class="popup-close"
-                        @click="close"
-                    >
+                    <button type="button" class="popup-close" @click="close">
                         ✕
                     </button>
 
                     <!-- Componente cargado por ruta -->
-                    <component
-                        v-if="currentView"
-                        :is="currentView"
-                        v-bind="currentParams"
-                        :callback="callback"
-                    />
+                    <component v-if="currentView" :is="currentView" v-bind="currentParams" :callback="callback" />
 
                     <!-- Si no hay componente, mostrar el slot -->
-                    <slot
-                        v-else
-                        :close="close"
-                        :callback="callback"
-                    />
+                    <slot v-else :close="close" :callback="callback" />
                 </div>
             </div>
         </Transition>
@@ -52,6 +35,10 @@ const props = defineProps({
     name: {
         type: String,
         default: null,
+    },
+    closableOnScreen: {
+        type: Boolean,
+        default: false,
     },
 })
 
