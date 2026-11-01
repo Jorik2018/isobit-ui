@@ -57,6 +57,7 @@ const viewCollector = inject('viewCollector')
 const parentRefresh = inject('refresh', null)
 
 const resolveView = async (routeRef) => {
+    console.log('routeRef',routeRef)
     let route = router
         .getRoutes()
         .find(route => route.name === routeRef)
